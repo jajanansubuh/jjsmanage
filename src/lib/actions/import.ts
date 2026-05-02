@@ -22,25 +22,33 @@ export async function importDatabaseAction(formData: FormData) {
     if (supplierSheet) {
       const suppliersData = XLSX.utils.sheet_to_json(supplierSheet) as any[];
       for (const data of suppliersData) {
-        // Upsert based on name or ID if available
-        await prisma.supplier.upsert({
-          where: { id: data.id || "non-existent-id" },
-          update: {
-            name: data.name,
-            ownerName: data.ownerName,
-            bankName: data.bankName,
-            accountNumber: data.accountNumber?.toString(),
-            balance: parseFloat(data.balance) || 0,
-          },
-          create: {
-            id: data.id,
-            name: data.name,
-            ownerName: data.ownerName,
-            bankName: data.bankName,
-            accountNumber: data.accountNumber?.toString(),
-            balance: parseFloat(data.balance) || 0,
-          },
+        // Cari supplier berdasarkan nama untuk overwrite/update
+        const existingSupplier = await prisma.supplier.findFirst({
+          where: { name: data.name },
         });
+
+        if (existingSupplier) {
+          await prisma.supplier.update({
+            where: { id: existingSupplier.id },
+            data: {
+              ownerName: data.ownerName,
+              bankName: data.bankName,
+              accountNumber: data.accountNumber?.toString(),
+              balance: parseFloat(data.balance) || 0,
+            },
+          });
+        } else {
+          await prisma.supplier.create({
+            data: {
+              id: data.id,
+              name: data.name,
+              ownerName: data.ownerName,
+              bankName: data.bankName,
+              accountNumber: data.accountNumber?.toString(),
+              balance: parseFloat(data.balance) || 0,
+            },
+          });
+        }
         importedSuppliers++;
       }
     }
