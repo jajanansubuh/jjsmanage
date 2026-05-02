@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Supplier {
+  id            String   @id @default(cuid())
+  name          String   // Nama UMKM
+  ownerName     String?  // Nama Pemilik
+  bankName      String?  // Nama Bank
+  accountNumber String?  // No Rek
+  balance       Float    @default(0) // Saldo
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  reports       ConsignmentReport[]
+}
+
+model Cashier {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ConsignmentReport {
+  id          String   @id @default(cuid())
+  date        DateTime @default(now())
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  revenue     Float    // Pendapatan
+  profit80    Float    // Bagi Hasil 80% (Cost - Barcode)
+  profit20    Float    // Bagi Hasil 20% (Pendapatan - Cost)
+  barcode     Float    // Barcode
+  cost        Float    // Cost
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String?
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
