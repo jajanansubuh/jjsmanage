@@ -16,8 +16,10 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Plus, Search, UserPlus, Database, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Search, UserPlus, Database, ArrowUpDown, ArrowUp, ArrowDown, Trash2, History, Edit, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 
 export default function MasterDataPage() {
   const [suppliers, setSuppliers] = useState<{ id: string, name: string, ownerName?: string | null, bankName?: string | null, accountNumber?: string | null, balance: number }[]>([]);
@@ -30,8 +32,14 @@ export default function MasterDataPage() {
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
 
-  const [supplierSortConfig, setSupplierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
-  const [cashierSortConfig, setCashierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
+  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [supplierHistory, setSupplierHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const [supplierSortConfig, setSupplierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
+  const [cashierSortConfig, setCashierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
 
   const sortedSuppliers = useMemo(() => {
     let sortable = Array.isArray(suppliers) ? [...suppliers] : [];
@@ -150,6 +158,70 @@ export default function MasterDataPage() {
     }
   }
 
+  useEffect(() => {
+    if (isHistoryDialogOpen && selectedSupplier?.id) {
+      fetchSupplierHistory(selectedSupplier.id);
+    }
+  }, [isHistoryDialogOpen, selectedSupplier?.id]);
+
+  const fetchSupplierHistory = async (supplierId: string) => {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/reports?supplierId=${supplierId}`);
+      const data = await res.json();
+      setSupplierHistory(data);
+    } catch (error) {
+      toast.error("Gagal mengambil riwayat transaksi");
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  const handleUpdateSupplier = async () => {
+    try {
+      const res = await fetch(`/api/suppliers/${selectedSupplier.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(selectedSupplier),
+      });
+      if (res.ok) {
+        toast.success("Suplier berhasil diperbarui");
+        setIsManageDialogOpen(false);
+        fetchData();
+      } else {
+        toast.error("Gagal memperbarui suplier");
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan");
+    }
+  };
+
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
+
+  const handleDeleteSupplier = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/suppliers/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast.success("Suplier berhasil dihapus");
+        setIsDeleteConfirmOpen(false);
+        setIsManageDialogOpen(false);
+        fetchData();
+      } else {
+        toast.error("Gagal menghapus suplier");
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const [isDeleting, setIsDeleting] = useState(false);
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
@@ -180,7 +252,7 @@ export default function MasterDataPage() {
                     <Plus className="w-5 h-5 mr-2" /> Tambah Suplier
                   </Button>
                 } />
-                <DialogContent className="bg-slate-900/95 backdrop-blur-2xl border-white/10 rounded-3xl shadow-2xl max-w-md">
+                <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
                   <DialogHeader>
                     <DialogTitle className="text-2xl font-black text-white">Tambah Suplier</DialogTitle>
                     <DialogDescription className="text-slate-400 font-medium">Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
@@ -265,7 +337,18 @@ export default function MasterDataPage() {
                     ) : (
                       sortedSuppliers.map((s) => (
                         <TableRow key={s.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
-                          <TableCell className="font-bold text-white py-4 px-8 group-hover:text-blue-400 transition-colors">{s.name}</TableCell>
+                          <TableCell 
+                            className="font-bold text-white py-4 px-8 group-hover:text-blue-400 transition-colors cursor-pointer"
+                            onClick={() => {
+                              setSelectedSupplier(s);
+                              setIsHistoryDialogOpen(true);
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              {s.name}
+                              <History className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </TableCell>
                           <TableCell className="text-slate-400 font-medium">{s.ownerName || "-"}</TableCell>
                           <TableCell className="text-slate-400 font-medium">{s.bankName || "-"}</TableCell>
                           <TableCell className="font-mono text-sm text-slate-500 group-hover:text-slate-300 transition-colors">{s.accountNumber || "-"}</TableCell>
@@ -273,7 +356,17 @@ export default function MasterDataPage() {
                             {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(s.balance)}
                           </TableCell>
                           <TableCell className="text-right py-4 px-8">
-                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 font-bold text-xs">Kelola</Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 font-bold text-xs"
+                              onClick={() => {
+                                setSelectedSupplier(s);
+                                setIsManageDialogOpen(true);
+                              }}
+                            >
+                              Kelola
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -367,6 +460,176 @@ export default function MasterDataPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog Kelola Suplier */}
+      <Dialog open={isManageDialogOpen} onOpenChange={setIsManageDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-white">Kelola Suplier</DialogTitle>
+            <DialogDescription className="text-slate-400 font-medium">Ubah atau hapus data suplier ini.</DialogDescription>
+          </DialogHeader>
+          {selectedSupplier && (
+            <div className="grid gap-5 py-6">
+              <div className="grid gap-2.5">
+                <Label htmlFor="edit-name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
+                <Input
+                  id="edit-name"
+                  value={selectedSupplier.name}
+                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, name: e.target.value })}
+                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                />
+              </div>
+              <div className="grid gap-2.5">
+                <Label htmlFor="edit-ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
+                <Input
+                  id="edit-ownerName"
+                  value={selectedSupplier.ownerName || ""}
+                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, ownerName: e.target.value })}
+                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                />
+              </div>
+              <div className="grid gap-2.5">
+                <Label htmlFor="edit-bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
+                <Input
+                  id="edit-bankName"
+                  value={selectedSupplier.bankName || ""}
+                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, bankName: e.target.value })}
+                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                />
+              </div>
+              <div className="grid gap-2.5">
+                <Label htmlFor="edit-accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
+                <Input
+                  id="edit-accountNumber"
+                  value={selectedSupplier.accountNumber || ""}
+                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, accountNumber: e.target.value })}
+                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => {
+                setSupplierToDelete(selectedSupplier?.id);
+                setIsDeleteConfirmOpen(true);
+              }} 
+              className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
+            >
+              <Trash2 className="w-4 h-4 mr-2" /> Hapus
+            </Button>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => setIsManageDialogOpen(false)} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+              <Button onClick={handleUpdateSupplier} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Riwayat Transaksi */}
+      <Dialog open={isHistoryDialogOpen} onOpenChange={setIsHistoryDialogOpen}>
+        <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl w-[95vw] sm:max-w-[1200px] sm:ml-32 max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <div className="p-8 border-b border-white/5">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black text-white flex items-center gap-3">
+                <History className="w-6 h-6 text-blue-400" />
+                Riwayat Transaksi: {selectedSupplier?.name}
+              </DialogTitle>
+              <DialogDescription className="text-slate-400 font-medium">Daftar transaksi bagi hasil yang telah tercatat.</DialogDescription>
+            </DialogHeader>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-8 pt-0">
+            {historyLoading ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-500">
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                <span>Memuat riwayat...</span>
+              </div>
+            ) : supplierHistory.length === 0 ? (
+              <div className="text-center py-20 text-slate-500 font-medium italic">Belum ada riwayat transaksi untuk suplier ini.</div>
+            ) : (
+              <div className="space-y-4 pt-6">
+                <Table>
+                  <TableHeader className="bg-white/[0.02] sticky top-0 z-10">
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4">Tanggal</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-right">Pendapatan</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-right">Cost</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-right">Potongan</TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-right text-blue-400">Mitra Jjs</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {supplierHistory.map((h) => {
+                      const totalDeductions = (h.serviceCharge || 0) + (h.kukuluban || 0) + (h.tabungan || 0);
+                      return (
+                        <TableRow key={h.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                          <TableCell className="text-slate-300 font-medium py-4">
+                            {format(new Date(h.date), "dd MMM yyyy, HH:mm", { locale: localeId })}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-300">
+                            {new Intl.NumberFormat("id-ID").format(h.revenue)}
+                          </TableCell>
+                          <TableCell className="text-right text-slate-400 italic">
+                            {new Intl.NumberFormat("id-ID").format(h.cost)}
+                          </TableCell>
+                          <TableCell className="text-right text-red-400/70 text-xs">
+                            -{new Intl.NumberFormat("id-ID").format(totalDeductions)}
+                          </TableCell>
+                          <TableCell className="text-right font-black text-blue-400">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(h.profit80)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+          
+          <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-end">
+            <Button variant="ghost" onClick={() => setIsHistoryDialogOpen(false)} className="h-11 px-8 rounded-xl text-white bg-white/5 hover:bg-white/10 font-bold">Tutup</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog Konfirmasi Hapus */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent className="bg-slate-950 border-white/10 rounded-3xl shadow-2xl max-w-md p-0 overflow-hidden">
+          <div className="p-8 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                <Trash2 className="w-8 h-8 text-red-500" />
+              </div>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Hapus Suplier?</DialogTitle>
+                <DialogDescription className="text-slate-400 font-medium pt-2 text-center">
+                  Anda akan menghapus suplier <span className="text-white font-bold">{selectedSupplier?.name}</span>. Semua data laporan terkait suplier ini juga akan dihapus secara permanen.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteConfirmOpen(false)}
+              className="flex-1 h-12 rounded-xl text-slate-400 font-bold hover:bg-white/5"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => supplierToDelete && handleDeleteSupplier(supplierToDelete)}
+              disabled={isDeleting}
+              className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+            >
+              {isDeleting ? <Loader2 className="w-5 h-5 animate-spin" /> : "YA, HAPUS"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

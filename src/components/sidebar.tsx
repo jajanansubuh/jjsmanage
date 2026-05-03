@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -19,6 +20,7 @@ import { logoutAction } from "@/lib/actions/auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Setor", href: "/deposits", icon: Wallet },
   { name: "Data Master", href: "/master", icon: Database },
   { name: "Transaksi", href: "/transactions", icon: ReceiptText },
   { name: "Laporan", href: "/reports", icon: FileText },

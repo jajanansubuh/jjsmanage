@@ -45,7 +45,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <Card className="border-white/10 bg-slate-900/40 backdrop-blur-2xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] animate-in zoom-in-95 fade-in duration-700">
+        <Card className="border-white/10 bg-slate-900/40 backdrop-blur-xl shadow-[0_0_50px_-12px_rgba(0,0,0,0.5)] animate-in zoom-in-95 fade-in duration-700">
           <CardHeader className="space-y-1 pb-4">
             <CardTitle className="text-2xl font-bold text-center bg-linear-to-b from-white to-slate-400 bg-clip-text text-transparent">Login</CardTitle>
             <CardDescription className="text-center text-slate-400">

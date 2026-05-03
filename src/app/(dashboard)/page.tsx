@@ -89,7 +89,7 @@ function DashboardContent() {
       bg: "bg-blue-500/10"
     },
     {
-      title: "Laba Bersih 20%",
+      title: "Toko",
       value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalProfit20) : "Rp 0",
       icon: Wallet,
       trend: `${(stats.profit20Growth || 0) >= 0 ? "+" : ""}${(stats.profit20Growth || 0).toFixed(1)}%`,

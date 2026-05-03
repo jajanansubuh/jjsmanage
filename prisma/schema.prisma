@@ -7,38 +7,44 @@ datasource db {
 }
 
 model Supplier {
-  id            String   @id @default(cuid())
-  name          String   // Nama UMKM
-  ownerName     String?  // Nama Pemilik
-  bankName      String?  // Nama Bank
-  accountNumber String?  // No Rek
-  balance       Float    @default(0) // Saldo
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String              @id @default(cuid())
+  name          String
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  accountNumber String?
+  balance       Float               @default(0)
+  ownerName     String?
+  bankName      String?
   reports       ConsignmentReport[]
 }
 
 model Cashier {
   id        String   @id @default(cuid())
   name      String
-  code      String   @unique
   createdAt DateTime @default(now())
+  code      String   @unique
   updatedAt DateTime @updatedAt
 }
 
 model ConsignmentReport {
-  id          String   @id @default(cuid())
-  date        DateTime @default(now())
-  supplierId  String
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
-  revenue     Float    // Pendapatan
-  profit80    Float    // Bagi Hasil 80% (Cost - Barcode)
-  profit20    Float    // Bagi Hasil 20% (Pendapatan - Cost)
-  barcode     Float    // Barcode
-  cost        Float    // Cost
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  date          DateTime @default(now())
+  noteNumber    String?  // No Nota
+  supplierId    String
+  revenue       Float
+  profit80      Float
+  profit20      Float
+  barcode       Float
+  cost          Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  kukuluban     Float?   @default(0)
+  serviceCharge Float?   @default(0)
+  tabungan      Float?   @default(0)
+  notes         String?
+  supplier      Supplier @relation(fields: [supplierId], references: [id])
 }
+
 model User {
   id        String   @id @default(cuid())
   username  String   @unique
