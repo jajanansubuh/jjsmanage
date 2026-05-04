@@ -22,10 +22,29 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/", req.nextUrl));
   }
 
+  // Supplier Role Based Access Control
+  if (session?.user?.role === "SUPPLIER") {
+    const allowedPaths = ['/deposits'];
+    
+    // Protect UI routes
+    if (path === '/' || (!allowedPaths.includes(path) && !path.startsWith('/api'))) {
+      return NextResponse.redirect(new URL('/deposits', req.nextUrl));
+    }
+    
+    // Protect API routes
+    if (path.startsWith('/api')) {
+      const allowedApiPaths = ['/api/reports'];
+      const isAllowedApi = allowedApiPaths.some(p => path.startsWith(p));
+      if (!isAllowedApi) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      }
+    }
+  }
+
   return NextResponse.next();
 }
 
 // Routes Middleware should not run on
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
+  matcher: ["/((?!_next/static|_next/image|.*\\.png$).*)"],
 };

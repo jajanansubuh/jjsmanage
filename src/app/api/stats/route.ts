@@ -10,6 +10,12 @@ export async function GET(request: Request) {
     const startParam = searchParams.get("startDate");
     const endParam = searchParams.get("endDate");
 
+    // Get session for Role Based Access Control
+    const { getSession } = await import("@/lib/auth-utils");
+    const session = await getSession();
+    const isSupplier = session?.user?.role === "SUPPLIER";
+    const supplierId = session?.user?.supplierId;
+
     let startDate: Date;
     let endDate = new Date();
 
@@ -35,53 +41,72 @@ export async function GET(request: Request) {
       lte: endDate,
     };
 
+    const baseWhere: any = { createdAt: dateFilter };
+    if (isSupplier && supplierId) {
+      baseWhere.supplierId = supplierId;
+    }
+
     // 1. Agregasi Total Revenue & Profit
     const totals = await prisma.consignmentReport.aggregate({
-      where: { createdAt: dateFilter },
+      where: baseWhere,
       _sum: {
         revenue: true,
-        profit20: true
+        profit20: true,
+        profit80: true
       }
     });
 
     const totalRevenue = totals._sum.revenue || 0;
     const totalProfit20 = totals._sum.profit20 || 0;
+    const totalProfit80 = totals._sum.profit80 || 0;
 
-    // 2. Count Suppliers & Cashiers
-    const totalSuppliers = await prisma.supplier.count();
-    const totalCashiers = await prisma.cashier.count();
+    // 2. Count Suppliers & Cashiers (Admin Only)
+    let totalSuppliers = 0;
+    let totalCashiers = 0;
+    let totalTransactions = 0;
 
-    // 3. Top Suppliers dengan groupBy
-    const topSupplierGroups = await prisma.consignmentReport.groupBy({
-      by: ['supplierId'],
-      where: { createdAt: dateFilter },
-      _sum: { revenue: true },
-      _count: { id: true },
-      orderBy: { _sum: { revenue: 'desc' } },
-      take: 5
-    });
+    if (!isSupplier) {
+      totalSuppliers = await prisma.supplier.count();
+      totalCashiers = await prisma.cashier.count();
+    } else {
+      totalTransactions = await prisma.consignmentReport.count({
+        where: baseWhere
+      });
+    }
 
-    // Ambil nama supplier untuk top 5
-    const topSupplierIds = topSupplierGroups.map(g => g.supplierId);
-    const topSuppliersData = await prisma.supplier.findMany({
-      where: { id: { in: topSupplierIds } },
-      select: { id: true, name: true }
-    });
+    // 3. Top Suppliers (Admin Only)
+    let topSuppliers: any[] = [];
+    if (!isSupplier) {
+      const topSupplierGroups = await prisma.consignmentReport.groupBy({
+        by: ['supplierId'],
+        where: { createdAt: dateFilter },
+        _sum: { revenue: true },
+        _count: { id: true },
+        orderBy: { _sum: { revenue: 'desc' } },
+        take: 5
+      });
 
-    const topSuppliers = topSupplierGroups.map(g => {
-      const supplier = topSuppliersData.find(s => s.id === g.supplierId);
-      return {
-        id: g.supplierId,
-        name: supplier?.name || "Unknown",
-        totalRevenue: g._sum.revenue || 0,
-        transactionCount: g._count.id || 0
-      };
-    });
+      const topSupplierIds = topSupplierGroups.map(g => g.supplierId);
+      const topSuppliersData = await prisma.supplier.findMany({
+        where: { id: { in: topSupplierIds } },
+        select: { id: true, name: true }
+      });
 
-    // 4. Trend Data - Hanya mengambil kolom yang diperlukan untuk menghemat memory
+      topSuppliers = topSupplierGroups.map(g => {
+        const supplier = topSuppliersData.find(s => s.id === g.supplierId);
+        return {
+          id: g.supplierId,
+          name: supplier?.name || "Unknown",
+          totalRevenue: g._sum.revenue || 0,
+          transactionCount: g._count.id || 0
+        };
+      });
+    }
+
+    // 4. Trend Data - Optimization: Only fetch what's needed
     const trendRecords = await prisma.consignmentReport.findMany({
-      where: { createdAt: dateFilter },
-      select: { createdAt: true, revenue: true },
+      where: baseWhere,
+      select: { createdAt: true, revenue: true, profit80: true },
       orderBy: { createdAt: "asc" }
     });
 
@@ -97,7 +122,10 @@ export async function GET(request: Request) {
       }
       trendRecords.forEach(r => {
         const key = format(new Date(r.createdAt), "dd MMM", { locale: id });
-        if (daysMap.has(key)) daysMap.set(key, daysMap.get(key) + r.revenue);
+        if (daysMap.has(key)) {
+          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          daysMap.set(key, daysMap.get(key) + val);
+        }
       });
       revenueTrend = Array.from(daysMap.entries()).map(([name, total]) => ({ name, total }));
     } 
@@ -106,13 +134,16 @@ export async function GET(request: Request) {
       const weeksMap = new Map();
       let currentWeek = new Date(startDate);
       while (currentWeek <= endDate) {
-        const weekKey = `Mg ${format(currentWeek, "w", { locale: id })}`; // e.g. Mg 12
+        const weekKey = `Mg ${format(currentWeek, "w", { locale: id })}`;
         weeksMap.set(weekKey, 0);
         currentWeek = new Date(currentWeek.setDate(currentWeek.getDate() + 7));
       }
       trendRecords.forEach(r => {
         const key = `Mg ${format(new Date(r.createdAt), "w", { locale: id })}`;
-        if (weeksMap.has(key)) weeksMap.set(key, weeksMap.get(key) + r.revenue);
+        if (weeksMap.has(key)) {
+          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          weeksMap.set(key, weeksMap.get(key) + val);
+        }
       });
       revenueTrend = Array.from(weeksMap.entries()).map(([name, total]) => ({ name, total }));
     }
@@ -127,31 +158,39 @@ export async function GET(request: Request) {
       }
       trendRecords.forEach(r => {
         const key = format(new Date(r.createdAt), "MMM", { locale: id });
-        if (monthsMap.has(key)) monthsMap.set(key, monthsMap.get(key) + r.revenue);
+        if (monthsMap.has(key)) {
+          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          monthsMap.set(key, monthsMap.get(key) + val);
+        }
       });
       revenueTrend = Array.from(monthsMap.entries()).map(([name, total]) => ({ name, total }));
     }
 
-    // 5. Calculate Previous Period for Comparison using aggregation
+    // 5. Calculate Previous Period for Comparison
     const duration = endDate.getTime() - startDate.getTime();
     const prevEndDate = new Date(startDate.getTime() - 1);
     const prevStartDate = new Date(prevEndDate.getTime() - duration);
 
+    const prevWhere = {
+      ...baseWhere,
+      createdAt: {
+        gte: prevStartDate,
+        lte: prevEndDate,
+      }
+    };
+
     const prevTotals = await prisma.consignmentReport.aggregate({
-      where: {
-        createdAt: {
-          gte: prevStartDate,
-          lte: prevEndDate,
-        }
-      },
+      where: prevWhere,
       _sum: {
         revenue: true,
-        profit20: true
+        profit20: true,
+        profit80: true
       }
     });
 
     const prevRevenue = prevTotals._sum.revenue || 0;
     const prevProfit20 = prevTotals._sum.profit20 || 0;
+    const prevProfit80 = prevTotals._sum.profit80 || 0;
 
     const calculateGrowth = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -160,16 +199,32 @@ export async function GET(request: Request) {
 
     const revenueGrowth = calculateGrowth(totalRevenue, prevRevenue);
     const profit20Growth = calculateGrowth(totalProfit20, prevProfit20);
+    const profit80Growth = calculateGrowth(totalProfit80, prevProfit80);
+
+    // Get current balance if supplier
+    let currentBalance = 0;
+    if (isSupplier && supplierId) {
+      const supplier = await prisma.supplier.findUnique({
+        where: { id: supplierId },
+        select: { balance: true }
+      });
+      currentBalance = supplier?.balance || 0;
+    }
 
     return NextResponse.json({
       totalRevenue,
       totalProfit20,
+      totalProfit80,
+      currentBalance,
       totalSuppliers,
       totalCashiers,
+      totalTransactions,
       revenueTrend,
       topSuppliers,
       revenueGrowth,
-      profit20Growth
+      profit20Growth,
+      profit80Growth,
+      role: session?.user?.role
     });
   } catch (error) {
     console.error("Failed to fetch stats:", error);

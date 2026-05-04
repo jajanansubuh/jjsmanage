@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { Plus, Search, UserPlus, Database, ArrowUpDown, ArrowUp, ArrowDown, Trash2, History, Edit, Loader2 } from "lucide-react";
+import { Plus, Search, UserPlus, Database, ArrowUpDown, ArrowUp, ArrowDown, Trash2, History, Edit, Loader2, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -190,6 +190,7 @@ export default function MasterDataPage() {
       toast.error("Terjadi kesalahan");
     }
   };
+
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
@@ -583,56 +584,98 @@ function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: { supplier
   return (
     <>
       <div className="grid gap-5 py-6">
-        <div className="grid gap-2.5">
-          <Label htmlFor="edit-name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
-          <Input
-            id="edit-name"
-            value={data.name}
-            onChange={(e) => setData({ ...data, name: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-          />
-        </div>
-        <div className="grid gap-2.5">
-          <Label htmlFor="edit-ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
-          <Input
-            id="edit-ownerName"
-            value={data.ownerName || ""}
-            onChange={(e) => setData({ ...data, ownerName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-          />
-        </div>
-        <div className="grid gap-2.5">
-          <Label htmlFor="edit-bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
-          <Input
-            id="edit-bankName"
-            value={data.bankName || ""}
-            onChange={(e) => setData({ ...data, bankName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-          />
-        </div>
-        <div className="grid gap-2.5">
-          <Label htmlFor="edit-accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
-          <Input
-            id="edit-accountNumber"
-            value={data.accountNumber || ""}
-            onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-          />
-        </div>
-      </div>
-      <DialogFooter className="flex flex-col sm:flex-row gap-3">
-        <Button 
-          variant="ghost" 
-          onClick={onDelete} 
-          className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
-        >
-          <Trash2 className="w-4 h-4 mr-2" /> Hapus
-        </Button>
-        <div className="flex gap-3">
-          <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-          <Button onClick={() => onUpdate(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
-        </div>
-      </DialogFooter>
+            <div className="grid gap-2.5">
+              <Label htmlFor="edit-name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
+              <Input
+                id="edit-name"
+                value={data.name}
+                onChange={(e) => setData({ ...data, name: e.target.value })}
+                className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+            <div className="grid gap-2.5">
+              <Label htmlFor="edit-ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
+              <Input
+                id="edit-ownerName"
+                value={data.ownerName || ""}
+                onChange={(e) => setData({ ...data, ownerName: e.target.value })}
+                className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+            <div className="grid gap-2.5">
+              <Label htmlFor="edit-bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
+              <Input
+                id="edit-bankName"
+                value={data.bankName || ""}
+                onChange={(e) => setData({ ...data, bankName: e.target.value })}
+                className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+            <div className="grid gap-2.5">
+              <Label htmlFor="edit-accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
+              <Input
+                id="edit-accountNumber"
+                value={data.accountNumber || ""}
+                onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
+                className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+              />
+            </div>
+
+            <div className="pt-4 border-t border-white/10 mt-2 space-y-4">
+              <div className="flex gap-3">
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  className="flex-1 h-12 rounded-xl border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold"
+                  onClick={async () => {
+                    try {
+                      const username = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                      const password = username + "123";
+                      
+                      const res = await fetch("/api/users", {
+                        method: "POST",
+                        body: JSON.stringify({
+                          username,
+                          password,
+                          name: data.name,
+                          role: "SUPPLIER",
+                          supplierId: data.id
+                        }),
+                        headers: { "Content-Type": "application/json" }
+                      });
+                      
+                      const responseData = await res.json();
+                      
+                      if (res.ok) {
+                        toast.success("Akun berhasil dibuat!", {
+                          description: `Username: ${username} | Password: ${password}`
+                        });
+                      } else {
+                        toast.error(responseData.error || "Gagal membuat akun");
+                      }
+                    } catch (e) {
+                      toast.error("Terjadi kesalahan");
+                    }
+                  }}
+                >
+                  Buat Akun Login
+                </Button>
+              </div>
+            </div>
+          </div>
+        <DialogFooter className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            variant="ghost" 
+            onClick={onDelete} 
+            className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
+          >
+            <Trash2 className="w-4 h-4 mr-2" /> Hapus
+          </Button>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+            <Button onClick={() => onUpdate(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
+          </div>
+        </DialogFooter>
     </>
   );
 }

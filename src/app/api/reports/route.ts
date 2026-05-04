@@ -5,9 +5,17 @@ import prisma from "@/lib/prisma";
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
-    const supplierId = searchParams.get('supplierId');
-    const noteNumber = searchParams.get('noteNumber');
     const date = searchParams.get('date');
+    const noteNumber = searchParams.get('noteNumber');
+    let supplierId = searchParams.get('supplierId');
+    
+    // Check session for Role Based Access
+    const { getSession } = await import("@/lib/auth-utils");
+    const session = await getSession();
+    
+    if (session?.user?.role === "SUPPLIER") {
+      supplierId = session.user.supplierId || "INVALID_SUPPLIER_ID"; // Force their own supplierId
+    }
     
     const whereClause: any = {};
     if (supplierId) whereClause.supplierId = supplierId;

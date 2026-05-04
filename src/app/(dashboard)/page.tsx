@@ -1,22 +1,41 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  TrendingUp,
-  Users,
-  Wallet,
-  ArrowUpRight,
-  ArrowDownRight,
-  DollarSign,
-  Calendar as CalendarIcon
+import { 
+  TrendingUp, 
+  Users, 
+  Wallet, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  DollarSign, 
+  Calendar as CalendarIcon,
+  History
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RevenueTrend } from "@/components/revenue-trend";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { PayoutHistoryModal } from "@/components/payout-history-modal";
 
 
 export default function DashboardPage() {
@@ -27,22 +46,32 @@ function DashboardContent() {
   const [stats, setStats] = useState<{
     totalRevenue: number,
     totalProfit20: number,
+    totalProfit80: number,
+    currentBalance: number,
     totalSuppliers: number,
     totalCashiers: number,
+    totalTransactions: number,
     revenueTrend: any[],
     topSuppliers: any[],
     revenueGrowth: number,
-    profit20Growth: number
+    profit20Growth: number,
+    profit80Growth: number,
+    role?: string
   }>({
     totalRevenue: 0,
     totalProfit20: 0,
+    totalProfit80: 0,
+    currentBalance: 0,
     totalSuppliers: 0,
     totalCashiers: 0,
+    totalTransactions: 0,
     revenueTrend: [],
     topSuppliers: [],
     revenueGrowth: 0,
-    profit20Growth: 0
+    profit20Growth: 0,
+    profit80Growth: 0
   });
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -51,6 +80,14 @@ function DashboardContent() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isMounted && stats.role === "SUPPLIER") {
+      router.push("/payouts");
+    }
+  }, [isMounted, stats.role, router]);
 
   useEffect(() => {
     async function fetchData() {
@@ -72,13 +109,56 @@ function DashboardContent() {
       if (res.ok) {
         const data = await res.json();
         setStats(data);
+        
+        // If supplier, data.role is checked in fetchData but we don't need to fetch payouts here anymore
+        // as the PayoutHistoryModal handles its own fetching when opened.
       }
     }
 
     fetchData();
   }, [startDate, endDate, selectedPeriod]);
 
-  const cards = [
+  const isSupplier = stats.role === "SUPPLIER";
+
+  const cards = isSupplier ? [
+    {
+      title: "Omzet Penjualan",
+      value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalRevenue) : "Rp 0",
+      icon: DollarSign,
+      trend: `${(stats.revenueGrowth || 0) >= 0 ? "+" : ""}${(stats.revenueGrowth || 0).toFixed(1)}%`,
+      trendUp: (stats.revenueGrowth || 0) >= 0,
+      color: "text-blue-400",
+      bg: "bg-blue-400/10"
+    },
+    {
+      title: "Bagi Hasil (80%)",
+      value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalProfit80) : "Rp 0",
+      icon: Wallet,
+      trend: `${(stats.profit80Growth || 0) >= 0 ? "+" : ""}${(stats.profit80Growth || 0).toFixed(1)}%`,
+      trendUp: (stats.profit80Growth || 0) >= 0,
+      color: "text-emerald-400",
+      bg: "bg-emerald-400/10"
+    },
+    {
+      title: "Saldo Saat Ini",
+      value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.currentBalance) : "Rp 0",
+      icon: History,
+      trend: "Lihat Riwayat",
+      trendUp: true,
+      color: "text-amber-400",
+      bg: "bg-amber-400/10",
+      onClick: () => setIsPayoutModalOpen(true)
+    },
+    {
+      title: "Total Transaksi",
+      value: stats.totalTransactions,
+      icon: TrendingUp,
+      trend: "Periode ini",
+      trendUp: true,
+      color: "text-purple-400",
+      bg: "bg-purple-400/10"
+    }
+  ] : [
     {
       title: "Total Pendapatan",
       value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalRevenue) : "Rp 0",
@@ -119,16 +199,22 @@ function DashboardContent() {
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 ease-out relative pb-10">
+      {/* Payout History Modal */}
+      <PayoutHistoryModal 
+        isOpen={isPayoutModalOpen} 
+        onOpenChange={setIsPayoutModalOpen} 
+      />
+
       {/* Subtle background decoration */}
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 -left-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-white">
+        <div className="space-y-2 pt-12 md:pt-0">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
             Ringkasan <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Statistik</span>
           </h2>
-          <p className="text-slate-400 font-medium">Performa bisnis Anda dalam genggaman.</p>
+          <p className="text-slate-400 text-sm sm:text-base font-medium opacity-80">Performa bisnis Anda dalam genggaman.</p>
         </div>
 
         <div className="flex items-center gap-3 p-1.5 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 shadow-xl">
@@ -192,7 +278,11 @@ function DashboardContent() {
         {cards.map((card, index) => (
           <Card
             key={card.title}
-            className="group overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-xl hover:bg-slate-900/60 transition-all duration-500 rounded-3xl shadow-lg hover:shadow-blue-500/5 hover:-translate-y-1"
+            onClick={card.onClick}
+            className={cn(
+              "group overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-xl hover:bg-slate-900/60 transition-all duration-500 rounded-3xl shadow-lg hover:shadow-blue-500/5 hover:-translate-y-1",
+              card.onClick && "cursor-pointer"
+            )}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
@@ -228,7 +318,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-400" />
-                Tren Pendapatan
+                {isSupplier ? "Tren Bagi Hasil" : "Tren Pendapatan"}
               </CardTitle>
               <div className="flex items-center gap-1 bg-slate-950/50 p-1 rounded-lg border border-white/5">
                 {['D', 'W', 'M', 'Y'].map((t) => (
@@ -254,52 +344,54 @@ function DashboardContent() {
             <RevenueTrend data={stats.revenueTrend} />
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3 border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
-          <CardHeader className="border-b border-white/5 bg-white/[0.02] py-5">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-400" />
-                Pendapatan tertinggi
-              </CardTitle>
-              <Link 
-                href="/master" 
-                className={cn(
-                  buttonVariants({ variant: "ghost", size: "sm" }), 
-                  "h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 font-bold text-[10px] uppercase tracking-widest px-3 border border-blue-400/20 transition-all flex items-center justify-center"
-                )}
-              >
-                Data Suplier
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-white/5">
-              {stats.topSuppliers && stats.topSuppliers.length > 0 ? (
-                stats.topSuppliers.map((s, index) => (
-                  <div key={s.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors group cursor-pointer">
-                    <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                      {index + 1}
+        {!isSupplier && (
+          <Card className="lg:col-span-3 border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
+            <CardHeader className="border-b border-white/5 bg-white/[0.02] py-5">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-400" />
+                  Pendapatan tertinggi
+                </CardTitle>
+                <Link 
+                  href="/master" 
+                  className={cn(
+                    buttonVariants({ variant: "ghost", size: "sm" }), 
+                    "h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 font-bold text-[10px] uppercase tracking-widest px-3 border border-blue-400/20 transition-all flex items-center justify-center"
+                  )}
+                >
+                  Data Suplier
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-white/5">
+                {stats.topSuppliers && stats.topSuppliers.length > 0 ? (
+                  stats.topSuppliers.map((s, index) => (
+                    <div key={s.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors group cursor-pointer">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                        {index + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors truncate">{s.name}</p>
+                        <p className="text-xs text-slate-500">{s.transactionCount} Transaksi</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-black text-white">
+                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumSignificantDigits: 3 }).format(s.totalRevenue)}
+                        </p>
+                        <p className="text-[10px] text-emerald-400 font-bold">Terpopuler</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors truncate">{s.name}</p>
-                      <p className="text-xs text-slate-500">{s.transactionCount} Transaksi</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black text-white">
-                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumSignificantDigits: 3 }).format(s.totalRevenue)}
-                      </p>
-                      <p className="text-[10px] text-emerald-400 font-bold">Terpopuler</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center">
+                    <p className="text-sm text-slate-500 font-medium">Belum ada data suplier untuk periode ini.</p>
                   </div>
-                ))
-              ) : (
-                <div className="p-8 text-center">
-                  <p className="text-sm text-slate-500 font-medium">Belum ada data suplier untuk periode ini.</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

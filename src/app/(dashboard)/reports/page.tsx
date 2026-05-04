@@ -32,6 +32,7 @@ export default function ReportsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
   const [noteDetails, setNoteDetails] = useState<any[]>([]);
@@ -47,12 +48,18 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    fetch("/api/reports")
-      .then(res => res.json())
-      .then(data => {
-        setReports(data);
-        setLoading(false);
-      });
+    // Fetch reports and stats (which includes role)
+    Promise.all([
+      fetch("/api/reports").then(res => res.json()),
+      fetch("/api/stats").then(res => res.json())
+    ]).then(([reportsData, statsData]) => {
+      setReports(reportsData);
+      setUserRole(statsData.role);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch dashboard data:", err);
+      setLoading(false);
+    });
   }, []);
 
   // Group reports by noteNumber
@@ -209,19 +216,25 @@ export default function ReportsPage() {
         <Card className="bg-slate-900/40 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group transition-all hover:bg-slate-900/60">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-colors" />
           <div className="relative space-y-4">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Total Mitra Jjs</span>
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+              {userRole === "SUPPLIER" ? "Total Bagi Hasil" : "Total Mitra Jjs"}
+            </span>
             <div className="text-4xl font-black text-emerald-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(totalProfit80)}</div>
-            <div className="text-xs font-bold text-emerald-400/80">Total pendapatan Mitra Jjs</div>
+            <div className="text-xs font-bold text-emerald-400/80">
+              {userRole === "SUPPLIER" ? "Pendapatan bersih Anda" : "Total pendapatan Mitra Jjs"}
+            </div>
           </div>
         </Card>
-        <Card className="bg-slate-900/40 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group transition-all hover:bg-slate-900/60">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-indigo-500/20 transition-colors" />
-          <div className="relative space-y-4">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Total Toko</span>
-            <div className="text-4xl font-black text-blue-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(totalProfit20)}</div>
-            <div className="text-xs font-bold text-blue-400/80">Total pendapatan Toko</div>
-          </div>
-        </Card>
+        {userRole !== "SUPPLIER" && (
+          <Card className="bg-slate-900/40 backdrop-blur-xl border-white/5 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden relative group transition-all hover:bg-slate-900/60">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-indigo-500/20 transition-colors" />
+            <div className="relative space-y-4">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Total Toko</span>
+              <div className="text-4xl font-black text-blue-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(totalProfit20)}</div>
+              <div className="text-xs font-bold text-blue-400/80">Total pendapatan Toko</div>
+            </div>
+          </Card>
+        )}
       </div>
 
       <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl relative z-10">
@@ -303,10 +316,10 @@ export default function ReportsPage() {
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-5 px-8">Tanggal</TableHead>
                   <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Total Pendapatan</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Total Mitra Jjs</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Total Toko</TableHead>
-                  <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Omzet</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Bagi Hasil</TableHead>
+                  {userRole !== "SUPPLIER" && <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Total Toko</TableHead>}
+                  {userRole !== "SUPPLIER" && <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -347,27 +360,31 @@ export default function ReportsPage() {
                       <TableCell className="text-emerald-400 font-black">
                         {isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(r.profit80) : "Rp 0"}
                       </TableCell>
-                      <TableCell className="text-blue-400 font-black">
-                        {isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(r.profit20) : "Rp 0"}
-                      </TableCell>
-                      <TableCell className="text-right px-8">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (r.noteNumber) {
-                              setDeleteNoteNumber(r.noteNumber);
-                              setIsDeleteModalOpen(true);
-                            } else {
-                              toast.error("Nota ini tidak valid untuk dihapus");
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4.5 h-4.5" />
-                        </Button>
-                      </TableCell>
+                      {userRole !== "SUPPLIER" && (
+                        <TableCell className="text-blue-400 font-black">
+                          {isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(r.profit20) : "Rp 0"}
+                        </TableCell>
+                      )}
+                      {userRole !== "SUPPLIER" && (
+                        <TableCell className="text-right px-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 rounded-xl text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all duration-300"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (r.noteNumber) {
+                                setDeleteNoteNumber(r.noteNumber);
+                                setIsDeleteModalOpen(true);
+                              } else {
+                                toast.error("Nota ini tidak valid untuk dihapus");
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4.5 h-4.5" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
@@ -446,15 +463,17 @@ export default function ReportsPage() {
           
           <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-between gap-3">
             <div className="flex gap-3">
-              <Button
-                onClick={() => {
-                  setIsNoteModalOpen(false);
-                  router.push(`/transactions?edit=${selectedNote}`);
-                }}
-                className="h-11 px-6 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Pencil className="w-4 h-4 mr-2" /> Edit Transaksi
-              </Button>
+              {userRole !== "SUPPLIER" && (
+                <Button
+                  onClick={() => {
+                    setIsNoteModalOpen(false);
+                    router.push(`/transactions?edit=${selectedNote}`);
+                  }}
+                  className="h-11 px-6 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 font-bold border border-amber-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Pencil className="w-4 h-4 mr-2" /> Edit Transaksi
+                </Button>
+              )}
               <Button
                 onClick={() => {
                   if (!selectedNote || noteDetails.length === 0) return;

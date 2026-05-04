@@ -8,34 +8,57 @@ import prisma from "@/lib/prisma";
 import { encrypt } from "@/lib/auth-utils";
 
 export async function loginAction(prevState: any, formData: FormData) {
-  const username = formData.get("username") as string;
-  const password = formData.get("password") as string;
+  try {
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
 
-  if (!username || !password) {
-    return { error: "Username dan password wajib diisi" };
+    if (!username || !password) {
+      return { error: "Username dan password wajib diisi" };
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { username },
+    });
+
+    if (!user) {
+      return { error: "Username atau password salah" };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return { error: "Username atau password salah" };
+    }
+
+    // Create session
+    const expires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+    const session = await encrypt({ 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        name: user.name, 
+        role: user.role,
+        // @ts-ignore - supplierId exists in DB but TS cache is stale
+        supplierId: user.supplierId || null
+      }, 
+      expires 
+    });
+
+    // Save session in cookie
+    const cookieStore = await cookies();
+    cookieStore.set("session", session, { 
+      expires, 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production",
+      path: "/", // Ensure cookie is available everywhere
+    });
+
+  } catch (error) {
+    console.error("Login Action Error:", error);
+    return { error: "Terjadi kesalahan pada server saat login" };
   }
 
-  const user = await prisma.user.findUnique({
-    where: { username },
-  });
-
-  if (!user) {
-    return { error: "Username atau password salah" };
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    return { error: "Username atau password salah" };
-  }
-
-  // Create session
-  const expires = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
-  const session = await encrypt({ user: { id: user.id, username: user.username, name: user.name, role: user.role }, expires });
-
-  // Save session in cookie
-  (await cookies()).set("session", session, { expires, httpOnly: true, secure: process.env.NODE_ENV === "production" });
-
+  // Redirect MUST be called outside the try/catch block in some Next.js versions
   redirect("/");
 }
 

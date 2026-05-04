@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, Wallet, ArrowUpDown, History, Calendar as CalendarIcon, Printer } from "lucide-react";
+import { Search, Wallet, ArrowUpDown, History, Calendar as CalendarIcon, Printer, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PayoutHistoryModal } from "@/components/payout-history-modal";
 
 interface DepositItem {
   id: string;
@@ -27,8 +28,17 @@ export default function DepositsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<{ id: string, name: string } | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
+    // Fetch role from lightweight API
+    fetch('/api/auth/role')
+      .then(res => res.json())
+      .then(data => setRole(data.role))
+      .catch(err => console.error("Failed to fetch role:", err));
+
     setLoading(true);
     fetch(`/api/reports?date=${selectedDate}`)
       .then((res) => res.json())
@@ -195,6 +205,13 @@ export default function DepositsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10">
+      <PayoutHistoryModal 
+        isOpen={isHistoryModalOpen} 
+        onOpenChange={setIsHistoryModalOpen} 
+        supplierId={selectedSupplier?.id}
+        supplierName={selectedSupplier?.name}
+      />
+
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <h2 className="text-4xl font-black tracking-tight text-white">
@@ -278,6 +295,13 @@ export default function DepositsPage() {
                       Total Setor <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
                     </div>
                   </TableHead>
+                  {role === "SUPPLIER" && (
+                    <TableHead className="py-6 px-8 text-center">
+                      <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                        Aksi
+                      </div>
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -328,6 +352,22 @@ export default function DepositsPage() {
                           }).format(item.dailyProfit)}
                         </span>
                       </TableCell>
+                      {role === "SUPPLIER" && (
+                        <TableCell className="text-center px-8">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSupplier({ id: item.id, name: item.name });
+                              setIsHistoryModalOpen(true);
+                            }}
+                            className="h-9 w-9 p-0 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-400 transition-all border border-white/5"
+                            title="Lihat Riwayat Transfer"
+                          >
+                            <History className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))
                 )}
