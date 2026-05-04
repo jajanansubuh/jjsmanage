@@ -41,6 +41,7 @@ export async function POST(req: Request) {
     // Support single or multiple reports
     if (Array.isArray(data)) {
       const result = await prisma.$transaction(async (tx) => {
+        // 1. Batch create all reports
         const reports = [];
         for (const r of data) {
           const report = await tx.consignmentReport.create({
@@ -59,16 +60,27 @@ export async function POST(req: Request) {
               notes: r.notes || null,
             },
           });
-          
-          // Update supplier balance
-          await tx.supplier.update({
-            where: { id: r.supplierId },
-            data: { balance: { increment: Number(r.profit80) || 0 } }
-          });
-          
           reports.push(report);
         }
+        
+        // 2. Aggregate balance increments per supplier (reduces DB calls)
+        const balanceMap = new Map<string, number>();
+        for (const r of data) {
+          const profit = Number(r.profit80) || 0;
+          balanceMap.set(r.supplierId, (balanceMap.get(r.supplierId) || 0) + profit);
+        }
+        
+        // 3. Update supplier balances (one query per unique supplier)
+        for (const [supplierId, totalProfit] of balanceMap) {
+          await tx.supplier.update({
+            where: { id: supplierId },
+            data: { balance: { increment: totalProfit } }
+          });
+        }
+        
         return reports;
+      }, {
+        timeout: 30000, // 30 seconds timeout for large batches
       });
       return NextResponse.json(result);
     } else {
@@ -97,14 +109,24 @@ export async function POST(req: Request) {
         });
 
         return report;
+      }, {
+        timeout: 30000,
       });
       return NextResponse.json(result);
     }
   } catch (error) {
     console.error("POST /api/reports error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Check for common Prisma errors
+    if (errorMessage.includes("Foreign key constraint")) {
+      return NextResponse.json({ 
+        error: "Suplier tidak valid", 
+        details: "Salah satu supplierId tidak ditemukan di database. Pastikan suplier masih ada." 
+      }, { status: 400 });
+    }
     return NextResponse.json({ 
       error: "Failed to save report", 
-      details: error instanceof Error ? error.message : String(error) 
+      details: errorMessage
     }, { status: 500 });
   }
 }

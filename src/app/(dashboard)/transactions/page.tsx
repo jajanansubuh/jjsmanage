@@ -112,6 +112,7 @@ function TransactionsPageContent() {
   const [noteNumber, setNoteNumber] = useState(editNoteParam || "");
   const [notes, setNotes] = useState("");
   const editInitializedRef = useRef(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     supplierId: "",
     revenue: "",
@@ -591,12 +592,22 @@ function TransactionsPageContent() {
   };
 
   const handleSave = async () => {
+    if (isSaving) return;
+    
     const validRows = rows.filter(r => r.supplierId && (r.revenue > 0 || r.cost > 0 || r.barcode > 0));
     if (validRows.length === 0) {
       toast.error("Tidak ada data transaksi untuk disimpan");
       return;
     }
 
+    // Validate all supplier IDs exist
+    const invalidRows = validRows.filter(r => !suppliers.some(s => s.id === r.supplierId));
+    if (invalidRows.length > 0) {
+      toast.error(`${invalidRows.length} transaksi memiliki suplier yang tidak valid. Hapus dan tambahkan ulang.`);
+      return;
+    }
+
+    setIsSaving(true);
     try {
       // If in edit mode, delete old records first
       if (isEditMode && editNoteNumber) {
@@ -642,10 +653,16 @@ function TransactionsPageContent() {
         // We don't clear setRows([]) and setNotes("") yet, 
         // we'll do it when the modal is closed or user chooses to finish.
       } else {
-        toast.error("Gagal menyimpan laporan");
+        const errData = await res.json().catch(() => null);
+        const errMsg = errData?.details || errData?.error || "Unknown error";
+        console.error("Save report error:", errData);
+        toast.error(`Gagal menyimpan laporan: ${errMsg}`);
       }
     } catch (error) {
-      toast.error("Terjadi kesalahan");
+      console.error("Save report exception:", error);
+      toast.error(`Terjadi kesalahan: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -754,13 +771,18 @@ function TransactionsPageContent() {
           <Button onClick={handleExportExcel} variant="outline" className="border-white/10 hover:bg-white/5 bg-slate-900 text-white shadow-lg">
             <Download className="w-4 h-4 mr-2" /> Export Excel
           </Button>
-          <Button onClick={handleSave} className={cn(
+          <Button onClick={handleSave} disabled={isSaving} className={cn(
             "shadow-lg px-8",
             isEditMode
               ? "bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
-              : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20"
+              : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20",
+            isSaving && "opacity-50 cursor-not-allowed"
           )}>
-            <Save className="w-4 h-4 mr-2" /> {isEditMode ? 'Simpan Perubahan' : 'Simpan Laporan'}
+            {isSaving ? (
+              <><div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" /> Menyimpan...</>
+            ) : (
+              <><Save className="w-4 h-4 mr-2" /> {isEditMode ? 'Simpan Perubahan' : 'Simpan Laporan'}</>
+            )}
           </Button>
         </div>
       </div>

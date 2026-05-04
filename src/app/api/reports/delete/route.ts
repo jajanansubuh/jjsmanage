@@ -45,6 +45,8 @@ export async function POST(req: Request) {
       await tx.consignmentReport.deleteMany({
         where: { noteNumber: noteNumber }
       });
+    }, {
+      timeout: 30000,
     });
 
     return NextResponse.json({ success: true });

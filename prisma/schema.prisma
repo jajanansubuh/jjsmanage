@@ -29,7 +29,6 @@ model Cashier {
 model ConsignmentReport {
   id            String   @id @default(cuid())
   date          DateTime @default(now())
-  noteNumber    String?  // No Nota
   supplierId    String
   revenue       Float
   profit80      Float
@@ -41,6 +40,7 @@ model ConsignmentReport {
   kukuluban     Float?   @default(0)
   serviceCharge Float?   @default(0)
   tabungan      Float?   @default(0)
+  noteNumber    String?
   notes         String?
   supplier      Supplier @relation(fields: [supplierId], references: [id])
 }

@@ -26,9 +26,6 @@ export default function MasterDataPage() {
   const [cashiers, setCashiers] = useState<{ id: string, name: string, code: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [newSupplier, setNewSupplier] = useState({ name: "", ownerName: "", bankName: "", accountNumber: "" });
-  const [newCashier, setNewCashier] = useState({ name: "", code: "" });
-
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
 
@@ -118,17 +115,16 @@ export default function MasterDataPage() {
     }
   }
 
-  async function handleAddSupplier() {
+  async function handleAddSupplier(data: any) {
     try {
       const res = await fetch("/api/suppliers", {
         method: "POST",
-        body: JSON.stringify(newSupplier),
+        body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" }
       });
       if (res.ok) {
         toast.success("Suplier berhasil ditambahkan");
         setIsSupplierDialogOpen(false);
-        setNewSupplier({ name: "", ownerName: "", bankName: "", accountNumber: "" });
         fetchData();
       } else {
         toast.error("Gagal menambahkan suplier");
@@ -138,17 +134,16 @@ export default function MasterDataPage() {
     }
   }
 
-  async function handleAddCashier() {
+  async function handleAddCashier(data: any) {
     try {
       const res = await fetch("/api/cashiers", {
         method: "POST",
-        body: JSON.stringify(newCashier),
+        body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" }
       });
       if (res.ok) {
         toast.success("Kasir berhasil ditambahkan");
         setIsCashierDialogOpen(false);
-        setNewCashier({ name: "", code: "" });
         fetchData();
       } else {
         toast.error("Gagal menambahkan kasir");
@@ -177,12 +172,12 @@ export default function MasterDataPage() {
     }
   };
 
-  const handleUpdateSupplier = async () => {
+  const handleUpdateSupplier = async (data: any) => {
     try {
-      const res = await fetch(`/api/suppliers/${selectedSupplier.id}`, {
+      const res = await fetch(`/api/suppliers/${data.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(selectedSupplier),
+        body: JSON.stringify(data),
       });
       if (res.ok) {
         toast.success("Suplier berhasil diperbarui");
@@ -257,52 +252,10 @@ export default function MasterDataPage() {
                     <DialogTitle className="text-2xl font-black text-white">Tambah Suplier</DialogTitle>
                     <DialogDescription className="text-slate-400 font-medium">Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-5 py-6">
-                    <div className="grid gap-2.5">
-                      <Label htmlFor="name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
-                      <Input
-                        id="name"
-                        placeholder="Contoh: Abang"
-                        value={newSupplier.name}
-                        onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                        className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                      />
-                    </div>
-                    <div className="grid gap-2.5">
-                      <Label htmlFor="ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
-                      <Input
-                        id="ownerName"
-                        placeholder="Contoh: Bpk. Ucup"
-                        value={newSupplier.ownerName}
-                        onChange={(e) => setNewSupplier({ ...newSupplier, ownerName: e.target.value })}
-                        className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                      />
-                    </div>
-                    <div className="grid gap-2.5">
-                      <Label htmlFor="bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
-                      <Input
-                        id="bankName"
-                        placeholder="Contoh: BCA, Mandiri, dll"
-                        value={newSupplier.bankName}
-                        onChange={(e) => setNewSupplier({ ...newSupplier, bankName: e.target.value })}
-                        className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                      />
-                    </div>
-                    <div className="grid gap-2.5">
-                      <Label htmlFor="accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
-                      <Input
-                        id="accountNumber"
-                        placeholder="Contoh: 1234567890"
-                        value={newSupplier.accountNumber}
-                        onChange={(e) => setNewSupplier({ ...newSupplier, accountNumber: e.target.value })}
-                        className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter className="gap-3 sm:gap-0">
-                    <Button variant="ghost" onClick={() => setIsSupplierDialogOpen(false)} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-                    <Button onClick={handleAddSupplier} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Simpan Suplier</Button>
-                  </DialogFooter>
+                  <SupplierAddForm 
+                    onSave={handleAddSupplier} 
+                    onCancel={() => setIsSupplierDialogOpen(false)} 
+                  />
                 </DialogContent>
               </Dialog>
             </CardHeader>
@@ -396,30 +349,10 @@ export default function MasterDataPage() {
                     <DialogTitle>Tambah Kasir Baru</DialogTitle>
                     <DialogDescription>Masukkan detail kasir untuk disimpan ke sistem.</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">Nama Kasir</Label>
-                      <Input
-                        id="name"
-                        placeholder="Contoh: Somad"
-                        value={newCashier.name}
-                        onChange={(e) => setNewCashier({ ...newCashier, name: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="code">Kode Kasir</Label>
-                      <Input
-                        id="code"
-                        placeholder="KSR001"
-                        value={newCashier.code}
-                        onChange={(e) => setNewCashier({ ...newCashier, code: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsCashierDialogOpen(false)}>Batal</Button>
-                    <Button onClick={handleAddCashier} className="bg-purple-600 hover:bg-purple-700">Simpan</Button>
-                  </DialogFooter>
+                  <CashierAddForm 
+                    onSave={handleAddCashier} 
+                    onCancel={() => setIsCashierDialogOpen(false)} 
+                  />
                 </DialogContent>
               </Dialog>
             </CardHeader>
@@ -469,61 +402,16 @@ export default function MasterDataPage() {
             <DialogDescription className="text-slate-400 font-medium">Ubah atau hapus data suplier ini.</DialogDescription>
           </DialogHeader>
           {selectedSupplier && (
-            <div className="grid gap-5 py-6">
-              <div className="grid gap-2.5">
-                <Label htmlFor="edit-name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
-                <Input
-                  id="edit-name"
-                  value={selectedSupplier.name}
-                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, name: e.target.value })}
-                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-              <div className="grid gap-2.5">
-                <Label htmlFor="edit-ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
-                <Input
-                  id="edit-ownerName"
-                  value={selectedSupplier.ownerName || ""}
-                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, ownerName: e.target.value })}
-                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-              <div className="grid gap-2.5">
-                <Label htmlFor="edit-bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
-                <Input
-                  id="edit-bankName"
-                  value={selectedSupplier.bankName || ""}
-                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, bankName: e.target.value })}
-                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-              <div className="grid gap-2.5">
-                <Label htmlFor="edit-accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
-                <Input
-                  id="edit-accountNumber"
-                  value={selectedSupplier.accountNumber || ""}
-                  onChange={(e) => setSelectedSupplier({ ...selectedSupplier, accountNumber: e.target.value })}
-                  className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => {
-                setSupplierToDelete(selectedSupplier?.id);
+            <SupplierEditForm
+              supplier={selectedSupplier}
+              onUpdate={handleUpdateSupplier}
+              onDelete={() => {
+                setSupplierToDelete(selectedSupplier.id);
                 setIsDeleteConfirmOpen(true);
-              }} 
-              className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
-            >
-              <Trash2 className="w-4 h-4 mr-2" /> Hapus
-            </Button>
-            <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setIsManageDialogOpen(false)} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-              <Button onClick={handleUpdateSupplier} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
-            </div>
-          </DialogFooter>
+              }}
+              onCancel={() => setIsManageDialogOpen(false)}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
@@ -631,5 +519,153 @@ export default function MasterDataPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function SupplierAddForm({ onSave, onCancel }: { onSave: (data: any) => void, onCancel: () => void }) {
+  const [data, setData] = useState({ name: "", ownerName: "", bankName: "", accountNumber: "" });
+
+  return (
+    <>
+      <div className="grid gap-5 py-6">
+        <div className="grid gap-2.5">
+          <Label htmlFor="name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
+          <Input
+            id="name"
+            placeholder="Contoh: Abang"
+            value={data.name}
+            onChange={(e) => setData({ ...data, name: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
+          <Input
+            id="ownerName"
+            placeholder="Contoh: Bpk. Ucup"
+            value={data.ownerName}
+            onChange={(e) => setData({ ...data, ownerName: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
+          <Input
+            id="bankName"
+            placeholder="Contoh: BCA, Mandiri, dll"
+            value={data.bankName}
+            onChange={(e) => setData({ ...data, bankName: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
+          <Input
+            id="accountNumber"
+            placeholder="Contoh: 1234567890"
+            value={data.accountNumber}
+            onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+      </div>
+      <DialogFooter className="gap-3 sm:gap-0">
+        <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+        <Button onClick={() => onSave(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Simpan Suplier</Button>
+      </DialogFooter>
+    </>
+  );
+}
+
+function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: { supplier: any, onUpdate: (data: any) => void, onDelete: () => void, onCancel: () => void }) {
+  const [data, setData] = useState(supplier);
+
+  return (
+    <>
+      <div className="grid gap-5 py-6">
+        <div className="grid gap-2.5">
+          <Label htmlFor="edit-name" className="text-slate-300 font-bold ml-1">Nama UMKM</Label>
+          <Input
+            id="edit-name"
+            value={data.name}
+            onChange={(e) => setData({ ...data, name: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="edit-ownerName" className="text-slate-300 font-bold ml-1">Nama Pemilik</Label>
+          <Input
+            id="edit-ownerName"
+            value={data.ownerName || ""}
+            onChange={(e) => setData({ ...data, ownerName: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="edit-bankName" className="text-slate-300 font-bold ml-1">Nama Bank</Label>
+          <Input
+            id="edit-bankName"
+            value={data.bankName || ""}
+            onChange={(e) => setData({ ...data, bankName: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+        <div className="grid gap-2.5">
+          <Label htmlFor="edit-accountNumber" className="text-slate-300 font-bold ml-1">No Rekening</Label>
+          <Input
+            id="edit-accountNumber"
+            value={data.accountNumber || ""}
+            onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+          />
+        </div>
+      </div>
+      <DialogFooter className="flex flex-col sm:flex-row gap-3">
+        <Button 
+          variant="ghost" 
+          onClick={onDelete} 
+          className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
+        >
+          <Trash2 className="w-4 h-4 mr-2" /> Hapus
+        </Button>
+        <div className="flex gap-3">
+          <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+          <Button onClick={() => onUpdate(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
+        </div>
+      </DialogFooter>
+    </>
+  );
+}
+
+function CashierAddForm({ onSave, onCancel }: { onSave: (data: any) => void, onCancel: () => void }) {
+  const [data, setData] = useState({ name: "", code: "" });
+
+  return (
+    <>
+      <div className="grid gap-4 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="name">Nama Kasir</Label>
+          <Input
+            id="name"
+            placeholder="Contoh: Somad"
+            value={data.name}
+            onChange={(e) => setData({ ...data, name: e.target.value })}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="code">Kode Kasir</Label>
+          <Input
+            id="code"
+            placeholder="KSR001"
+            value={data.code}
+            onChange={(e) => setData({ ...data, code: e.target.value })}
+          />
+        </div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={onCancel}>Batal</Button>
+        <Button onClick={() => onSave(data)} className="bg-purple-600 hover:bg-purple-700 text-white">Simpan</Button>
+      </DialogFooter>
+    </>
   );
 }

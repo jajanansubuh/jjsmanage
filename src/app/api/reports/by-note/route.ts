@@ -21,11 +21,20 @@ export async function DELETE(req: Request) {
     }
 
     await prisma.$transaction(async (tx) => {
-      // Reverse supplier balances
+      // Aggregate balance decrements per supplier
+      const balanceMap = new Map<string, number>();
       for (const report of existingReports) {
+        balanceMap.set(
+          report.supplierId,
+          (balanceMap.get(report.supplierId) || 0) + report.profit80
+        );
+      }
+
+      // Reverse supplier balances (one query per unique supplier)
+      for (const [supplierId, totalProfit] of balanceMap) {
         await tx.supplier.update({
-          where: { id: report.supplierId },
-          data: { balance: { decrement: report.profit80 } },
+          where: { id: supplierId },
+          data: { balance: { decrement: totalProfit } },
         });
       }
 
@@ -33,6 +42,8 @@ export async function DELETE(req: Request) {
       await tx.consignmentReport.deleteMany({
         where: { noteNumber },
       });
+    }, {
+      timeout: 30000,
     });
 
     return NextResponse.json({ success: true, deleted: existingReports.length });
