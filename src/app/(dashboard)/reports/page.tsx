@@ -448,24 +448,6 @@ export default function ReportsPage() {
             <div className="flex gap-3">
               <Button
                 onClick={() => {
-                  if (!selectedNote || noteDetails.length === 0) return;
-                  const editData = {
-                    noteNumber: selectedNote,
-                    date: noteDetails[0]?.date || noteDetails[0]?.createdAt,
-                    rows: noteDetails.map((d: any) => ({
-                      id: d.id,
-                      supplierId: d.supplierId,
-                      revenue: d.revenue,
-                      barcode: d.barcode,
-                      cost: d.cost,
-                      serviceCharge: d.serviceCharge || 0,
-                      kukuluban: d.kukuluban || 0,
-                      tabungan: d.tabungan || 0,
-                      profit80: d.profit80,
-                      profit20: d.profit20,
-                    })),
-                  };
-                  localStorage.setItem("jjs-edit-transaction", JSON.stringify(editData));
                   setIsNoteModalOpen(false);
                   router.push(`/transactions?edit=${selectedNote}`);
                 }}

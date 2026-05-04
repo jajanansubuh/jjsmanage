@@ -34,6 +34,7 @@ import {
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Calculator, Search, ChevronDown, Check, ArrowUpDown, Calendar as CalendarIcon, Download, Printer, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { saveTransactionAction } from "@/lib/actions/transactions";
 
 interface ReportRow {
   id: string;
@@ -188,88 +189,50 @@ function TransactionsPageContent() {
         }
       });
 
-    // Check for edit mode — load rows from localStorage
+    // Check for edit mode — load rows from API directly
     if (editNoteParam && !editInitializedRef.current) {
       editInitializedRef.current = true;
-      const editDataStr = localStorage.getItem("jjs-edit-transaction");
-      if (editDataStr) {
+      const fetchEditData = async () => {
         try {
-          const editData = JSON.parse(editDataStr);
-          if (editData.noteNumber === editNoteParam) {
+          const res = await fetch(`/api/reports?noteNumber=${encodeURIComponent(editNoteParam)}`);
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
             setIsEditMode(true);
-            setEditNoteNumber(editData.noteNumber);
-            setNoteNumber(editData.noteNumber);
-            if (editData.date) {
-              setSelectedDate(format(new Date(editData.date), "yyyy-MM-dd"));
+            setEditNoteNumber(editNoteParam);
+            setNoteNumber(editNoteParam);
+            if (data[0].date) {
+              setSelectedDate(format(new Date(data[0].date), "yyyy-MM-dd"));
             }
-            if (editData.notes) {
-              setNotes(editData.notes);
+            if (data[0].notes) {
+              setNotes(data[0].notes);
             }
-            if (editData.rows && Array.isArray(editData.rows)) {
-              setRows(editData.rows.map((r: any) => ({
-                id: Math.random().toString(36).substr(2, 9),
-                supplierId: r.supplierId,
-                revenue: r.revenue || 0,
-                barcode: r.barcode || 0,
-                cost: r.cost || 0,
-                serviceCharge: r.serviceCharge || 0,
-                kukuluban: r.kukuluban || 0,
-                tabungan: r.tabungan || 0,
-                profit80: r.profit80 || 0,
-                profit20: r.profit20 || 0,
-              })));
-            }
-            localStorage.removeItem("jjs-edit-transaction");
-            toast.info(`Mode edit nota: ${editData.noteNumber}`);
-            return; // Don't load from localStorage in edit mode
-          }
-        } catch (e) {
-          console.error("Failed to parse edit data:", e);
-        }
-      } else {
-        // No localStorage data — fetch directly from API
-        const fetchEditData = async () => {
-          try {
-            const res = await fetch(`/api/reports?noteNumber=${encodeURIComponent(editNoteParam)}`);
-            const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-              setIsEditMode(true);
-              setEditNoteNumber(editNoteParam);
-              setNoteNumber(editNoteParam);
-              if (data[0].date) {
-                setSelectedDate(format(new Date(data[0].date), "yyyy-MM-dd"));
-              }
-              if (data[0].notes) {
-                setNotes(data[0].notes);
-              }
-              setRows(data.map((r: any) => ({
-                id: Math.random().toString(36).substr(2, 9),
-                supplierId: r.supplierId,
-                revenue: r.revenue || 0,
-                barcode: r.barcode || 0,
-                cost: r.cost || 0,
-                serviceCharge: r.serviceCharge || 0,
-                kukuluban: r.kukuluban || 0,
-                tabungan: r.tabungan || 0,
-                profit80: r.profit80 || 0,
-                profit20: r.profit20 || 0,
-              })));
-              toast.info(`Mode edit nota: ${editNoteParam}`);
-            } else {
-              toast.error("Data nota tidak ditemukan");
-              setIsEditMode(false);
-              setEditNoteNumber(null);
-            }
-          } catch (e) {
-            console.error("Failed to fetch edit data from API:", e);
-            toast.error("Gagal memuat data nota");
+            setRows(data.map((r: any) => ({
+              id: Math.random().toString(36).substr(2, 9),
+              supplierId: r.supplierId,
+              revenue: r.revenue || 0,
+              barcode: r.barcode || 0,
+              cost: r.cost || 0,
+              serviceCharge: r.serviceCharge || 0,
+              kukuluban: r.kukuluban || 0,
+              tabungan: r.tabungan || 0,
+              profit80: r.profit80 || 0,
+              profit20: r.profit20 || 0,
+            })));
+            toast.info(`Mode edit nota: ${editNoteParam}`);
+          } else {
+            toast.error("Data nota tidak ditemukan");
             setIsEditMode(false);
             setEditNoteNumber(null);
           }
-        };
-        fetchEditData();
-        return; // Don't load from localStorage
-      }
+        } catch (e) {
+          console.error("Failed to fetch edit data from API:", e);
+          toast.error("Gagal memuat data nota");
+          setIsEditMode(false);
+          setEditNoteNumber(null);
+        }
+      };
+      fetchEditData();
+      return; // Don't load other local storage rows
     }
 
     // Load from localStorage (only when not in edit mode)
@@ -609,33 +572,28 @@ function TransactionsPageContent() {
 
     setIsSaving(true);
     try {
-      // If in edit mode, delete old records first
-      if (isEditMode && editNoteNumber) {
-        const deleteRes = await fetch(`/api/reports/by-note?noteNumber=${encodeURIComponent(editNoteNumber)}`, {
-          method: "DELETE",
-        });
-        if (!deleteRes.ok) {
-          const err = await deleteRes.json();
-          toast.error(`Gagal menghapus data lama: ${err.error || 'Unknown error'}`);
-          return;
-        }
-      }
-
       const currentNoteNumber = noteNumber || `NT-${format(new Date(), "yyyyMMddHHmmss")}`;
 
-      const res = await fetch("/api/reports", {
-        method: "POST",
-        body: JSON.stringify(validRows.map(r => ({
-          ...r,
-          noteNumber: currentNoteNumber,
-          date: selectedDate,
-          notes: notes,
-          cashierId: selectedCashiers[0] || ""
-        }))),
-        headers: { "Content-Type": "application/json" }
+      const result = await saveTransactionAction({
+        isEditMode: isEditMode,
+        editNoteNumber: editNoteNumber,
+        noteNumber: currentNoteNumber,
+        date: selectedDate,
+        notes: notes,
+        rows: validRows.map(r => ({
+          supplierId: r.supplierId,
+          revenue: r.revenue,
+          barcode: r.barcode,
+          cost: r.cost,
+          serviceCharge: r.serviceCharge,
+          kukuluban: r.kukuluban,
+          tabungan: r.tabungan,
+          profit80: r.profit80,
+          profit20: r.profit20
+        }))
       });
 
-      if (res.ok) {
+      if (result.success) {
         toast.success(isEditMode ? "Transaksi berhasil diperbarui" : "Laporan berhasil disimpan");
         
         // Prepare info for printing modal
@@ -649,18 +607,15 @@ function TransactionsPageContent() {
           cashierName: cashierName
         });
         setIsSaveSuccessModalOpen(true);
-
-        // We don't clear setRows([]) and setNotes("") yet, 
-        // we'll do it when the modal is closed or user chooses to finish.
       } else {
-        const errData = await res.json().catch(() => null);
-        const errMsg = errData?.details || errData?.error || "Unknown error";
-        console.error("Save report error:", errData);
-        toast.error(`Gagal menyimpan laporan: ${errMsg}`);
+        toast.error(result.error || "Gagal menyimpan laporan");
+        if (result.details) {
+          console.error("Save error details:", result.details);
+        }
       }
     } catch (error) {
       console.error("Save report exception:", error);
-      toast.error(`Terjadi kesalahan: ${error instanceof Error ? error.message : String(error)}`);
+      toast.error(`Terjadi kesalahan sistem saat menyimpan`);
     } finally {
       setIsSaving(false);
     }

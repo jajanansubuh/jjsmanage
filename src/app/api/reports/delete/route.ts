@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
     const { noteNumber, username, password } = await req.json();
 
-    // 1. Simple Credential Validation (In a real app, use auth session or bcrypt)
-    // We'll check against existing user or a hardcoded master for this specific requirement
+    // 1. Validate credentials against database
     const user = await prisma.user.findFirst({
       where: { 
         username: username,
-        // Assuming password matches for demo, but should use hashing in production
       }
     });
 
-    if (!user || user.password !== password) {
-      return NextResponse.json({ error: "Kredensial tidak valid" }, { status: 401 });
+    if (!user) {
+      return NextResponse.json({ error: "Username tidak ditemukan" }, { status: 401 });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json({ error: "Password salah" }, { status: 401 });
     }
 
     // 2. Find all reports under this note number to get the refund amounts

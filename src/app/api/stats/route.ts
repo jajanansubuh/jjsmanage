@@ -30,44 +30,60 @@ export async function GET(request: Request) {
       startDate = startOfYear(new Date()); // fallback
     }
 
-    const reports = await prisma.consignmentReport.findMany({
-      where: {
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        }
-      },
-      include: {
-        supplier: true
-      },
-      orderBy: { createdAt: "asc" }
+    const dateFilter = {
+      gte: startDate,
+      lte: endDate,
+    };
+
+    // 1. Agregasi Total Revenue & Profit
+    const totals = await prisma.consignmentReport.aggregate({
+      where: { createdAt: dateFilter },
+      _sum: {
+        revenue: true,
+        profit20: true
+      }
     });
 
-    const totalRevenue = reports.reduce((acc, curr) => acc + curr.revenue, 0);
-    const totalProfit20 = reports.reduce((acc, curr) => acc + curr.profit20, 0);
+    const totalRevenue = totals._sum.revenue || 0;
+    const totalProfit20 = totals._sum.profit20 || 0;
+
+    // 2. Count Suppliers & Cashiers
     const totalSuppliers = await prisma.supplier.count();
     const totalCashiers = await prisma.cashier.count();
 
-    // Calculate Top Suppliers
-    const supplierStatsMap = new Map();
-    reports.forEach(r => {
-      const s = r.supplier;
-      if (!supplierStatsMap.has(s.id)) {
-        supplierStatsMap.set(s.id, {
-          id: s.id,
-          name: s.name,
-          totalRevenue: 0,
-          transactionCount: 0
-        });
-      }
-      const stats = supplierStatsMap.get(s.id);
-      stats.totalRevenue += r.revenue;
-      stats.transactionCount += 1;
+    // 3. Top Suppliers dengan groupBy
+    const topSupplierGroups = await prisma.consignmentReport.groupBy({
+      by: ['supplierId'],
+      where: { createdAt: dateFilter },
+      _sum: { revenue: true },
+      _count: { id: true },
+      orderBy: { _sum: { revenue: 'desc' } },
+      take: 5
     });
 
-    const topSuppliers = Array.from(supplierStatsMap.values())
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
-      .slice(0, 5);
+    // Ambil nama supplier untuk top 5
+    const topSupplierIds = topSupplierGroups.map(g => g.supplierId);
+    const topSuppliersData = await prisma.supplier.findMany({
+      where: { id: { in: topSupplierIds } },
+      select: { id: true, name: true }
+    });
+
+    const topSuppliers = topSupplierGroups.map(g => {
+      const supplier = topSuppliersData.find(s => s.id === g.supplierId);
+      return {
+        id: g.supplierId,
+        name: supplier?.name || "Unknown",
+        totalRevenue: g._sum.revenue || 0,
+        transactionCount: g._count.id || 0
+      };
+    });
+
+    // 4. Trend Data - Hanya mengambil kolom yang diperlukan untuk menghemat memory
+    const trendRecords = await prisma.consignmentReport.findMany({
+      where: { createdAt: dateFilter },
+      select: { createdAt: true, revenue: true },
+      orderBy: { createdAt: "asc" }
+    });
 
     let revenueTrend: any[] = [];
 
@@ -79,7 +95,7 @@ export async function GET(request: Request) {
         daysMap.set(format(currentDate, "dd MMM", { locale: id }), 0);
         currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
       }
-      reports.forEach(r => {
+      trendRecords.forEach(r => {
         const key = format(new Date(r.createdAt), "dd MMM", { locale: id });
         if (daysMap.has(key)) daysMap.set(key, daysMap.get(key) + r.revenue);
       });
@@ -94,7 +110,7 @@ export async function GET(request: Request) {
         weeksMap.set(weekKey, 0);
         currentWeek = new Date(currentWeek.setDate(currentWeek.getDate() + 7));
       }
-      reports.forEach(r => {
+      trendRecords.forEach(r => {
         const key = `Mg ${format(new Date(r.createdAt), "w", { locale: id })}`;
         if (weeksMap.has(key)) weeksMap.set(key, weeksMap.get(key) + r.revenue);
       });
@@ -109,29 +125,33 @@ export async function GET(request: Request) {
         monthsMap.set(monthKey, 0);
         currentMonthDate = new Date(currentMonthDate.setMonth(currentMonthDate.getMonth() + 1));
       }
-      reports.forEach(r => {
+      trendRecords.forEach(r => {
         const key = format(new Date(r.createdAt), "MMM", { locale: id });
         if (monthsMap.has(key)) monthsMap.set(key, monthsMap.get(key) + r.revenue);
       });
       revenueTrend = Array.from(monthsMap.entries()).map(([name, total]) => ({ name, total }));
     }
 
-    // Calculate Previous Period for Comparison
+    // 5. Calculate Previous Period for Comparison using aggregation
     const duration = endDate.getTime() - startDate.getTime();
     const prevEndDate = new Date(startDate.getTime() - 1);
     const prevStartDate = new Date(prevEndDate.getTime() - duration);
 
-    const prevReports = await prisma.consignmentReport.findMany({
+    const prevTotals = await prisma.consignmentReport.aggregate({
       where: {
         createdAt: {
           gte: prevStartDate,
           lte: prevEndDate,
         }
+      },
+      _sum: {
+        revenue: true,
+        profit20: true
       }
     });
 
-    const prevRevenue = prevReports.reduce((acc, curr) => acc + curr.revenue, 0);
-    const prevProfit20 = prevReports.reduce((acc, curr) => acc + curr.profit20, 0);
+    const prevRevenue = prevTotals._sum.revenue || 0;
+    const prevProfit20 = prevTotals._sum.profit20 || 0;
 
     const calculateGrowth = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -152,6 +172,7 @@ export async function GET(request: Request) {
       profit20Growth
     });
   } catch (error) {
+    console.error("Failed to fetch stats:", error);
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }
