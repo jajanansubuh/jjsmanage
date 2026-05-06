@@ -48,11 +48,15 @@ export default function ReportsPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    // Fetch reports and stats (which includes role)
+    setLoading(true);
+    
+    // Fetch reports with pagination (default to page 1)
     Promise.all([
-      fetch("/api/reports").then(res => res.json()),
+      fetch("/api/reports?limit=500").then(res => res.json()), // Fetch more for grouping
       fetch("/api/stats").then(res => res.json())
-    ]).then(([reportsData, statsData]) => {
+    ]).then(([data, statsData]) => {
+      // Handle both old array format and new paginated object format for backward compatibility
+      const reportsData = Array.isArray(data) ? data : (data.reports || []);
       setReports(reportsData);
       setUserRole(statsData.role);
       setLoading(false);
@@ -172,9 +176,10 @@ export default function ReportsPage() {
         setIsDeleteModalOpen(false);
         setDeleteCredentials({ username: "", password: "" });
         // Refresh data
-        const refreshRes = await fetch("/api/reports");
-        const newData = await refreshRes.json();
-        setReports(newData);
+        const refreshRes = await fetch("/api/reports?limit=500");
+        const data = await refreshRes.json();
+        const reportsData = Array.isArray(data) ? data : (data.reports || []);
+        setReports(reportsData);
       } else {
         setDeleteError(result.error || "Gagal menghapus");
       }
@@ -217,7 +222,7 @@ export default function ReportsPage() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-emerald-500/20 transition-colors" />
           <div className="relative space-y-4">
             <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-              {userRole === "SUPPLIER" ? "Total Bagi Hasil" : "Total Mitra Jjs"}
+              Total Mitra Jjs
             </span>
             <div className="text-4xl font-black text-emerald-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(totalProfit80)}</div>
             <div className="text-xs font-bold text-emerald-400/80">
@@ -317,7 +322,7 @@ export default function ReportsPage() {
                   <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-5 px-8">Tanggal</TableHead>
                   <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
                   <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Omzet</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Bagi Hasil</TableHead>
+                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Mitra Jjs</TableHead>
                   {userRole !== "SUPPLIER" && <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500">Total Toko</TableHead>}
                   {userRole !== "SUPPLIER" && <TableHead className="text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>}
                 </TableRow>
@@ -424,7 +429,7 @@ export default function ReportsPage() {
                       <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Barcode</TableHead>
                       <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Potongan</TableHead>
                       <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-500 text-emerald-400">Mitra Jjs</TableHead>
-                      <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-500 text-blue-400">Toko</TableHead>
+                      {userRole !== "SUPPLIER" && <TableHead className="text-right text-[10px] font-black uppercase tracking-widest text-slate-500 text-blue-400">Toko</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -438,7 +443,7 @@ export default function ReportsPage() {
                           <TableCell className="text-right text-slate-400">{new Intl.NumberFormat("id-ID").format(d.barcode)}</TableCell>
                           <TableCell className="text-right text-red-400/70 text-xs">-{new Intl.NumberFormat("id-ID").format(totalDeductions)}</TableCell>
                           <TableCell className="text-right font-black text-emerald-400">{new Intl.NumberFormat("id-ID").format(d.profit80)}</TableCell>
-                          <TableCell className="text-right font-black text-blue-400">{new Intl.NumberFormat("id-ID").format(d.profit20)}</TableCell>
+                          {userRole !== "SUPPLIER" && <TableCell className="text-right font-black text-blue-400">{new Intl.NumberFormat("id-ID").format(d.profit20)}</TableCell>}
                         </TableRow>
                       );
                     })}
@@ -451,9 +456,11 @@ export default function ReportsPage() {
                       <TableCell className="text-right text-emerald-400">
                         {new Intl.NumberFormat("id-ID").format(noteDetails.reduce((sum, d) => sum + d.profit80, 0))}
                       </TableCell>
-                      <TableCell className="text-right text-blue-400">
-                        {new Intl.NumberFormat("id-ID").format(noteDetails.reduce((sum, d) => sum + d.profit20, 0))}
-                      </TableCell>
+                      {userRole !== "SUPPLIER" && (
+                        <TableCell className="text-right text-blue-400">
+                          {new Intl.NumberFormat("id-ID").format(noteDetails.reduce((sum, d) => sum + d.profit20, 0))}
+                        </TableCell>
+                      )}
                     </TableRow>
                   </TableBody>
                 </Table>
@@ -515,7 +522,7 @@ export default function ReportsPage() {
                       <td align="right">${fmt(d.kukuluban || 0)}</td>
                       <td align="right">${fmt(d.tabungan || 0)}</td>
                       <td align="right">${fmt(d.profit80)}</td>
-                      <td align="right">${fmt(d.profit20)}</td>
+                      ${userRole !== "SUPPLIER" ? `<td align="right">${fmt(d.profit20)}</td>` : ""}
                     </tr>
                   `).join('');
 
@@ -535,7 +542,7 @@ export default function ReportsPage() {
                           table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
                           th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
                           td { padding: 6px 5px; border: 1px solid #ddd; }
-                          tfoot td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+                          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
                           .footer-sig { margin-top: 40px; display: flex; justify-content: space-between; }
                           .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 50px; font-size: 11px; font-weight: bold; }
                         </style>
@@ -564,14 +571,12 @@ export default function ReportsPage() {
                               <th align="right">Kukuluban</th>
                               <th align="right">Tabungan</th>
                               <th align="right">Mitra Jjs</th>
-                              <th align="right">Toko</th>
+                              ${userRole !== "SUPPLIER" ? `<th align="right">Toko</th>` : ""}
                             </tr>
                           </thead>
                           <tbody>
                             ${tableRows}
-                          </tbody>
-                          <tfoot>
-                            <tr>
+                            <tr class="total-row">
                               <td colspan="2" align="center">TOTAL</td>
                               <td align="right">${fmt(totalRevenue)}</td>
                               <td align="right">${fmt(totalCost)}</td>
@@ -580,14 +585,14 @@ export default function ReportsPage() {
                               <td align="right">${fmt(totalKukuluban)}</td>
                               <td align="right">${fmt(totalTabungan)}</td>
                               <td align="right">${fmt(totalProfit80)}</td>
-                              <td align="right">${fmt(totalProfit20)}</td>
+                              ${userRole !== "SUPPLIER" ? `<td align="right">${fmt(totalProfit20)}</td>` : ""}
                             </tr>
-                          </tfoot>
+                          </tbody>
                         </table>
 
                         <div class="footer-sig">
-                          <div class="sig">Kasir / Admin</div>
-                          <div class="sig">Manager / Owner</div>
+                          <div class="sig">Kasir</div>
+                          <div class="sig">Admin</div>
                         </div>
                       </body>
                     </html>

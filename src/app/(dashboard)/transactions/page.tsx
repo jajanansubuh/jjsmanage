@@ -486,7 +486,7 @@ function TransactionsPageContent() {
             table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
             th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
             td { padding: 6px 5px; border: 1px solid #ddd; }
-            tfoot td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+            .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
             .totals-summary { margin-top: 20px; text-align: right; font-weight: bold; font-size: 14px; }
             .footer-sig { margin-top: 40px; display: flex; justify-content: space-between; }
             .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 50px; font-size: 11px; font-weight: bold; }
@@ -494,7 +494,7 @@ function TransactionsPageContent() {
         </head>
         <body>
           <div class="header">
-            <h1>Laporan Bagi Hasil - Jajanan Subuh</h1>
+            <h1>Laporan Mitra Jjs - Jajanan Subuh</h1>
           </div>
           
           <div class="meta-grid">
@@ -522,9 +522,7 @@ function TransactionsPageContent() {
             </thead>
             <tbody>
               ${rowsHtml}
-            </tbody>
-            <tfoot>
-              <tr>
+              <tr class="total-row">
                 <td colspan="2" align="center">TOTAL</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalRevenue)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalCost)}</td>
@@ -535,12 +533,12 @@ function TransactionsPageContent() {
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalProfit80)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalProfit20)}</td>
               </tr>
-            </tfoot>
+            </tbody>
           </table>
 
           <div class="footer-sig">
-            <div class="sig">Kasir / Admin<br/>(${cashierNames})</div>
-            <div class="sig">Manager / Owner</div>
+            <div class="sig">Kasir<br/>(${cashierNames})</div>
+            <div class="sig">Admin</div>
           </div>
         </body>
       </html>
@@ -697,7 +695,7 @@ function TransactionsPageContent() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold tracking-tight text-white/90 print:text-black print:text-center print:mb-4 print:text-3xl print:uppercase">
-            {isEditMode ? 'Edit Transaksi' : 'Laporan Bagi Hasil'}
+            {isEditMode ? 'Edit Transaksi' : 'Laporan Mitra Jjs'}
           </h2>
           {isEditMode && (
             <span className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-widest animate-pulse">

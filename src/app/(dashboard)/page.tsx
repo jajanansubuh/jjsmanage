@@ -10,7 +10,8 @@ import {
   ArrowDownRight, 
   DollarSign, 
   Calendar as CalendarIcon,
-  History
+  History,
+  Coins
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RevenueTrend } from "@/components/revenue-trend";
@@ -56,6 +57,7 @@ function DashboardContent() {
     revenueGrowth: number,
     profit20Growth: number,
     profit80Growth: number,
+    totalSavings: number,
     role?: string
   }>({
     totalRevenue: 0,
@@ -69,7 +71,8 @@ function DashboardContent() {
     topSuppliers: [],
     revenueGrowth: 0,
     profit20Growth: 0,
-    profit80Growth: 0
+    profit80Growth: 0,
+    totalSavings: 0
   });
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -84,9 +87,10 @@ function DashboardContent() {
   const router = useRouter();
 
   useEffect(() => {
-    if (isMounted && stats.role === "SUPPLIER") {
-      router.push("/payouts");
-    }
+    // We now allow Suppliers to see the Dashboard so they can view their Tabungan stats card.
+    // if (isMounted && stats.role === "SUPPLIER") {
+    //   router.push("/payouts");
+    // }
   }, [isMounted, stats.role, router]);
 
   useEffect(() => {
@@ -120,7 +124,18 @@ function DashboardContent() {
 
   const isSupplier = stats.role === "SUPPLIER";
 
-  const cards = isSupplier ? [
+  interface DashboardCard {
+    title: string;
+    value: string | number;
+    icon: any;
+    trend: string;
+    trendUp: boolean;
+    color: string;
+    bg: string;
+    onClick?: () => void;
+  }
+
+  const cards: DashboardCard[] = isSupplier ? [
     {
       title: "Omzet Penjualan",
       value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalRevenue) : "Rp 0",
@@ -131,13 +146,23 @@ function DashboardContent() {
       bg: "bg-blue-400/10"
     },
     {
-      title: "Bagi Hasil (80%)",
+      title: "Mitra Jjs",
       value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalProfit80) : "Rp 0",
       icon: Wallet,
       trend: `${(stats.profit80Growth || 0) >= 0 ? "+" : ""}${(stats.profit80Growth || 0).toFixed(1)}%`,
       trendUp: (stats.profit80Growth || 0) >= 0,
       color: "text-emerald-400",
       bg: "bg-emerald-400/10"
+    },
+    {
+      title: "Total Tabungan",
+      value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalSavings) : "Rp 0",
+      icon: Coins,
+      trend: "Lihat Detail",
+      trendUp: true,
+      color: "text-purple-400",
+      bg: "bg-purple-400/10",
+      onClick: () => router.push("/savings")
     },
     {
       title: "Saldo Saat Ini",
@@ -148,15 +173,6 @@ function DashboardContent() {
       color: "text-amber-400",
       bg: "bg-amber-400/10",
       onClick: () => setIsPayoutModalOpen(true)
-    },
-    {
-      title: "Total Transaksi",
-      value: stats.totalTransactions,
-      icon: TrendingUp,
-      trend: "Periode ini",
-      trendUp: true,
-      color: "text-purple-400",
-      bg: "bg-purple-400/10"
     }
   ] : [
     {
@@ -318,7 +334,7 @@ function DashboardContent() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-blue-400" />
-                {isSupplier ? "Tren Bagi Hasil" : "Tren Pendapatan"}
+                {isSupplier ? "Tren Mitra Jjs" : "Tren Pendapatan"}
               </CardTitle>
               <div className="flex items-center gap-1 bg-slate-950/50 p-1 rounded-lg border border-white/5">
                 {['D', 'W', 'M', 'Y'].map((t) => (

@@ -40,9 +40,10 @@ export default function DepositsPage() {
       .catch(err => console.error("Failed to fetch role:", err));
 
     setLoading(true);
-    fetch(`/api/reports?date=${selectedDate}`)
+    fetch(`/api/reports?date=${selectedDate}&limit=1000`)
       .then((res) => res.json())
-      .then((reports) => {
+      .then((data) => {
+        const reports = Array.isArray(data) ? data : (data.reports || []);
         if (Array.isArray(reports)) {
           // Group by supplier and sum profit80 (Mitra Jjs share)
           const grouped: Record<string, DepositItem> = {};
@@ -165,7 +166,7 @@ export default function DepositsPage() {
         </head>
         <body>
           <div class="header">
-            <h1>Laporan Penyetoran Bagi Hasil</h1>
+            <h1>Laporan Penyetoran Mitra Jjs</h1>
             <div class="meta">Tanggal Transaksi: ${formattedDate}</div>
           </div>
           <table>

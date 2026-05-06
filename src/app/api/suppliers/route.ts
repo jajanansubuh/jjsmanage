@@ -4,12 +4,29 @@ import prisma from "@/lib/prisma";
 export async function GET() {
   try {
     const suppliers = await prisma.supplier.findMany({
+      include: {
+        users: {
+          select: {
+            id: true,
+            isCredentialsChanged: true
+          }
+        }
+      },
       orderBy: { updatedAt: "desc" },
     });
+    
     return NextResponse.json(suppliers);
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET /api/suppliers error:", error);
-    return NextResponse.json({ error: "Failed to fetch suppliers" }, { status: 500 });
+    // Jika gagal dengan include, coba ambil data dasar saja
+    try {
+      const basicSuppliers = await prisma.supplier.findMany({
+        orderBy: { updatedAt: "desc" },
+      });
+      return NextResponse.json(basicSuppliers);
+    } catch (innerError) {
+      return NextResponse.json([], { status: 500 });
+    }
   }
 }
 

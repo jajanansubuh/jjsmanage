@@ -24,7 +24,7 @@ export default async function middleware(req: NextRequest) {
 
   // Supplier Role Based Access Control
   if (session?.user?.role === "SUPPLIER") {
-    const allowedPaths = ['/deposits'];
+    const allowedPaths = ['/deposits', '/settings', '/payouts', '/savings'];
     
     // Protect UI routes
     if (path === '/' || (!allowedPaths.includes(path) && !path.startsWith('/api'))) {
@@ -33,7 +33,7 @@ export default async function middleware(req: NextRequest) {
     
     // Protect API routes
     if (path.startsWith('/api')) {
-      const allowedApiPaths = ['/api/reports'];
+      const allowedApiPaths = ['/api/reports', '/api/users/profile', '/api/auth', '/api/savings', '/api/stats'];
       const isAllowedApi = allowedApiPaths.some(p => path.startsWith(p));
       if (!isAllowedApi) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });

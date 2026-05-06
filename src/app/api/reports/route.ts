@@ -31,12 +31,30 @@ export async function GET(req: Request) {
       };
     }
 
-    const reports = await prisma.consignmentReport.findMany({
-      where: whereClause,
-      include: { supplier: true },
-      orderBy: { createdAt: "desc" },
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '100'); // Default to 100 or another reasonable number
+    const skip = (page - 1) * limit;
+
+    const [reports, total] = await Promise.all([
+      prisma.consignmentReport.findMany({
+        where: whereClause,
+        include: { supplier: true },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.consignmentReport.count({ where: whereClause })
+    ]);
+
+    return NextResponse.json({
+      reports,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
     });
-    return NextResponse.json(reports);
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch reports" }, { status: 500 });
   }

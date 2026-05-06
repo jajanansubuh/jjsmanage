@@ -13,16 +13,28 @@ import {
   LogOut,
   ShieldCheck,
   Wallet,
-  History
+  History,
+  Coins,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { logoutAction } from "@/lib/actions/auth";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Riwayat", href: "/payouts", icon: History },
   { name: "Setor", href: "/deposits", icon: Wallet },
+  { name: "Tabungan", href: "/savings", icon: Coins },
   { name: "Data Master", href: "/master", icon: Database },
   { name: "Transaksi", href: "/transactions", icon: ReceiptText },
   { name: "Laporan", href: "/reports", icon: FileText },
@@ -32,15 +44,17 @@ const navigation = [
 export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: string, name?: string }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
 
   // Filter navigation based on role
   const filteredNavigation = navigation.filter(item => {
-    if (role === "SUPPLIER") {
-      // Supplier sees ONLY Riwayat and Setor
-      return ["Riwayat", "Setor"].includes(item.name);
+    const userRole = role?.toUpperCase();
+    if (userRole === "SUPPLIER") {
+      // Supplier sees ONLY Riwayat, Setor, Tabungan and Pengaturan
+      return ["Riwayat", "Setor", "Tabungan", "Pengaturan"].includes(item.name);
     }
     // Admin sees everything EXCEPT Riwayat
-    return item.name !== "Riwayat";
+    return item.name !== "History" && item.name !== "Riwayat";
   });
 
   return (
@@ -123,7 +137,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
               </Link>
               
               <button 
-                onClick={() => logoutAction()}
+                onClick={() => setIsLogoutDialogOpen(true)}
                 className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-xs font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
               >
                 <LogOut className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
@@ -141,6 +155,41 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
           onClick={() => setIsOpen(false)}
         />
       )}
+
+      {/* Logout Confirmation Modal */}
+      <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
+        <DialogContent className="bg-slate-950 border-white/10 rounded-3xl shadow-2xl max-w-sm p-0 overflow-hidden">
+          <div className="p-8 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                <AlertCircle className="w-8 h-8 text-amber-500" />
+              </div>
+              <DialogHeader>
+                <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Keluar Sesi?</DialogTitle>
+                <DialogDescription className="text-slate-400 font-medium pt-2 text-center">
+                  Anda akan keluar dari sistem. Pastikan semua pekerjaan telah disimpan.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+          </div>
+
+          <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3 sm:gap-0">
+            <Button
+              variant="ghost"
+              onClick={() => setIsLogoutDialogOpen(false)}
+              className="flex-1 h-12 rounded-xl text-slate-400 font-bold hover:bg-white/5"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => logoutAction()}
+              className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+            >
+              YA, KELUAR
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

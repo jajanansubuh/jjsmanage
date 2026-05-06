@@ -1,29 +1,93 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Database, Download, Upload, Loader2, FileSpreadsheet } from "lucide-react";
+import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { importDatabaseAction } from "@/lib/actions/import";
-import { useRef } from "react";
 
 export default function SettingsPage() {
+  const [user, setUser] = useState<{ id: string, username: string, role: string, isCredentialsChanged: boolean } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  
+  const [formData, setFormData] = useState({ username: "", password: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
-    toast.success("Pengaturan berhasil disimpan");
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await fetch("/api/users/profile");
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data);
+        setFormData(prev => ({ ...prev, username: data.username }));
+      } else {
+        // Fallback: get role from auth session
+        const roleRes = await fetch("/api/auth/role");
+        if (roleRes.ok) {
+          const roleData = await roleRes.json();
+          setUser({ id: "", username: roleData.username || "", role: roleData.role || "ADMIN", isCredentialsChanged: false });
+        }
+      }
+    } catch (error) {
+      // Fallback: try to get role from session
+      try {
+        const roleRes = await fetch("/api/auth/role");
+        if (roleRes.ok) {
+          const roleData = await roleRes.json();
+          setUser({ id: "", username: roleData.username || "", role: roleData.role || "ADMIN", isCredentialsChanged: false });
+        }
+      } catch {
+        toast.error("Gagal memuat profil");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!formData.username) {
+      toast.error("Username tidak boleh kosong");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const res = await fetch("/api/users/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        toast.success("Profil berhasil diperbarui");
+        setFormData(prev => ({ ...prev, password: "" }));
+        fetchProfile();
+      } else {
+        toast.error(result.details || result.error || "Gagal memperbarui profil");
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check if xlsx
     if (!file.name.endsWith(".xlsx")) {
       toast.error("Hanya file .xlsx yang diperbolehkan");
       return;
@@ -66,7 +130,7 @@ export default function SettingsPage() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "backup-jjs-manage.zip";
+      a.download = `backup-jjs-${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -81,102 +145,153 @@ export default function SettingsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+        <p className="text-slate-400 font-medium animate-pulse">Memuat pengaturan...</p>
+      </div>
+    );
+  }
+
+  const isAdmin = user?.role?.toUpperCase().includes("ADMIN");
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto pb-20">
-      <div className="space-y-2">
+      <div className="space-y-2 text-center sm:text-left">
         <h2 className="text-3xl font-black tracking-tight text-white">
-          Pengaturan <span className="text-blue-500">Sistem</span>
+          Pengaturan <span className="text-blue-500">{isAdmin ? "Sistem" : "Akun"}</span>
         </h2>
-        <p className="text-slate-400 font-medium text-sm uppercase tracking-widest">Kelola kredensial login dan data sistem Anda.</p>
+        <p className="text-slate-400 font-medium text-sm uppercase tracking-widest">
+          {isAdmin ? "Kelola kredensial login dan data sistem Anda." : "Kelola keamanan dan akses akun suplier Anda."}
+        </p>
       </div>
+
+      {!isAdmin && user?.isCredentialsChanged && (
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-3 text-emerald-400">
+          <CheckCircle2 className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-medium">Akun Anda sudah diperbarui dan aman.</p>
+        </div>
+      )}
+
+      {!isAdmin && !user?.isCredentialsChanged && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3 text-amber-400">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-medium">Segera ganti username dan password bawaan admin untuk keamanan.</p>
+        </div>
+      )}
 
       <div className="grid gap-6">
         <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
           <CardHeader className="border-b border-white/5 bg-white/[0.02]">
             <CardTitle className="flex items-center text-xl font-bold text-white">
-              <User className="w-6 h-6 mr-3 text-blue-500" /> Informasi Login
+              <KeyRound className="w-6 h-6 mr-3 text-blue-500" /> Informasi Login
             </CardTitle>
             <CardDescription className="text-slate-400">Ubah username dan password akses sistem.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 pt-6">
             <div className="grid gap-3">
-              <Label htmlFor="username" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Username</Label>
-              <Input id="username" placeholder="Masukkan username" defaultValue="admin" className="h-12 bg-white/5 border-white/10 text-white font-medium focus-visible:ring-blue-500/50 rounded-2xl" />
+              <Label htmlFor="username" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Username Baru</Label>
+              <Input 
+                id="username" 
+                placeholder="Masukkan username baru" 
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                className="h-12 bg-white/5 border-white/10 text-white font-medium focus-visible:ring-blue-500/50 rounded-2xl transition-all" 
+              />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Password</Label>
-              <Input id="password" type="password" placeholder="Masukkan password" defaultValue="password" className="h-12 bg-white/5 border-white/10 text-white focus-visible:ring-blue-500/50 rounded-2xl" />
+              <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-slate-500 ml-1">Password Baru</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="Masukkan password baru (kosongkan jika tidak ganti)" 
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                className="h-12 bg-white/5 border-white/10 text-white focus-visible:ring-blue-500/50 rounded-2xl transition-all" 
+              />
             </div>
-            <Button onClick={handleSave} className="w-full h-12 text-sm font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 rounded-2xl transition-all active:scale-[0.98]">
-              Simpan Perubahan
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="w-full h-12 text-sm font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 rounded-2xl transition-all active:scale-[0.98]"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Menyimpan...
+                </>
+              ) : "Simpan Perubahan"}
             </Button>
           </CardContent>
         </Card>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-            <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-              <CardTitle className="flex items-center text-lg font-bold text-white">
-                <Download className="w-5 h-5 mr-3 text-emerald-500" /> Backup Data
-              </CardTitle>
-              <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center pt-6">
-              <Button 
-                onClick={handleBackup} 
-                disabled={isBackingUp}
-                className="w-full h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
-              >
-                {isBackingUp ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Download ZIP
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+        {isAdmin && (
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                <CardTitle className="flex items-center text-lg font-bold text-white">
+                  <Download className="w-5 h-5 mr-3 text-emerald-500" /> Backup Data
+                </CardTitle>
+                <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center pt-6">
+                <Button 
+                  onClick={handleBackup} 
+                  disabled={isBackingUp}
+                  className="w-full h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                >
+                  {isBackingUp ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Memproses...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Download ZIP
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
 
-          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-            <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-              <CardTitle className="flex items-center text-lg font-bold text-white">
-                <Upload className="w-5 h-5 mr-3 text-purple-500" /> Import Database
-              </CardTitle>
-              <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col justify-center pt-6">
-              <input 
-                type="file" 
-                accept=".xlsx" 
-                ref={fileInputRef} 
-                onChange={handleImport} 
-                className="hidden" 
-              />
-              <Button 
-                onClick={() => fileInputRef.current?.click()} 
-                disabled={isImporting}
-                className="w-full h-12 text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
-              >
-                {isImporting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Mengimport...
-                  </>
-                ) : (
-                  <>
-                    <FileSpreadsheet className="w-4 h-4" />
-                    Import XLSX
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                <CardTitle className="flex items-center text-lg font-bold text-white">
+                  <Upload className="w-5 h-5 mr-3 text-purple-500" /> Import Database
+                </CardTitle>
+                <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col justify-center pt-6">
+                <input 
+                  type="file" 
+                  accept=".xlsx" 
+                  ref={fileInputRef} 
+                  onChange={handleImport} 
+                  className="hidden" 
+                />
+                <Button 
+                  onClick={() => fileInputRef.current?.click()} 
+                  disabled={isImporting}
+                  className="w-full h-12 text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Mengimport...
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="w-4 h-4" />
+                      Import XLSX
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );

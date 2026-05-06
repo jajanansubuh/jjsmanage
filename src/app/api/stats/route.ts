@@ -52,13 +52,15 @@ export async function GET(request: Request) {
       _sum: {
         revenue: true,
         profit20: true,
-        profit80: true
+        profit80: true,
+        tabungan: true
       }
     });
 
     const totalRevenue = totals._sum.revenue || 0;
     const totalProfit20 = totals._sum.profit20 || 0;
     const totalProfit80 = totals._sum.profit80 || 0;
+    const totalSavings = totals._sum.tabungan || 0;
 
     // 2. Count Suppliers & Cashiers (Admin Only)
     let totalSuppliers = 0;
@@ -215,6 +217,7 @@ export async function GET(request: Request) {
       totalRevenue,
       totalProfit20,
       totalProfit80,
+      totalSavings,
       currentBalance,
       totalSuppliers,
       totalCashiers,

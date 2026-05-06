@@ -22,7 +22,7 @@ import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 
 export default function MasterDataPage() {
-  const [suppliers, setSuppliers] = useState<{ id: string, name: string, ownerName?: string | null, bankName?: string | null, accountNumber?: string | null, balance: number }[]>([]);
+  const [suppliers, setSuppliers] = useState<{ id: string, name: string, ownerName?: string | null, bankName?: string | null, accountNumber?: string | null, balance: number, users?: { id: string, username: string, isCredentialsChanged: boolean }[] }[]>([]);
   const [cashiers, setCashiers] = useState<{ id: string, name: string, code: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -161,10 +161,12 @@ export default function MasterDataPage() {
 
   const fetchSupplierHistory = async (supplierId: string) => {
     setHistoryLoading(true);
+    setSupplierHistory([]); // Clear old data immediately to prevent flickering
     try {
-      const res = await fetch(`/api/reports?supplierId=${supplierId}`);
+      const res = await fetch(`/api/reports?supplierId=${supplierId}&limit=100`); // Limit to 100 for better modal performance
       const data = await res.json();
-      setSupplierHistory(data);
+      const reportsData = Array.isArray(data) ? data : (data.reports || []);
+      setSupplierHistory(reportsData);
     } catch (error) {
       toast.error("Gagal mengambil riwayat transaksi");
     } finally {
@@ -194,22 +196,38 @@ export default function MasterDataPage() {
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
+  const [deleteCredentials, setDeleteCredentials] = useState({ username: "", password: "" });
+  const [deleteError, setDeleteError] = useState("");
 
   const handleDeleteSupplier = async (id: string) => {
+    if (!deleteCredentials.username || !deleteCredentials.password) {
+      setDeleteError("Username dan password wajib diisi");
+      return;
+    }
+
     setIsDeleting(true);
+    setDeleteError("");
     try {
       const res = await fetch(`/api/suppliers/${id}`, {
         method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(deleteCredentials),
       });
+      
+      const result = await res.json();
+      
       if (res.ok) {
         toast.success("Suplier berhasil dihapus");
         setIsDeleteConfirmOpen(false);
         setIsManageDialogOpen(false);
+        setDeleteCredentials({ username: "", password: "" });
         fetchData();
       } else {
-        toast.error("Gagal menghapus suplier");
+        setDeleteError(result.error || "Gagal menghapus suplier");
+        toast.error(result.error || "Gagal menghapus suplier");
       }
     } catch (error) {
+      setDeleteError("Terjadi kesalahan jaringan");
       toast.error("Terjadi kesalahan");
     } finally {
       setIsDeleting(false);
@@ -280,6 +298,7 @@ export default function MasterDataPage() {
                       <TableHead onClick={() => requestSupplierSort('balance')} className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-right cursor-pointer hover:text-white transition-colors group/th">
                         Pendapatan {getSortIcon(supplierSortConfig, 'balance')}
                       </TableHead>
+                      <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 text-center">Status Akun</TableHead>
                       <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 px-8 text-right">Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -308,6 +327,23 @@ export default function MasterDataPage() {
                           <TableCell className="font-mono text-sm text-slate-500 group-hover:text-slate-300 transition-colors">{s.accountNumber || "-"}</TableCell>
                           <TableCell className="text-right font-black text-emerald-400 group-hover:scale-105 transition-transform origin-right">
                             {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(s.balance)}
+                          </TableCell>
+                          <TableCell className="text-center py-4">
+                            {s.users && s.users.length > 0 ? (
+                              s.users[0].isCredentialsChanged ? (
+                                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider text-emerald-400">
+                                  Sudah Ganti
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider text-amber-400">
+                                  Belum Ganti
+                                </span>
+                              )
+                            ) : (
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-500/10 border border-slate-500/20 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                Tanpa Akun
+                              </span>
+                            )}
                           </TableCell>
                           <TableCell className="text-right py-4 px-8">
                             <Button 
@@ -429,16 +465,17 @@ export default function MasterDataPage() {
             </DialogHeader>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-8 pt-0">
+          <div className="flex-1 overflow-y-auto p-8 pt-0 scrollbar-hide">
             {historyLoading ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-500">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                <span>Memuat riwayat...</span>
+              <div className="space-y-4 pt-6 animate-pulse">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="h-16 w-full bg-white/5 rounded-2xl border border-white/5" />
+                ))}
               </div>
             ) : supplierHistory.length === 0 ? (
-              <div className="text-center py-20 text-slate-500 font-medium italic">Belum ada riwayat transaksi untuk suplier ini.</div>
+              <div className="text-center py-20 text-slate-500 font-medium italic animate-in fade-in zoom-in-95 duration-200">Belum ada riwayat transaksi untuk suplier ini.</div>
             ) : (
-              <div className="space-y-4 pt-6">
+              <div className="space-y-4 pt-6 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300 ease-out">
                 <Table>
                   <TableHeader className="bg-white/[0.02] sticky top-0 z-10">
                     <TableRow className="border-white/5 hover:bg-transparent">
@@ -484,8 +521,13 @@ export default function MasterDataPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog Konfirmasi Hapus */}
-      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={(open) => {
+        setIsDeleteConfirmOpen(open);
+        if (!open) {
+          setDeleteCredentials({ username: "", password: "" });
+          setDeleteError("");
+        }
+      }}>
         <DialogContent className="bg-slate-950 border-white/10 rounded-3xl shadow-2xl max-w-md p-0 overflow-hidden">
           <div className="p-8 space-y-6">
             <div className="flex flex-col items-center text-center space-y-3">
@@ -498,6 +540,34 @@ export default function MasterDataPage() {
                   Anda akan menghapus suplier <span className="text-white font-bold">{selectedSupplier?.name}</span>. Semua data laporan terkait suplier ini juga akan dihapus secara permanen.
                 </DialogDescription>
               </DialogHeader>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Username Admin</Label>
+                <Input
+                  placeholder="Username"
+                  value={deleteCredentials.username}
+                  onChange={(e) => setDeleteCredentials({ ...deleteCredentials, username: e.target.value })}
+                  className="bg-white/5 border-white/5 h-12 rounded-xl focus:ring-red-500/20 focus:border-red-500/50 transition-all text-white font-medium"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={deleteCredentials.password}
+                  onChange={(e) => setDeleteCredentials({ ...deleteCredentials, password: e.target.value })}
+                  className="bg-white/5 border-white/5 h-12 rounded-xl focus:ring-red-500/20 focus:border-red-500/50 transition-all text-white font-medium"
+                  onKeyDown={(e) => e.key === "Enter" && supplierToDelete && handleDeleteSupplier(supplierToDelete)}
+                />
+              </div>
+              {deleteError && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold text-center">
+                  {deleteError}
+                </div>
+              )}
             </div>
           </div>
 

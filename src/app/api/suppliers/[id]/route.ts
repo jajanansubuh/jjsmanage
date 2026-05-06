@@ -21,13 +21,40 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    // Delete all reports related to the supplier first to avoid foreign key constraints
-    await prisma.consignmentReport.deleteMany({
-      where: { supplierId: id },
+    const { username, password } = await req.json();
+
+    // 1. Validate credentials
+    const user = await prisma.user.findFirst({
+      where: { username }
     });
-    await prisma.supplier.delete({
-      where: { id },
+
+    if (!user) {
+      return NextResponse.json({ error: "Username tidak ditemukan" }, { status: 401 });
+    }
+
+    const isPasswordValid = await import("bcryptjs").then(bcrypt => bcrypt.compare(password, user.password));
+    if (!isPasswordValid) {
+      return NextResponse.json({ error: "Password salah" }, { status: 401 });
+    }
+
+    // 2. Start transaction for safe deletion
+    await prisma.$transaction(async (tx) => {
+      // Delete all reports related to the supplier first to avoid foreign key constraints
+      await tx.consignmentReport.deleteMany({
+        where: { supplierId: id },
+      });
+      
+      // Also delete any users associated with this supplier
+      await tx.user.deleteMany({
+        where: { supplierId: id }
+      });
+
+      // Finally delete the supplier
+      await tx.supplier.delete({
+        where: { id },
+      });
     });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error(error);

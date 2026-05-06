@@ -5,6 +5,8 @@ export async function GET() {
   const session = await getSession();
   return NextResponse.json({ 
     role: session?.user?.role || null,
+    username: session?.user?.username || null,
+    name: session?.user?.name || null,
     supplierId: session?.user?.supplierId || null 
   });
 }
