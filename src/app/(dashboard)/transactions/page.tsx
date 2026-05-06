@@ -196,17 +196,19 @@ function TransactionsPageContent() {
         try {
           const res = await fetch(`/api/reports?noteNumber=${encodeURIComponent(editNoteParam)}`);
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
+          const reportsData = Array.isArray(data) ? data : (data.reports || []);
+          
+          if (reportsData.length > 0) {
             setIsEditMode(true);
             setEditNoteNumber(editNoteParam);
             setNoteNumber(editNoteParam);
-            if (data[0].date) {
-              setSelectedDate(format(new Date(data[0].date), "yyyy-MM-dd"));
+            if (reportsData[0].date) {
+              setSelectedDate(format(new Date(reportsData[0].date), "yyyy-MM-dd"));
             }
-            if (data[0].notes) {
-              setNotes(data[0].notes);
+            if (reportsData[0].notes) {
+              setNotes(reportsData[0].notes);
             }
-            setRows(data.map((r: any) => ({
+            setRows(reportsData.map((r: any) => ({
               id: Math.random().toString(36).substr(2, 9),
               supplierId: r.supplierId,
               revenue: r.revenue || 0,

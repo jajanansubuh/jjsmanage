@@ -85,9 +85,9 @@ export default function PayoutsPage() {
         const res = await fetch(`/api/reports?${params.toString()}`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data)) {
-            setTransactions(data);
-          }
+          // Handle both old array format and new paginated object format
+          const reportsData = Array.isArray(data) ? data : (data.reports || []);
+          setTransactions(reportsData);
         }
       } catch (error) {
         console.error("Failed to fetch transactions:", error);
