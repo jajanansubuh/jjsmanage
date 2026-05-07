@@ -30,10 +30,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Save, Plus, Trash2, Calculator, Search, ChevronDown, Check, ArrowUpDown, Calendar as CalendarIcon, Download, Printer, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { Upload } from "lucide-react";
 import { saveTransactionAction } from "@/lib/actions/transactions";
 
 interface ReportRow {
@@ -47,6 +49,8 @@ interface ReportRow {
   tabungan: number;
   profit80: number;
   profit20: number;
+  items?: { name: string; qtyBeli: number; qtyJual: number; retureJual: number }[];
+  importedSupplierName?: string;
 }
 
 function SupplierCombobox({ value, onValueChange, suppliers }: { value: string, onValueChange: (val: string) => void, suppliers: { id: string, name: string, ownerName?: string | null }[] }) {
@@ -114,6 +118,7 @@ function TransactionsPageContent() {
   const [notes, setNotes] = useState("");
   const editInitializedRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     supplierId: "",
     revenue: "",
@@ -219,6 +224,7 @@ function TransactionsPageContent() {
               tabungan: r.tabungan || 0,
               profit80: r.profit80 || 0,
               profit20: r.profit20 || 0,
+              items: r.items || [],
             })));
             toast.info(`Mode edit nota: ${editNoteParam}`);
           } else {
@@ -362,6 +368,17 @@ function TransactionsPageContent() {
     setRows(rows.filter((_, i) => i !== index));
   };
 
+  const handleClearAll = () => {
+    if (rows.length === 0) return;
+    setIsClearAllDialogOpen(true);
+  };
+
+  const confirmClearAll = () => {
+    setRows([]);
+    setIsClearAllDialogOpen(false);
+    toast.success("Semua data transaksi telah dihapus");
+  };
+
   const updateRowField = (id: string, field: keyof ReportRow, value: string) => {
     const numericValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
     setRows(prevRows => prevRows.map(row => {
@@ -428,6 +445,138 @@ function TransactionsPageContent() {
     const fileName = `Transaksi_${cashierName}_${selectedDate}.xlsx`;
     XLSX.writeFile(workbook, fileName);
     toast.success("Berhasil export ke Excel");
+  };
+
+  const handleImportExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+        if (data.length === 0) {
+          toast.error("File Excel kosong");
+          return;
+        }
+
+        // Helper to find value by multiple possible header names (case-insensitive)
+        const findValue = (row: any, ...possibleNames: string[]) => {
+          const keys = Object.keys(row);
+          for (const name of possibleNames) {
+            const lowerName = name.toLowerCase();
+            const foundKey = keys.find(k => k.toLowerCase().trim() === lowerName || k.toLowerCase().trim().startsWith(lowerName));
+            if (foundKey) return row[foundKey];
+          }
+          return undefined;
+        };
+
+        // Use a Map to group by supplier
+        const groupedData = new Map<string, ReportRow>();
+
+        data.forEach((row) => {
+          let supplierName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Supl") || "").toString().trim();
+          
+          // Clean up "A1. Total" or "A1." to just "A1"
+          if (supplierName.toLowerCase().endsWith(". total")) {
+            supplierName = supplierName.substring(0, supplierName.length - 8).trim();
+          } else if (supplierName.endsWith(".")) {
+            supplierName = supplierName.substring(0, supplierName.length - 1).trim();
+          }
+
+          if (!supplierName) return;
+
+          const itemName = findValue(row, "Nama Barang", "Produk", "Barang");
+          const qtyBeli = Number(findValue(row, "Qty Beli", "Beli")) || 0;
+          const qtyJual = Number(findValue(row, "Qty Jual", "Jual")) || 0;
+          const retureJual = Number(findValue(row, "Reture Jual", "Retur Jual", "Return Jual")) || 0;
+          const rev = Number(findValue(row, "Pendapatan", "Omset", "Revenue")) || 0;
+          const cst = Number(findValue(row, "Cost", "Harga Pokok")) || 0;
+          const bc = Number(findValue(row, "Barcode", "Barcod")) || 0;
+          const sc = Number(findValue(row, "Service Ch", "Service Charge", "S.Charge")) || 0;
+          const kuk = Number(findValue(row, "Kukuluban", "Kukulub")) || 0;
+          const tab = Number(findValue(row, "Tabungan", "Tabung")) || 0;
+
+          if (groupedData.has(supplierName)) {
+            const existing = groupedData.get(supplierName)!;
+            // Sum values
+            existing.revenue += rev;
+            existing.cost += cst;
+            existing.barcode += bc;
+            existing.serviceCharge += sc;
+            existing.kukuluban += kuk;
+            existing.tabungan += tab;
+            
+            if (itemName && itemName.toString().toLowerCase() !== "total") {
+              existing.items?.push({ name: itemName.toString(), qtyBeli, qtyJual, retureJual });
+            }
+          } else {
+            // New supplier entry
+            let foundSupplier = null;
+            foundSupplier = suppliers.find(s => s.name.toLowerCase().trim() === supplierName.toLowerCase());
+            if (!foundSupplier && supplierName.length >= 2) {
+              foundSupplier = suppliers.find(s => {
+                const sName = s.name.toLowerCase().trim();
+                const iName = supplierName.toLowerCase();
+                return sName.includes(iName) || iName.includes(sName);
+              });
+            }
+
+            groupedData.set(supplierName, {
+              id: Math.random().toString(36).substr(2, 9),
+              supplierId: foundSupplier?.id || "",
+              importedSupplierName: foundSupplier ? undefined : supplierName,
+              revenue: rev,
+              cost: cst,
+              barcode: bc,
+              serviceCharge: sc,
+              kukuluban: kuk,
+              tabungan: tab,
+              profit80: 0,
+              profit20: 0,
+              items: itemName && itemName.toString().toLowerCase() !== "total" ? [{ name: itemName.toString(), qtyBeli, qtyJual, retureJual }] : []
+            });
+          }
+        });
+
+        // Convert Map back to array and calculate profits
+        const newRows: ReportRow[] = Array.from(groupedData.values()).map(row => {
+          row.profit80 = row.cost - (row.barcode + row.serviceCharge + row.kukuluban + row.tabungan);
+          row.profit20 = row.revenue - row.cost;
+          return row;
+        });
+
+        if (newRows.length > 0) {
+          // Check for duplicate suppliers in imported data
+          const existingSupplierIds = new Set(rows.map(r => r.supplierId));
+          const filteredNewRows = newRows.filter(r => {
+            if (r.supplierId && existingSupplierIds.has(r.supplierId)) {
+              return false;
+            }
+            return true;
+          });
+
+          if (filteredNewRows.length < newRows.length) {
+            toast.info(`${newRows.length - filteredNewRows.length} suplier sudah ada di daftar, dilewati.`);
+          }
+
+          setRows([...rows, ...filteredNewRows]);
+          toast.success(`Berhasil mengimport ${filteredNewRows.length} transaksi`);
+        } else {
+          toast.error("Format Excel tidak sesuai atau data tidak ditemukan");
+        }
+      } catch (error) {
+        console.error("Import error:", error);
+        toast.error("Gagal membaca file Excel");
+      }
+      e.target.value = ""; // Reset input
+    };
+    reader.readAsBinaryString(file);
   };
 
   const handlePrint = () => {
@@ -589,7 +738,8 @@ function TransactionsPageContent() {
           kukuluban: r.kukuluban,
           tabungan: r.tabungan,
           profit80: r.profit80,
-          profit20: r.profit20
+          profit20: r.profit20,
+          items: r.items || []
         }))
       });
 
@@ -725,6 +875,21 @@ function TransactionsPageContent() {
           </Button>
           <Button onClick={handleExportExcel} variant="outline" className="border-white/10 hover:bg-white/5 bg-slate-900 text-white shadow-lg">
             <Download className="w-4 h-4 mr-2" /> Export Excel
+          </Button>
+          <div className="relative">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleImportExcel}
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              title="Import Excel"
+            />
+            <Button variant="outline" className="border-white/10 hover:bg-white/5 bg-slate-900 text-white shadow-lg pointer-events-none">
+              <Upload className="w-4 h-4 mr-2" /> Import Excel
+            </Button>
+          </div>
+          <Button onClick={handleClearAll} variant="outline" className="border-red-500/20 hover:bg-red-500/10 bg-slate-900 text-red-400 shadow-lg">
+            <Trash2 className="w-4 h-4 mr-2" /> Clear All
           </Button>
           <Button onClick={handleSave} disabled={isSaving} className={cn(
             "shadow-lg px-8",
@@ -977,8 +1142,85 @@ function TransactionsPageContent() {
                     <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
                       <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                       <TableCell>
-                        <div className="font-bold text-white print:text-black">
-                          {suppliers.find(s => s.id === row.supplierId)?.name || "-"}
+                        <div className="flex flex-col gap-1">
+                          <div className="font-bold text-white print:text-black min-w-[150px]">
+                            {suppliers.find(s => s.id === row.supplierId) ? (
+                              row.items && row.items.length > 0 ? (
+                                <Dialog>
+                                  <DialogTrigger className="cursor-pointer hover:text-blue-400 transition-colors border-b border-dashed border-white/20 pb-0.5 flex items-center gap-2 group/text bg-transparent border-0 p-0 text-white font-bold h-auto">
+                                    {suppliers.find(s => s.id === row.supplierId)?.name}
+                                    <Plus className="w-3 h-3 text-white/20 group-hover/text:text-blue-400 transition-colors" />
+                                  </DialogTrigger>
+                                  <DialogContent className="bg-slate-900 border-white/10 text-white max-w-2xl p-0 overflow-hidden rounded-3xl shadow-2xl">
+                                    <div className="p-8 bg-gradient-to-br from-blue-600/20 to-transparent border-b border-white/5">
+                                      <div className="flex items-center gap-4 mb-2">
+                                        <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
+                                          <Calculator className="w-6 h-6 text-blue-400" />
+                                        </div>
+                                        <div>
+                                          <DialogTitle className="text-2xl font-black tracking-tight">Rincian Produk</DialogTitle>
+                                          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Suplier: {suppliers.find(s => s.id === row.supplierId)?.name}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="p-8">
+                                      <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
+                                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                          <Table>
+                                            <TableHeader className="sticky top-0 bg-slate-900 z-10">
+                                              <TableRow className="border-white/5 bg-white/5">
+                                                <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Nama Barang</TableHead>
+                                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Beli</TableHead>
+                                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Jual</TableHead>
+                                              </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                              {row.items.map((item, idx) => (
+                                                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                                                  <TableCell className="font-bold text-slate-200 py-4">{item.name}</TableCell>
+                                                  <TableCell className="text-center font-black text-slate-400">{item.qtyBeli}</TableCell>
+                                                  <TableCell className="text-center font-black text-emerald-400">{item.qtyJual}</TableCell>
+                                                </TableRow>
+                                              ))}
+                                            </TableBody>
+                                          </Table>
+                                        </div>
+                                      </div>
+                                      <div className="mt-8 flex justify-end">
+                                        <DialogFooter>
+                                          <Button onClick={() => document.body.click()} className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 rounded-xl border border-white/10 transition-all">
+                                            Tutup
+                                          </Button>
+                                        </DialogFooter>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              ) : (
+                                suppliers.find(s => s.id === row.supplierId)?.name
+                              )
+                            ) : (
+                              <div className="space-y-2">
+                                {row.importedSupplierName && (
+                                  <div className="text-[10px] font-black text-red-400 uppercase tracking-widest bg-red-400/10 px-2 py-0.5 rounded-sm inline-block">
+                                    Import: {row.importedSupplierName}
+                                  </div>
+                                )}
+                                <SupplierCombobox 
+                                  value={row.supplierId} 
+                                  onValueChange={(val) => {
+                                    setRows(prev => prev.map(r => r.id === row.id ? { ...r, supplierId: val, importedSupplierName: undefined } : r));
+                                  }} 
+                                  suppliers={suppliers} 
+                                />
+                              </div>
+                            )}
+                          </div>
+                          {row.items && row.items.length > 0 && (
+                            <div className="text-[9px] text-blue-400/60 font-medium uppercase tracking-tighter">
+                              {row.items.length} Produk Terlampir
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-right p-2">
@@ -1108,6 +1350,38 @@ function TransactionsPageContent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Clear All Confirmation Dialog */}
+      <Dialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+        <DialogContent className="bg-slate-900 border-white/10 text-white max-w-md p-8 rounded-3xl shadow-2xl">
+          <div className="flex flex-col items-center text-center space-y-6">
+            <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center border border-red-500/20 animate-pulse">
+              <Trash2 className="w-10 h-10 text-red-400" />
+            </div>
+            <div className="space-y-2">
+              <DialogTitle className="text-2xl font-black tracking-tight">Hapus Semua Data?</DialogTitle>
+              <p className="text-slate-400 font-medium">
+                Tindakan ini akan menghapus seluruh daftar transaksi yang ada di tabel saat ini secara permanen.
+              </p>
+            </div>
+            <div className="flex flex-col w-full gap-3">
+              <Button 
+                onClick={confirmClearAll}
+                className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all active:scale-95"
+              >
+                Ya, Hapus Semua
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => setIsClearAllDialogOpen(false)}
+                className="w-full h-12 text-slate-400 hover:text-white hover:bg-white/5 font-bold rounded-xl transition-all"
+              >
+                Batal
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

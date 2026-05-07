@@ -82,6 +82,7 @@ export async function saveTransactionAction(rawData: any) {
               kukuluban: Number(r.kukuluban) || 0,
               tabungan: Number(r.tabungan) || 0,
               notes: data.notes || null,
+              items: r.items || [],
             },
           });
         }

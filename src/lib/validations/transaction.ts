@@ -10,6 +10,12 @@ export const transactionRowSchema = z.object({
   tabungan: z.number().min(0, "Tabungan tidak boleh negatif"),
   profit80: z.number(), // This is calculated on the client, but we can re-verify or just accept it
   profit20: z.number(),
+  items: z.array(z.object({
+    name: z.string(),
+    qtyBeli: z.number(),
+    qtyJual: z.number(),
+    retureJual: z.number().optional().default(0)
+  })).optional().default([]),
 }).refine(data => data.revenue > 0 || data.cost > 0 || data.barcode > 0, {
   message: "Baris transaksi harus memiliki setidaknya satu nilai transaksi (Pendapatan/Cost/Barcode) yang lebih dari 0",
   path: ["revenue"]

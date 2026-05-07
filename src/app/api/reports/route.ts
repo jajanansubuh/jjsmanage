@@ -32,8 +32,9 @@ export async function GET(req: Request) {
     }
 
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '100'); // Default to 100 or another reasonable number
+    const limit = parseInt(searchParams.get('limit') || '1000'); // Increased to 1000 to avoid cutting off data
     const skip = (page - 1) * limit;
+
 
     const [reports, total] = await Promise.all([
       prisma.consignmentReport.findMany({
@@ -84,6 +85,7 @@ export async function POST(req: Request) {
               kukuluban: Number(r.kukuluban) || 0,
               tabungan: Number(r.tabungan) || 0,
               notes: r.notes || null,
+              items: r.items || [],
             },
           });
           reports.push(report);
@@ -125,6 +127,7 @@ export async function POST(req: Request) {
             kukuluban: Number(data.kukuluban) || 0,
             tabungan: Number(data.tabungan) || 0,
             notes: data.notes || null,
+            items: data.items || [],
           },
         });
 

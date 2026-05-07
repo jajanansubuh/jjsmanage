@@ -24,7 +24,7 @@ export default async function middleware(req: NextRequest) {
 
   // Supplier Role Based Access Control
   if (session?.user?.role === "SUPPLIER") {
-    const allowedPaths = ['/deposits', '/settings', '/payouts', '/savings'];
+    const allowedPaths = ['/deposits', '/settings', '/payouts', '/savings', '/produk'];
     
     // Protect UI routes
     if (path === '/' || (!allowedPaths.includes(path) && !path.startsWith('/api'))) {

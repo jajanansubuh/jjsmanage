@@ -55,6 +55,7 @@ model ConsignmentReport {
   tabungan      Float?   @default(0)
   noteNumber    String?
   notes         String?
+  items         Json?    @default("[]")
   supplier      Supplier @relation(fields: [supplierId], references: [id])
 }
 

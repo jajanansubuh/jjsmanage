@@ -195,13 +195,13 @@
   }
 
   /* Optimized Column Widths for Large Numbers */
-  th:nth-child(1), td:nth-child(1) { width: 4% !important; }   /* No */
-  th:nth-child(2), td:nth-child(2) { width: 16% !important; }  /* Suplier */
-  th:nth-child(3), td:nth-child(3) { width: 16% !important; }  /* Pendapatan */
-  th:nth-child(4), td:nth-child(4) { width: 16% !important; }  /* 80% */
-  th:nth-child(5), td:nth-child(5) { width: 16% !important; }  /* 20% */
-  th:nth-child(6), td:nth-child(6) { width: 16% !important; }  /* Barcode */
-  th:nth-child(7), td:nth-child(7) { width: 16% !important; }  /* Cost */
+  th:nth-child(1), td:nth-child(1) { width: 4% !important; }
+  th:nth-child(2), td:nth-child(2) { width: 16% !important; }
+  th:nth-child(3), td:nth-child(3) { width: 16% !important; }
+  th:nth-child(4), td:nth-child(4) { width: 16% !important; }
+  th:nth-child(5), td:nth-child(5) { width: 16% !important; }
+  th:nth-child(6), td:nth-child(6) { width: 16% !important; }
+  th:nth-child(7), td:nth-child(7) { width: 16% !important; }
 
   .text-emerald-400 {
     color: #059669 !important;
@@ -219,4 +219,30 @@
   input, [role="combobox"] {
     display: none !important;
   }
+}
+
+/* Global Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.1) rgba(255, 255, 255, 0.02);
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,7 +53,7 @@ export default function ReportsPage() {
     
     // Fetch reports with pagination (default to page 1)
     Promise.all([
-      fetch("/api/reports?limit=500").then(res => res.json()), // Fetch more for grouping
+      fetch("/api/reports?limit=2000").then(res => res.json()), // Fetch more for grouping
       fetch("/api/stats").then(res => res.json())
     ]).then(([data, statsData]) => {
       // Handle both old array format and new paginated object format for backward compatibility
@@ -176,7 +177,7 @@ export default function ReportsPage() {
         setIsDeleteModalOpen(false);
         setDeleteCredentials({ username: "", password: "" });
         // Refresh data
-        const refreshRes = await fetch("/api/reports?limit=500");
+        const refreshRes = await fetch("/api/reports?limit=2000");
         const data = await refreshRes.json();
         const reportsData = Array.isArray(data) ? data : (data.reports || []);
         setReports(reportsData);
@@ -436,7 +437,8 @@ export default function ReportsPage() {
                     {noteDetails.map((d) => {
                       const totalDeductions = (d.serviceCharge || 0) + (d.kukuluban || 0) + (d.tabungan || 0);
                       return (
-                        <TableRow key={d.id} className="border-white/5 hover:bg-white/[0.02]">
+                        <React.Fragment key={d.id}>
+                          <TableRow className="border-white/5 hover:bg-white/[0.02]">
                           <TableCell className="font-bold text-slate-200">{d.supplier?.name}</TableCell>
                           <TableCell className="text-right text-slate-300">{new Intl.NumberFormat("id-ID").format(d.revenue)}</TableCell>
                           <TableCell className="text-right text-slate-400">{new Intl.NumberFormat("id-ID").format(d.cost)}</TableCell>
@@ -445,6 +447,28 @@ export default function ReportsPage() {
                           <TableCell className="text-right font-black text-emerald-400">{new Intl.NumberFormat("id-ID").format(d.profit80)}</TableCell>
                           {userRole !== "SUPPLIER" && <TableCell className="text-right font-black text-blue-400">{new Intl.NumberFormat("id-ID").format(d.profit20)}</TableCell>}
                         </TableRow>
+                        {/* Sub-items for Supplier Report */}
+                        {d.items && Array.isArray(d.items) && d.items.length > 0 && (
+                          <TableRow className="bg-blue-500/[0.03] hover:bg-blue-500/[0.05] border-white/5">
+                            <TableCell colSpan={userRole === "SUPPLIER" ? 6 : 7} className="py-0">
+                              <div className="px-10 py-3 space-y-2 border-l-2 border-blue-500/30 ml-4 my-2">
+                                <div className="grid grid-cols-3 text-[9px] font-black uppercase tracking-widest text-slate-500 pb-1 border-b border-white/5">
+                                  <span>Nama Barang</span>
+                                  <span className="text-center">Qty Beli</span>
+                                  <span className="text-center">Qty Jual</span>
+                                </div>
+                                {d.items.map((item: any, idx: number) => (
+                                  <div key={idx} className="grid grid-cols-3 text-xs font-medium text-slate-400 items-center py-1 border-b border-white/[0.02] last:border-0">
+                                    <span className="text-slate-200">{item.name}</span>
+                                    <span className="text-center">{item.qtyBeli}</span>
+                                    <span className="text-center">{item.qtyJual}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </React.Fragment>
                       );
                     })}
                     <TableRow className="border-t-2 border-white/10 bg-white/[0.03] font-black">
@@ -511,20 +535,46 @@ export default function ReportsPage() {
 
                   const fmt = (n: number) => new Intl.NumberFormat('id-ID').format(n);
                   
-                  const tableRows = sortedDetails.map((d, i) => `
-                    <tr>
-                      <td>${i + 1}</td>
-                      <td>${d.supplier?.name || '-'}</td>
-                      <td align="right">${fmt(d.revenue)}</td>
-                      <td align="right">${fmt(d.cost)}</td>
-                      <td align="right">${fmt(d.barcode)}</td>
-                      <td align="right">${fmt(d.serviceCharge || 0)}</td>
-                      <td align="right">${fmt(d.kukuluban || 0)}</td>
-                      <td align="right">${fmt(d.tabungan || 0)}</td>
-                      <td align="right">${fmt(d.profit80)}</td>
-                      ${userRole !== "SUPPLIER" ? `<td align="right">${fmt(d.profit20)}</td>` : ""}
-                    </tr>
-                  `).join('');
+                  const tableRows = sortedDetails.map((d, i) => {
+                    let rows = `
+                      <tr>
+                        <td>${i + 1}</td>
+                        <td>${d.supplier?.name || '-'}</td>
+                        <td align="right">${fmt(d.revenue)}</td>
+                        <td align="right">${fmt(d.cost)}</td>
+                        <td align="right">${fmt(d.barcode)}</td>
+                        <td align="right">${fmt(d.serviceCharge || 0)}</td>
+                        <td align="right">${fmt(d.kukuluban || 0)}</td>
+                        <td align="right">${fmt(d.tabungan || 0)}</td>
+                        <td align="right">${fmt(d.profit80)}</td>
+                        ${userRole !== "SUPPLIER" ? `<td align="right">${fmt(d.profit20)}</td>` : ""}
+                      </tr>
+                    `;
+                    
+                    if (d.items && Array.isArray(d.items) && d.items.length > 0) {
+                      rows += `
+                        <tr style="background: #fcfcfc;">
+                          <td colspan="${userRole === 'SUPPLIER' ? 9 : 10}" style="padding: 0;">
+                            <table style="width: 100%; margin: 0; border: none; font-size: 8px; color: #666; border-left: 2px solid #eee; margin-left: 20px;">
+                              <tr style="background: #f9f9f9; font-weight: bold;">
+                                <td style="border: none;">Barang</td>
+                                <td style="border: none; text-align: center;">Beli</td>
+                                <td style="border: none; text-align: center;">Jual</td>
+                              </tr>
+                              ${d.items.map((item: any) => `
+                                <tr>
+                                  <td style="border: none;">${item.name}</td>
+                                  <td style="border: none; text-align: center;">${item.qtyBeli}</td>
+                                  <td style="border: none; text-align: center;">${item.qtyJual}</td>
+                                </tr>
+                              `).join('')}
+                            </table>
+                          </td>
+                        </tr>
+                      `;
+                    }
+                    return rows;
+                  }).join('');
 
                   printWindow.document.write(`
                     <html>

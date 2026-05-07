@@ -15,7 +15,8 @@ import {
   Wallet,
   History,
   Coins,
-  AlertCircle
+  AlertCircle,
+  Package
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -35,6 +36,7 @@ const navigation = [
   { name: "Riwayat", href: "/payouts", icon: History },
   { name: "Setor", href: "/deposits", icon: Wallet },
   { name: "Tabungan", href: "/savings", icon: Coins },
+  { name: "Produk", href: "/produk", icon: Package },
   { name: "Data Master", href: "/master", icon: Database },
   { name: "Transaksi", href: "/transactions", icon: ReceiptText },
   { name: "Laporan", href: "/reports", icon: FileText },
@@ -50,8 +52,8 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
   const filteredNavigation = navigation.filter(item => {
     const userRole = role?.toUpperCase();
     if (userRole === "SUPPLIER") {
-      // Supplier sees ONLY Riwayat, Setor, Tabungan and Pengaturan
-      return ["Riwayat", "Setor", "Tabungan", "Pengaturan"].includes(item.name);
+      // Supplier sees ONLY Riwayat, Setor, Tabungan, Produk and Pengaturan
+      return ["Riwayat", "Setor", "Tabungan", "Produk", "Pengaturan"].includes(item.name);
     }
     // Admin sees everything EXCEPT Riwayat
     return item.name !== "History" && item.name !== "Riwayat";
