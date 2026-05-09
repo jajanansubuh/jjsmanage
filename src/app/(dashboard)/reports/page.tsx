@@ -96,7 +96,7 @@ export default function ReportsPage() {
     });
 
     return Object.values(groups).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   }, [reports]);
 
@@ -107,7 +107,7 @@ export default function ReportsPage() {
     
     let matchDate = true;
     if (startDate || endDate) {
-      const reportDate = new Date(r.createdAt as string);
+      const reportDate = new Date(r.date as string);
       
       if (startDate) {
         const start = new Date(startDate);
@@ -355,7 +355,7 @@ export default function ReportsPage() {
                             <CalendarIcon className="w-4 h-4" />
                           </div>
                           <span className="font-bold text-white group-hover:text-blue-400 transition-colors">
-                            {isMounted ? format(new Date(r.createdAt), "dd MMM yyyy", { locale: id }) : "-"}
+                            {isMounted ? format(new Date(r.date), "dd MMM yyyy", { locale: id }) : "-"}
                           </span>
                         </div>
                       </TableCell>

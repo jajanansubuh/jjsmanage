@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Search, Wallet, ArrowUpDown, History, Calendar as CalendarIcon, Printer, Eye } from "lucide-react";
+import { Search, Wallet, ArrowUpDown, History, Calendar as CalendarIcon, Printer, Eye, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PayoutHistoryModal } from "@/components/payout-history-modal";
+import { DateRange } from "react-day-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface DepositItem {
   id: string;
@@ -26,8 +28,12 @@ export default function DepositsPage() {
   const [data, setData] = useState<DepositItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(),
+    to: new Date()
+  });
+  const [bankFilter, setBankFilter] = useState<string>("ALL");
+  const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>({ key: "name", direction: "asc" });
   const [selectedSupplier, setSelectedSupplier] = useState<{ id: string, name: string } | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [role, setRole] = useState<string | null>(null);
@@ -40,7 +46,12 @@ export default function DepositsPage() {
       .catch(err => console.error("Failed to fetch role:", err));
 
     setLoading(true);
-    fetch(`/api/reports?date=${selectedDate}&limit=1000`)
+    const params = new URLSearchParams();
+    if (dateRange?.from) params.append("startDate", format(dateRange.from, "yyyy-MM-dd"));
+    if (dateRange?.to) params.append("endDate", format(dateRange.to, "yyyy-MM-dd"));
+    params.append("limit", "2000");
+
+    fetch(`/api/reports?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         const reports = Array.isArray(data) ? data : (data.reports || []);
@@ -73,7 +84,7 @@ export default function DepositsPage() {
         console.error("Failed to fetch reports:", err);
         setLoading(false);
       });
-  }, [selectedDate]);
+  }, [dateRange]);
 
   const handleSort = (key: keyof DepositItem) => {
     let direction: "asc" | "desc" = "asc";
@@ -84,16 +95,36 @@ export default function DepositsPage() {
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let result = [...data].filter(
-      (s) =>
-        s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.ownerName && s.ownerName.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    let result = [...data].filter((s) => {
+      const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (s.ownerName && s.ownerName.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      if (!matchesSearch) return false;
+
+      if (bankFilter === "CASH") {
+        const name = (s.bankName || "").toUpperCase();
+        return name === "" || name === "CASH" || name === "TUNAI" || name === "-";
+      }
+      
+      if (bankFilter === "BANK") {
+        const name = (s.bankName || "").toUpperCase();
+        return name !== "" && name !== "CASH" && name !== "TUNAI" && name !== "-";
+      }
+
+      return true;
+    });
 
     if (sortConfig) {
       result.sort((a, b) => {
         const valA = (a[sortConfig.key] as any) || "";
         const valB = (b[sortConfig.key] as any) || "";
+        
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          return sortConfig.direction === "asc" 
+            ? valA.localeCompare(valB, 'id', { sensitivity: 'base' })
+            : valB.localeCompare(valA, 'id', { sensitivity: 'base' });
+        }
+
         if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
         if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
         return 0;
@@ -107,7 +138,9 @@ export default function DepositsPage() {
     const printWindow = window.open('', '_blank', 'width=900,height=700');
     if (!printWindow) return;
 
-    const formattedDate = format(new Date(selectedDate), "dd MMMM yyyy", { locale: localeId });
+    const formattedFrom = dateRange?.from ? format(dateRange.from, "dd MMM yyyy", { locale: localeId }) : "";
+    const formattedTo = dateRange?.to ? format(dateRange.to, "dd MMM yyyy", { locale: localeId }) : "";
+    const rangeText = formattedFrom === formattedTo ? formattedFrom : `${formattedFrom} - ${formattedTo}`;
     
     // Pastikan data yang dicetak selalu urut A-Z berdasarkan nama UMKM
     const dataToPrint = [...filteredAndSortedData].sort((a, b) => 
@@ -135,7 +168,7 @@ export default function DepositsPage() {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Daftar Penyetoran - ${selectedDate}</title>
+          <title>Daftar Penyetoran - ${rangeText}</title>
           <style>
             @page { size: portrait; margin: 0; }
             body { 
@@ -167,7 +200,8 @@ export default function DepositsPage() {
         <body>
           <div class="header">
             <h1>Laporan Penyetoran Mitra Jjs</h1>
-            <div class="meta">Tanggal Transaksi: ${formattedDate}</div>
+            <div class="meta">Periode: ${rangeText}</div>
+            ${bankFilter !== "ALL" ? `<div class="meta" style="margin-top: 5px;">Filter: ${bankFilter}</div>` : ""}
           </div>
           <table>
             <thead>
@@ -213,55 +247,94 @@ export default function DepositsPage() {
         supplierName={selectedSupplier?.name}
       />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-white">
-            Data <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-blue-400">Penyetoran</span>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
+            Data <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">Penyetoran</span>
           </h2>
-          <p className="text-slate-400 font-medium">Rekapitulasi transaksi harian yang siap disetorkan ke Mitra Jjs.</p>
+          <p className="text-slate-400 font-medium max-w-2xl">
+            Rekapitulasi transaksi harian yang siap disetorkan ke Mitra Jjs. Gunakan filter untuk melihat data spesifik.
+          </p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 no-print">
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tanggal Transaksi</span>
-                <Popover>
-                  <PopoverTrigger className="flex items-center gap-2 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto bg-transparent border-none">
-                    <CalendarIcon className="w-4 h-4 text-emerald-400" />
-                    {format(new Date(selectedDate), "dd MMM yyyy", { locale: localeId })}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={new Date(selectedDate)}
-                      onSelect={(date) => date && setSelectedDate(format(date, "yyyy-MM-dd"))}
-                      initialFocus
-                      className="text-white"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-slate-900/50 p-3 rounded-[2rem] border border-white/5 backdrop-blur-md">
+          {/* Date Filter */}
+          <div className="lg:col-span-3 flex items-center gap-3 px-4 py-2 bg-slate-950/40 rounded-2xl border border-white/5 hover:bg-white/5 transition-all group cursor-pointer h-14">
+            <div className="p-2 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
+              <CalendarIcon className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rentang Tanggal</span>
+              <Popover>
+                <PopoverTrigger className="flex items-center gap-2 text-sm font-bold text-white focus:outline-none p-0 h-auto bg-transparent border-none w-full text-left">
+                  {dateRange?.from ? (
+                    dateRange.to ? (
+                      <span className="truncate">
+                        {format(dateRange.from, "dd MMM", { locale: localeId })} - {format(dateRange.to, "dd MMM yyyy", { locale: localeId })}
+                      </span>
+                    ) : (
+                      format(dateRange.from, "dd MMM yyyy", { locale: localeId })
+                    )
+                  ) : (
+                    <span>Pilih Tanggal</span>
+                  )}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange?.from}
+                    selected={dateRange}
+                    onSelect={setDateRange}
+                    numberOfMonths={1}
+                    className="text-white"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
-          <div className="relative group w-full md:w-64">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
+          {/* Bank Filter */}
+          <div className="lg:col-span-2 flex items-center gap-3 px-4 py-2 bg-slate-950/40 rounded-2xl border border-white/5 hover:bg-white/5 transition-all group h-14">
+            <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
+              <Filter className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex flex-col flex-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-0.5">Metode</span>
+              <Select value={bankFilter} onValueChange={(val) => val && setBankFilter(val)}>
+                <SelectTrigger className="h-auto p-0 bg-transparent border-none text-sm font-bold text-white focus:ring-0 w-full hover:bg-transparent data-placeholder:text-slate-500">
+                  <SelectValue placeholder="Pilih Filter" />
+                </SelectTrigger>
+                <SelectContent side="bottom" sideOffset={8} align="start" alignItemWithTrigger={false} className="bg-slate-900/95 backdrop-blur-2xl border-white/10 text-white rounded-2xl p-1.5 shadow-2xl z-[100] min-w-[200px]">
+                  <SelectItem value="ALL" className="rounded-xl py-2.5 focus:bg-white/10 focus:text-white transition-colors">Semua Pembayaran</SelectItem>
+                  <SelectItem value="CASH" className="rounded-xl py-2.5 focus:bg-white/10 focus:text-white transition-colors">Cash / Tunai</SelectItem>
+                  <SelectItem value="BANK" className="rounded-xl py-2.5 focus:bg-white/10 focus:text-white transition-colors">Transfer Bank</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="lg:col-span-5 relative group h-14">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <Input 
               placeholder="Cari UMKM..." 
-              className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all font-medium text-white"
+              className="w-full h-full pl-12 pr-4 bg-slate-950/40 border-white/5 rounded-2xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all font-bold text-white placeholder:text-slate-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
 
-          <Button 
-            onClick={handlePrint}
-            disabled={filteredAndSortedData.length === 0}
-            className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xl shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-50"
-          >
-            <Printer className="w-5 h-5 mr-2" /> Cetak Setoran
-          </Button>
+          {/* Print Button */}
+          <div className="lg:col-span-2">
+            <Button 
+              onClick={handlePrint}
+              disabled={filteredAndSortedData.length === 0}
+              className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2"
+            >
+              <Printer className="w-5 h-5" /> Cetak
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -323,9 +396,10 @@ export default function DepositsPage() {
                   </TableRow>
                 ) : (
                   filteredAndSortedData.map((item) => (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
-                      <TableCell className="py-6 px-8">
-                        <span className="font-black text-lg text-white tracking-tight group-hover:text-emerald-400 transition-colors uppercase">
+                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.03] transition-all duration-500 group relative">
+                      <TableCell className="py-6 px-8 relative overflow-hidden">
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-emerald-500 group-hover:h-1/2 transition-all duration-500 rounded-r-full" />
+                        <span className="font-black text-lg text-white tracking-tight group-hover:text-emerald-400 transition-all duration-300 uppercase">
                           {item.name}
                         </span>
                       </TableCell>
@@ -335,9 +409,17 @@ export default function DepositsPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className="font-black text-slate-300 tracking-wider uppercase group-hover:text-white transition-colors">
-                          {item.bankName || "—"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            (item.bankName?.toUpperCase() === "CASH" || item.bankName?.toUpperCase() === "TUNAI" || !item.bankName) 
+                              ? "bg-amber-400" 
+                              : "bg-blue-400"
+                          )} />
+                          <span className="font-black text-slate-300 tracking-wider uppercase group-hover:text-white transition-colors">
+                            {item.bankName || "CASH"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <span className="font-mono text-slate-500 group-hover:text-slate-300 transition-colors">
@@ -345,7 +427,7 @@ export default function DepositsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-right px-8">
-                        <span className="font-black text-xl tracking-tighter text-emerald-400 transition-all duration-300 group-hover:scale-105 inline-block origin-right">
+                        <span className="font-black text-xl tracking-tighter text-emerald-400 transition-all duration-500 group-hover:scale-110 inline-block origin-right group-hover:drop-shadow-[0_0_8px_rgba(52,211,153,0.3)]">
                           {new Intl.NumberFormat("id-ID", {
                             style: "currency",
                             currency: "IDR",

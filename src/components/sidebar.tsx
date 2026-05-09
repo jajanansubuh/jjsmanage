@@ -33,13 +33,13 @@ import { Button } from "@/components/ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Riwayat", href: "/payouts", icon: History },
+  { name: "Data Master", href: "/master", icon: Database },
+  { name: "Transaksi", href: "/transactions", icon: ReceiptText },
   { name: "Setor", href: "/deposits", icon: Wallet },
   { name: "Tabungan", href: "/savings", icon: Coins },
   { name: "Produk", href: "/produk", icon: Package },
-  { name: "Data Master", href: "/master", icon: Database },
-  { name: "Transaksi", href: "/transactions", icon: ReceiptText },
   { name: "Laporan", href: "/reports", icon: FileText },
+  { name: "Riwayat", href: "/payouts", icon: History },
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ];
 

@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       lte: endDate,
     };
 
-    const baseWhere: any = { createdAt: dateFilter };
+    const baseWhere: any = { date: dateFilter };
     if (isSupplier && supplierId) {
       baseWhere.supplierId = supplierId;
     }
@@ -71,9 +71,12 @@ export async function GET(request: Request) {
       totalSuppliers = await prisma.supplier.count();
       totalCashiers = await prisma.cashier.count();
     } else {
-      totalTransactions = await prisma.consignmentReport.count({
-        where: baseWhere
+      const reports = await prisma.consignmentReport.findMany({
+        where: baseWhere,
+        select: { id: true, noteNumber: true }
       });
+      const uniqueNotes = new Set(reports.map(r => r.noteNumber || r.id));
+      totalTransactions = uniqueNotes.size;
     }
 
     // 3. Top Suppliers (Admin Only)
@@ -81,7 +84,7 @@ export async function GET(request: Request) {
     if (!isSupplier) {
       const topSupplierGroups = await prisma.consignmentReport.groupBy({
         by: ['supplierId'],
-        where: { createdAt: dateFilter },
+        where: { date: dateFilter },
         _sum: { revenue: true },
         _count: { id: true },
         orderBy: { _sum: { revenue: 'desc' } },
@@ -94,13 +97,27 @@ export async function GET(request: Request) {
         select: { id: true, name: true }
       });
 
+      // Get unique note counts for each top supplier
+      const uniqueNoteCounts = await Promise.all(topSupplierIds.map(async (sid) => {
+        const notes = await prisma.consignmentReport.findMany({
+          where: { 
+            supplierId: sid,
+            date: dateFilter 
+          },
+          select: { id: true, noteNumber: true }
+        });
+        const uniqueNotes = new Set(notes.map(n => n.noteNumber || n.id));
+        return { supplierId: sid, count: uniqueNotes.size };
+      }));
+
       topSuppliers = topSupplierGroups.map(g => {
         const supplier = topSuppliersData.find(s => s.id === g.supplierId);
+        const uniqueCount = uniqueNoteCounts.find(u => u.supplierId === g.supplierId)?.count || 0;
         return {
           id: g.supplierId,
           name: supplier?.name || "Unknown",
           totalRevenue: g._sum.revenue || 0,
-          transactionCount: g._count.id || 0
+          transactionCount: uniqueCount
         };
       });
     }
@@ -108,28 +125,33 @@ export async function GET(request: Request) {
     // 4. Trend Data - Optimization: Only fetch what's needed
     const trendRecords = await prisma.consignmentReport.findMany({
       where: baseWhere,
-      select: { createdAt: true, revenue: true, profit80: true },
-      orderBy: { createdAt: "asc" }
+      select: { date: true, revenue: true, profit80: true },
+      orderBy: { date: "asc" }
     });
 
     let revenueTrend: any[] = [];
 
     if (period === "day" || (period === "custom" && differenceInDays(endDate, startDate) <= 31)) {
-      // Group by day
-      const daysMap = new Map();
-      let currentDate = new Date(startDate);
-      while (currentDate <= endDate) {
-        daysMap.set(format(currentDate, "dd MMM", { locale: id }), 0);
-        currentDate = new Date(currentDate.setDate(currentDate.getDate() + 1));
+      // Group by day using YYYY-MM-DD for reliable matching
+      const dataMap = new Map();
+      let curr = new Date(startDate);
+      while (curr <= endDate) {
+        dataMap.set(format(curr, "yyyy-MM-dd"), 0);
+        curr = new Date(curr.getTime() + 24 * 60 * 60 * 1000);
       }
+      
       trendRecords.forEach(r => {
-        const key = format(new Date(r.createdAt), "dd MMM", { locale: id });
-        if (daysMap.has(key)) {
+        const key = format(new Date(r.date), "yyyy-MM-dd");
+        if (dataMap.has(key)) {
           const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
-          daysMap.set(key, daysMap.get(key) + val);
+          dataMap.set(key, dataMap.get(key) + val);
         }
       });
-      revenueTrend = Array.from(daysMap.entries()).map(([name, total]) => ({ name, total }));
+      
+      revenueTrend = Array.from(dataMap.entries()).map(([dateStr, total]) => ({
+        name: format(new Date(dateStr), "dd MMM", { locale: id }),
+        total
+      }));
     } 
     else if (period === "week") {
       // Group by week
@@ -138,10 +160,10 @@ export async function GET(request: Request) {
       while (currentWeek <= endDate) {
         const weekKey = `Mg ${format(currentWeek, "w", { locale: id })}`;
         weeksMap.set(weekKey, 0);
-        currentWeek = new Date(currentWeek.setDate(currentWeek.getDate() + 7));
+        currentWeek = new Date(currentWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
       }
       trendRecords.forEach(r => {
-        const key = `Mg ${format(new Date(r.createdAt), "w", { locale: id })}`;
+        const key = `Mg ${format(new Date(r.date), "w", { locale: id })}`;
         if (weeksMap.has(key)) {
           const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
           weeksMap.set(key, weeksMap.get(key) + val);
@@ -159,7 +181,7 @@ export async function GET(request: Request) {
         currentMonthDate = new Date(currentMonthDate.setMonth(currentMonthDate.getMonth() + 1));
       }
       trendRecords.forEach(r => {
-        const key = format(new Date(r.createdAt), "MMM", { locale: id });
+        const key = format(new Date(r.date), "MMM", { locale: id });
         if (monthsMap.has(key)) {
           const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
           monthsMap.set(key, monthsMap.get(key) + val);
@@ -175,7 +197,7 @@ export async function GET(request: Request) {
 
     const prevWhere = {
       ...baseWhere,
-      createdAt: {
+      date: {
         gte: prevStartDate,
         lte: prevEndDate,
       }

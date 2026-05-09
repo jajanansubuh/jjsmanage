@@ -16,6 +16,12 @@ import {
   LayoutGrid
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
+import { DateRange } from "react-day-picker";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIcon, Filter } from "lucide-react";
 
 interface ProductItem {
   name: string;
@@ -37,20 +43,33 @@ export default function ProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<AggregatedProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: keyof AggregatedProduct; direction: "asc" | "desc" } | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Default to start of month
+    to: new Date()
+  });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof AggregatedProduct; direction: "asc" | "desc" } | null>({ key: "totalJual", direction: "desc" });
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/reports?limit=5000'); // Fetch a large batch to get all history
+        // Hanya eksekusi jika rentang tanggal lengkap (Mulai & Selesai) atau jika belum ada pilihan sama sekali
+        if (dateRange?.from && !dateRange?.to) return;
+
+        const params = new URLSearchParams();
+        if (dateRange?.from) params.append("startDate", format(dateRange.from, "yyyy-MM-dd"));
+        if (dateRange?.to) params.append("endDate", format(dateRange.to, "yyyy-MM-dd"));
+        params.append("limit", "5000");
+
+        const res = await fetch(`/api/reports?${params.toString()}`);
         if (!res.ok) throw new Error("Gagal mengambil data laporan produk");
-        
+
         const data = await res.json();
         const reports = data.reports || [];
 
-        // Aggregate items from all reports
+        // ... rest of the aggregation logic ...
         const productMap = new Map<string, AggregatedProduct>();
 
         reports.forEach((report: any) => {
@@ -62,16 +81,16 @@ export default function ProductsPage() {
 
               if (productMap.has(name)) {
                 const existing = productMap.get(name)!;
-                existing.totalBeli += Number(item.qtyBeli) || 0;
-                existing.totalJual += Number(item.qtyJual) || 0;
-                existing.totalRetureJual += (item.retureJual != null && !isNaN(Number(item.retureJual))) ? Number(item.retureJual) : 0;
+                existing.totalBeli += Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0);
+                existing.totalJual += Number(item.qtyJual ?? item.jual ?? 0);
+                existing.totalRetureJual += Number(item.retureJual ?? item.retur ?? 0);
                 existing.transactions += 1;
               } else {
                 productMap.set(name, {
                   name: name,
-                  totalBeli: Number(item.qtyBeli) || 0,
-                  totalJual: Number(item.qtyJual) || 0,
-                  totalRetureJual: (item.retureJual != null && !isNaN(Number(item.retureJual))) ? Number(item.retureJual) : 0,
+                  totalBeli: Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0),
+                  totalJual: Number(item.qtyJual ?? item.jual ?? 0),
+                  totalRetureJual: Number(item.retureJual ?? item.retur ?? 0),
                   transactions: 1
                 });
               }
@@ -89,7 +108,7 @@ export default function ProductsPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [dateRange]);
 
   const handleSort = (key: keyof AggregatedProduct) => {
     let direction: "asc" | "desc" = "asc";
@@ -108,17 +127,17 @@ export default function ProductsPage() {
       result.sort((a, b) => {
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
-        
+
         if (typeof valA === 'string' && typeof valB === 'string') {
-          return sortConfig.direction === "asc" 
-            ? valA.localeCompare(valB) 
+          return sortConfig.direction === "asc"
+            ? valA.localeCompare(valB)
             : valB.localeCompare(valA);
         }
-        
+
         if (typeof valA === 'number' && typeof valB === 'number') {
           return sortConfig.direction === "asc" ? valA - valB : valB - valA;
         }
-        
+
         return 0;
       });
     }
@@ -130,7 +149,7 @@ export default function ProductsPage() {
     return {
       totalItems: products.length,
       totalSold: products.reduce((acc, p) => acc + p.totalJual, 0),
-      avgSellRate: products.length > 0 
+      avgSellRate: products.length > 0
         ? (products.reduce((acc, p) => acc + (p.totalBeli > 0 ? (p.totalJual / p.totalBeli) * 100 : 0), 0) / products.length).toFixed(1)
         : "0"
     };
@@ -171,14 +190,126 @@ export default function ProductsPage() {
           <p className="text-slate-400 font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
         </div>
 
-        <div className="relative group w-full md:w-80">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
-          <Input
-            placeholder="Cari nama produk..."
-            className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium text-white"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 no-print w-full sm:w-auto">
+            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group cursor-pointer w-full">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Periode Laporan</span>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger className="flex items-center gap-2 text-sm font-bold text-white focus:outline-none p-0 h-auto bg-transparent border-none hover:text-blue-400 transition-colors cursor-pointer">
+                    <CalendarIcon className="w-4 h-4 text-blue-400" />
+                    {dateRange?.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "dd MMM", { locale: localeId })} - {format(dateRange.to, "dd MMM yyyy", { locale: localeId })}
+                        </>
+                      ) : (
+                        format(dateRange.from, "dd MMM yyyy", { locale: localeId })
+                      )
+                    ) : (
+                      <span>Pilih Tanggal</span>
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
+                    <div className="flex flex-col md:flex-row">
+                      <div className="p-2 border-r border-white/5 flex flex-col gap-1 bg-white/[0.02]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
+                          onClick={() => {
+                            setDateRange({ from: new Date(), to: new Date() });
+                            setIsCalendarOpen(false);
+                          }}
+                        >
+                          Hari Ini
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
+                          onClick={() => {
+                            const end = new Date();
+                            const start = new Date();
+                            start.setDate(start.getDate() - 7);
+                            setDateRange({ from: start, to: end });
+                            setIsCalendarOpen(false);
+                          }}
+                        >
+                          7 Hari Terakhir
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
+                          onClick={() => {
+                            const now = new Date();
+                            setDateRange({
+                              from: new Date(now.getFullYear(), now.getMonth(), 1),
+                              to: now
+                            });
+                            setIsCalendarOpen(false);
+                          }}
+                        >
+                          Bulan Ini
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
+                          onClick={() => {
+                            const now = new Date();
+                            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                            const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                            setDateRange({ from: lastMonth, to: endOfLastMonth });
+                            setIsCalendarOpen(false);
+                          }}
+                        >
+                          Bulan Lalu
+                        </Button>
+                      </div>
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range, selectedDay) => {
+                          // Logika agar klik baru selalu mereset rentang jika sebelumnya sudah lengkap
+                          if (dateRange?.from && dateRange?.to) {
+                            setDateRange({ from: selectedDay, to: undefined });
+                          } else {
+                            setDateRange(range);
+                          }
+
+                          // Jika sudah klik tanggal kedua (range lengkap), otomatis tutup
+                          // Kita cek dari 'range' yang baru atau logika manual
+                          const nextRange = (dateRange?.from && dateRange?.to)
+                            ? { from: selectedDay, to: undefined }
+                            : range;
+
+                          if (nextRange?.from && nextRange?.to) {
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                        numberOfMonths={1}
+                        className="p-4 text-white"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative group w-full md:w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+            <Input
+              placeholder="Cari nama produk..."
+              className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium text-white"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
@@ -214,7 +345,7 @@ export default function ProductsPage() {
               <LayoutGrid className="w-7 h-7 text-emerald-400" />
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Rasio Laku</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Rasio Terjual</p>
               <h4 className="text-3xl font-black text-white tracking-tighter">{stats.avgSellRate}%</h4>
             </div>
           </CardContent>
@@ -258,7 +389,7 @@ export default function ProductsPage() {
                     </TableHead>
                     <TableHead className="py-6 px-8 text-right">
                       <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                        Persentase Laku
+                        Persentase
                       </div>
                     </TableHead>
                   </TableRow>
@@ -272,10 +403,10 @@ export default function ProductsPage() {
                     </TableRow>
                   ) : (
                     filteredProducts.map((product, idx) => {
-                      const sellRate = product.totalBeli > 0 
+                      const sellRate = product.totalBeli > 0
                         ? ((product.totalJual / product.totalBeli) * 100).toFixed(1)
                         : "0";
-                      
+
                       return (
                         <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
                           <TableCell className="py-6 px-8">
@@ -309,8 +440,8 @@ export default function ProductsPage() {
                                 {sellRate}%
                               </span>
                               <div className="w-24 h-1.5 bg-white/5 rounded-full mt-2 overflow-hidden">
-                                <div 
-                                  className="h-full bg-linear-to-r from-blue-500 to-emerald-500" 
+                                <div
+                                  className="h-full bg-linear-to-r from-blue-500 to-emerald-500"
                                   style={{ width: `${Math.min(100, Number(sellRate))}%` }}
                                 />
                               </div>

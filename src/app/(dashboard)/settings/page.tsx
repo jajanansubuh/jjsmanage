@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
+import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { importDatabaseAction } from "@/lib/actions/import";
 
@@ -15,13 +15,36 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [systemStats, setSystemStats] = useState<{
+    reportCount: number,
+    supplierCount: number,
+    cashierCount: number,
+    userCount: number,
+    estimatedSizeMB: string,
+    status: string,
+    lastActivity: string,
+    databaseType: string
+  } | null>(null);
   
   const [formData, setFormData] = useState({ username: "", password: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProfile();
+    fetchSystemStats();
   }, []);
+
+  const fetchSystemStats = async () => {
+    try {
+      const res = await fetch("/api/system/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setSystemStats(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch system stats");
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -228,6 +251,95 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <div className="grid md:grid-cols-2 gap-6">
+            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col md:col-span-2 border-b-0">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02] p-8">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center text-2xl font-black text-white tracking-tight">
+                      <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-4">
+                        <Database className="w-6 h-6 text-blue-400" />
+                      </div>
+                      Ringkasan Aktivitas Sistem
+                    </CardTitle>
+                    <CardDescription className="text-slate-400 font-medium ml-14">Status kesehatan database dan kapasitas penyimpanan.</CardDescription>
+                  </div>
+                  <div className="hidden sm:block">
+                    <div className="px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Sistem Online</span>
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-8 space-y-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-blue-400 transition-colors">Total Nota</p>
+                    <p className="text-4xl font-black text-white tracking-tighter">{systemStats?.reportCount || 0}</p>
+                  </div>
+                  
+                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-blue-400 transition-colors">Penyimpanan</p>
+                    <div className="flex items-baseline gap-1">
+                      <p className="text-4xl font-black text-blue-400 tracking-tighter">{systemStats?.estimatedSizeMB || "0.00"}</p>
+                      <span className="text-sm font-bold text-slate-500">MB</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-emerald-400 transition-colors">Status DB</p>
+                    <div className="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">{systemStats?.status || "Optimal"}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/20 transition-all group">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-purple-400 transition-colors">Suplier</p>
+                    <p className="text-4xl font-black text-purple-400 tracking-tighter">{systemStats?.supplierCount || 0}</p>
+                  </div>
+                </div>
+
+                <div className="relative p-8 rounded-[2.5rem] bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-white/10 overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <ShieldCheck className="w-24 h-24 text-white" />
+                  </div>
+                  
+                  <div className="relative space-y-6">
+                    <div className="grid sm:grid-cols-2 gap-8">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tipe Database</p>
+                        <p className="text-sm font-bold text-white">{systemStats?.databaseType || "PostgreSQL (Cloud Indexed)"}</p>
+                      </div>
+                      <div className="space-y-1 sm:text-right">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Aktifitas Terakhir</p>
+                        <p className="text-sm font-bold text-white">
+                          {systemStats?.lastActivity 
+                            ? new Date(systemStats.lastActivity).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+                            : "Belum ada aktifitas"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-end">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Kapasitas Penyimpanan</p>
+                        <p className="text-xs font-black text-white">{Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100).toFixed(2)}% Terpakai</p>
+                      </div>
+                      <div className="h-3 w-full bg-slate-950/50 rounded-full border border-white/5 p-0.5">
+                        <div 
+                          className="h-full bg-linear-to-r from-blue-500 via-blue-400 to-indigo-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out" 
+                          style={{ width: `${Math.max(2, Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100))}%` }}
+                        />
+                      </div>
+                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider italic">
+                        * Berdasarkan alokasi kuota standar 1,024 MB (1GB)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
               <CardHeader className="border-b border-white/5 bg-white/[0.02]">
                 <CardTitle className="flex items-center text-lg font-bold text-white">
@@ -235,7 +347,7 @@ export default function SettingsPage() {
                 </CardTitle>
                 <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-center pt-6">
+              <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
                 <Button 
                   onClick={handleBackup} 
                   disabled={isBackingUp}
@@ -263,7 +375,7 @@ export default function SettingsPage() {
                 </CardTitle>
                 <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
               </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-center pt-6">
+              <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
                 <input 
                   type="file" 
                   accept=".xlsx" 

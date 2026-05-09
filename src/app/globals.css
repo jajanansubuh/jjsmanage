@@ -120,11 +120,19 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
+  }
+
+  button, 
+  [role="button"],
+  .cursor-pointer {
+    cursor: pointer !important;
   }
 }
 
@@ -133,14 +141,21 @@
     size: 215mm 330mm;
     margin: 0;
   }
-  
+
   body {
     background-color: white !important;
     color: black !important;
     padding: 15mm !important;
   }
 
-  .no-print, button, nav, aside, [data-sidebar], .sidebar-container, header, .sidebar-trigger {
+  .no-print,
+  button,
+  nav,
+  aside,
+  [data-sidebar],
+  .sidebar-container,
+  header,
+  .sidebar-trigger {
     display: none !important;
   }
 
@@ -151,7 +166,14 @@
     padding: 0 !important;
   }
 
-  .bg-card\/20, .bg-slate-900, .bg-card, .backdrop-blur-xl, .backdrop-blur-2xl, .shadow-2xl, .shadow-xl, .shadow-lg {
+  .bg-card\/20,
+  .bg-slate-900,
+  .bg-card,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .shadow-2xl,
+  .shadow-xl,
+  .shadow-lg {
     background-color: transparent !important;
     background: none !important;
     border: none !important;
@@ -167,7 +189,8 @@
     border: 1pt solid black !important;
   }
 
-  th, td {
+  th,
+  td {
     border: 1pt solid black !important;
     padding: 3pt 2pt !important;
     word-wrap: normal !important;
@@ -194,14 +217,40 @@
     white-space: normal !important;
   }
 
-  /* Optimized Column Widths for Large Numbers */
-  th:nth-child(1), td:nth-child(1) { width: 4% !important; }
-  th:nth-child(2), td:nth-child(2) { width: 16% !important; }
-  th:nth-child(3), td:nth-child(3) { width: 16% !important; }
-  th:nth-child(4), td:nth-child(4) { width: 16% !important; }
-  th:nth-child(5), td:nth-child(5) { width: 16% !important; }
-  th:nth-child(6), td:nth-child(6) { width: 16% !important; }
-  th:nth-child(7), td:nth-child(7) { width: 16% !important; }
+  th:nth-child(1),
+  td:nth-child(1) {
+    width: 4% !important;
+  }
+
+  th:nth-child(2),
+  td:nth-child(2) {
+    width: 16% !important;
+  }
+
+  th:nth-child(3),
+  td:nth-child(3) {
+    width: 16% !important;
+  }
+
+  th:nth-child(4),
+  td:nth-child(4) {
+    width: 16% !important;
+  }
+
+  th:nth-child(5),
+  td:nth-child(5) {
+    width: 16% !important;
+  }
+
+  th:nth-child(6),
+  td:nth-child(6) {
+    width: 16% !important;
+  }
+
+  th:nth-child(7),
+  td:nth-child(7) {
+    width: 16% !important;
+  }
 
   .text-emerald-400 {
     color: #059669 !important;
@@ -216,7 +265,8 @@
     print-color-adjust: exact;
   }
 
-  input, [role="combobox"] {
+  input,
+  [role="combobox"] {
     display: none !important;
   }
 }

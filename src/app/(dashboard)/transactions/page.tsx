@@ -33,7 +33,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, Calculator, Search, ChevronDown, Check, ArrowUpDown, Calendar as CalendarIcon, Download, Printer, CheckCircle2 } from "lucide-react";
+import { Save, Plus, Trash2, Calculator, Search, ChevronDown, Check, ArrowUpDown, Calendar as CalendarIcon, Download, Printer, CheckCircle2, AlertCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Upload } from "lucide-react";
 import { saveTransactionAction } from "@/lib/actions/transactions";
@@ -53,7 +53,7 @@ interface ReportRow {
   importedSupplierName?: string;
 }
 
-function SupplierCombobox({ value, onValueChange, suppliers }: { value: string, onValueChange: (val: string) => void, suppliers: { id: string, name: string, ownerName?: string | null }[] }) {
+function SupplierCombobox({ value, onValueChange, suppliers, id, onKeyDown }: { value: string, onValueChange: (val: string) => void, suppliers: { id: string, name: string, ownerName?: string | null }[], id?: string, onKeyDown?: (e: React.KeyboardEvent) => void }) {
   const [search, setSearch] = useState("");
 
   // Clear search when value is reset (e.g. after adding transaction)
@@ -67,7 +67,7 @@ function SupplierCombobox({ value, onValueChange, suppliers }: { value: string, 
 
   return (
     <Combobox value={value} onValueChange={onValueChange}>
-      <ComboboxTrigger id="supplier-combobox-trigger" className="w-full bg-white/5 border-white/10 h-10 text-white hover:bg-white/10 transition-all">
+      <ComboboxTrigger id={id} onKeyDown={onKeyDown} className="w-full bg-white/5 border-white/10 h-10 text-white hover:bg-white/10 transition-all">
         {suppliers.find(s => s.id === value)?.name || "Pilih Suplier"}
       </ComboboxTrigger>
       <ComboboxContent className="w-[300px] bg-slate-900/95 backdrop-blur-xl border-white/10 p-2 shadow-2xl">
@@ -132,6 +132,14 @@ function TransactionsPageContent() {
   // Save Success Modal State
   const [isSaveSuccessModalOpen, setIsSaveSuccessModalOpen] = useState(false);
   const [savedNoteInfo, setSavedNoteInfo] = useState<{ noteNumber: string, date: string, cashierName: string } | null>(null);
+
+  const previewProfit80 = (Number(formData.cost) || 0) - (
+    (Number(formData.barcode) || 0) + 
+    (Number(formData.serviceCharge) || 0) + 
+    (Number(formData.kukuluban) || 0) + 
+    (Number(formData.tabungan) || 0)
+  );
+  const previewProfit20 = (Number(formData.revenue) || 0) - (Number(formData.cost) || 0);
 
   useEffect(() => {
     if (isEditMode) return; // Don't auto-generate note number in edit mode
@@ -322,38 +330,67 @@ function TransactionsPageContent() {
     }, 0);
   };
 
+  const handleFormKeyDown = (e: React.KeyboardEvent, field: string) => {
+    if (field === "supplier") {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        revenueRef.current?.focus();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        // Focus first row in table if exists
+        const firstRowInput = document.querySelector("tbody tr:first-child td:nth-child(3) input") as HTMLInputElement;
+        firstRowInput?.focus();
+      }
+    }
+  };
+
   const handleRevenueKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "ArrowRight") {
+      e.preventDefault();
+      costRef.current?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      document.getElementById("supplier-combobox-trigger")?.focus();
+    }
+  };
+
+  const handleCostKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "ArrowRight") {
+      e.preventDefault();
+      barcodeRef.current?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      revenueRef.current?.focus();
+    }
+  };
+
+  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "ArrowRight") {
+      e.preventDefault();
+      serviceChargeRef.current?.focus();
+    } else if (e.key === "ArrowLeft") {
       e.preventDefault();
       costRef.current?.focus();
     }
   };
 
-  const handleCostKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+  const handleServiceChargeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === "ArrowRight") {
+      e.preventDefault();
+      kukulubanRef.current?.focus();
+    } else if (e.key === "ArrowLeft") {
       e.preventDefault();
       barcodeRef.current?.focus();
     }
   };
 
-  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      serviceChargeRef.current?.focus();
-    }
-  };
-
-  const handleServiceChargeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      kukulubanRef.current?.focus();
-    }
-  };
-
   const handleKukulubanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" || e.key === "ArrowRight") {
       e.preventDefault();
       tabunganRef.current?.focus();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      serviceChargeRef.current?.focus();
     }
   };
 
@@ -361,6 +398,13 @@ function TransactionsPageContent() {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddTransaction();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      kukulubanRef.current?.focus();
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      // focus add button
+      (e.currentTarget.parentElement?.nextElementSibling?.querySelector("button") as HTMLElement)?.focus();
     }
   };
 
@@ -391,6 +435,49 @@ function TransactionsPageContent() {
       }
       return row;
     }));
+  };
+
+  const handleTableKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, field: string) => {
+    const fields = ["revenue", "cost", "barcode", "serviceCharge", "kukuluban", "tabungan"];
+    const fieldIndex = fields.indexOf(field);
+
+    if (e.key === "ArrowRight" || e.key === "Enter") {
+      e.preventDefault();
+      if (fieldIndex < fields.length - 1) {
+        const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
+        nextInput?.focus();
+      } else if (e.key === "Enter") {
+        // If Enter on last column, go to next row first column if exists
+        if (rowIndex < rows.length - 1) {
+          const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
+          const targetInput = nextRow?.querySelectorAll("td")[2]?.querySelector("input");
+          targetInput?.focus();
+        } else {
+          // Or back to top form
+          document.getElementById("supplier-combobox-trigger")?.focus();
+        }
+      }
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      if (fieldIndex > 0) {
+        const prevInput = e.currentTarget.closest("td")?.previousElementSibling?.querySelector("input");
+        prevInput?.focus();
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (rowIndex < rows.length - 1) {
+        const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
+        const targetInput = nextRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
+        targetInput?.focus();
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (rowIndex > 0) {
+        const prevRow = e.currentTarget.closest("tr")?.previousElementSibling;
+        const targetInput = prevRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
+        targetInput?.focus();
+      }
+    }
   };
 
   const calculateTotal = (field: keyof ReportRow) => {
@@ -492,9 +579,9 @@ function TransactionsPageContent() {
           if (!supplierName) return;
 
           const itemName = findValue(row, "Nama Barang", "Produk", "Barang");
-          const qtyBeli = Number(findValue(row, "Qty Beli", "Beli")) || 0;
-          const qtyJual = Number(findValue(row, "Qty Jual", "Jual")) || 0;
-          const retureJual = Number(findValue(row, "Reture Jual", "Retur Jual", "Return Jual")) || 0;
+          const qtyBeli = Number(findValue(row, "Qty Beli", "Beli", "Qty", "Jumlah Beli", "Stok", "Stock", "Masuk", "Jml Beli", "Awal", "Total Beli", "Supply")) || 0;
+          const qtyJual = Number(findValue(row, "Qty Jual", "Jual", "Laku", "Terjual", "Jumlah Jual")) || 0;
+          const retureJual = Number(findValue(row, "Reture Jual", "Retur Jual", "Return Jual", "Retur", "Kembali")) || 0;
           const rev = Number(findValue(row, "Pendapatan", "Omset", "Revenue")) || 0;
           const cst = Number(findValue(row, "Cost", "Harga Pokok")) || 0;
           const bc = Number(findValue(row, "Barcode", "Barcod")) || 0;
@@ -870,9 +957,6 @@ function TransactionsPageContent() {
               Batal Edit
             </Button>
           )}
-          <Button onClick={handlePrint} variant="outline" className="border-white/10 hover:bg-white/5 bg-slate-900 text-white shadow-lg">
-            <Printer className="w-4 h-4 mr-2" /> Print
-          </Button>
           <Button onClick={handleExportExcel} variant="outline" className="border-white/10 hover:bg-white/5 bg-slate-900 text-white shadow-lg">
             <Download className="w-4 h-4 mr-2" /> Export Excel
           </Button>
@@ -905,6 +989,45 @@ function TransactionsPageContent() {
             )}
           </Button>
         </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-blue-500/20 transition-all">
+          <CardContent className="p-8 flex items-center gap-6">
+            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+              <Plus className="w-7 h-7 text-blue-400" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total UMKM</p>
+              <h4 className="text-3xl font-black text-white tracking-tighter">{rows.length}</h4>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-emerald-500/20 transition-all">
+          <CardContent className="p-8 flex items-center gap-6">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+              <Calculator className="w-7 h-7 text-emerald-400" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total Pendapatan</p>
+              <h4 className="text-2xl font-black text-white tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(calculateTotal("revenue"))}</h4>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-purple-500/20 transition-all">
+          <CardContent className="p-8 flex items-center gap-6">
+            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+              <CheckCircle2 className="w-7 h-7 text-purple-400" />
+            </div>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total Toko (20%)</p>
+              <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(calculateTotal("profit20"))}</h4>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="border-border/40 bg-card/20 backdrop-blur-xl shadow-2xl print:border-0 print:shadow-none">
@@ -1026,6 +1149,7 @@ function TransactionsPageContent() {
             <div className="col-span-1 md:col-span-3">
               <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Suplier</Label>
               <SupplierCombobox
+                id="supplier-combobox-trigger"
                 value={formData.supplierId}
                 onValueChange={(val) => {
                   setFormData({ ...formData, supplierId: val });
@@ -1033,6 +1157,7 @@ function TransactionsPageContent() {
                     revenueRef.current?.focus();
                   }, 50);
                 }}
+                onKeyDown={(e) => handleFormKeyDown(e, "supplier")}
                 suppliers={suppliers}
               />
             </div>
@@ -1107,40 +1232,62 @@ function TransactionsPageContent() {
                 <Plus className="w-5 h-5" />
               </Button>
             </div>
+
+            {/* Live Profit Preview */}
+            <div className="col-span-1 md:col-span-12 mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs font-bold uppercase tracking-widest">
+              <div className="flex gap-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">Preview Mitra Jjs:</span>
+                  <span className={cn("text-blue-400", previewProfit80 < 0 && "text-red-400")}>
+                    Rp {new Intl.NumberFormat("id-ID").format(previewProfit80)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">Preview Toko:</span>
+                  <span className={cn("text-emerald-400", previewProfit20 < 0 && "text-red-400")}>
+                    Rp {new Intl.NumberFormat("id-ID").format(previewProfit20)}
+                  </span>
+                </div>
+              </div>
+              <span className="text-slate-600 lowercase font-medium italic">Kalkulasi otomatis saat Anda mengetik</span>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-white/5 hover:bg-transparent">
-                  <TableHead className="w-[40px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">No</TableHead>
-                  <TableHead className="min-w-[150px] print:min-w-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <TableHead className="w-[30px] text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">No</TableHead>
+                  <TableHead className="min-w-[120px] print:min-w-0 text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">
                     <div className="flex items-center cursor-pointer hover:text-white transition-colors" onClick={toggleSort}>
-                      Suplier <ArrowUpDown className="ml-2 w-3 h-3 no-print" />
+                      Suplier <ArrowUpDown className="ml-1 w-2.5 h-2.5 no-print" />
                     </div>
                   </TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pendapatan</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Cost</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Barcode</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">S.Charge</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Kukuluban</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Tabungan</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Mitra Jjs</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-emerald-400">Toko</TableHead>
-                  <TableHead className="w-[40px] no-print"></TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Pendapatan</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Cost</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Barcode</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">S.Charge</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Kukuluban</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Tabungan</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Mitra Jjs</TableHead>
+                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground text-emerald-400 px-2">Toko</TableHead>
+                  <TableHead className="w-[30px] no-print px-2"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center py-10 text-slate-500 italic">
-                      Belum ada data transaksi. Silakan tambah melalui form di atas.
+                    <TableCell colSpan={11} className="text-center py-20 text-slate-500 font-medium italic">
+                      <div className="flex flex-col items-center gap-2">
+                        <AlertCircle className="w-8 h-8 text-slate-700" />
+                        Belum ada data transaksi. Silakan tambah melalui form di atas.
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
                   rows.map((row, index) => (
                     <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                      <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
+                      <TableCell className="font-medium text-slate-500 py-3 px-2 text-[11px]">{index + 1}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <div className="font-bold text-white print:text-black min-w-[150px]">
@@ -1228,13 +1375,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.revenue ? new Intl.NumberFormat("id-ID").format(row.revenue) : "0"}
                           onChange={(e) => updateRowField(row.id, "revenue", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
-                              nextInput?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "revenue")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1243,13 +1384,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.cost ? new Intl.NumberFormat("id-ID").format(row.cost) : "0"}
                           onChange={(e) => updateRowField(row.id, "cost", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
-                              nextInput?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "cost")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1258,13 +1393,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.barcode ? new Intl.NumberFormat("id-ID").format(row.barcode) : "0"}
                           onChange={(e) => updateRowField(row.id, "barcode", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
-                              nextInput?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "barcode")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1273,13 +1402,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.serviceCharge ? new Intl.NumberFormat("id-ID").format(row.serviceCharge) : "0"}
                           onChange={(e) => updateRowField(row.id, "serviceCharge", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
-                              nextInput?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "serviceCharge")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1288,13 +1411,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.kukuluban ? new Intl.NumberFormat("id-ID").format(row.kukuluban) : "0"}
                           onChange={(e) => updateRowField(row.id, "kukuluban", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              const nextInput = e.currentTarget.closest("td")?.nextElementSibling?.querySelector("input");
-                              nextInput?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "kukuluban")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1303,12 +1420,7 @@ function TransactionsPageContent() {
                           type="text"
                           value={row.tabungan ? new Intl.NumberFormat("id-ID").format(row.tabungan) : "0"}
                           onChange={(e) => updateRowField(row.id, "tabungan", e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              document.getElementById("supplier-combobox-trigger")?.focus();
-                            }
-                          }}
+                          onKeyDown={(e) => handleTableKeyDown(e, index, "tabungan")}
                           className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
                         />
                       </TableCell>
@@ -1318,14 +1430,14 @@ function TransactionsPageContent() {
                       <TableCell className="text-right font-bold text-emerald-400 print:text-black">
                         {new Intl.NumberFormat("id-ID").format(row.profit20)}
                       </TableCell>
-                      <TableCell className="no-print">
+                      <TableCell className="no-print px-2">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => removeRow(index)}
-                          className="text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
+                          className="w-8 h-8 text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -1333,17 +1445,17 @@ function TransactionsPageContent() {
                 )}
 
                 {/* Total Row */}
-                <TableRow className="bg-white/5 border-t-2 border-white/10 font-bold print:bg-gray-100">
-                  <TableCell colSpan={2} className="text-center text-xs tracking-widest uppercase py-6 print:text-black">Total</TableCell>
-                  <TableCell className="text-right text-lg print:text-black">{new Intl.NumberFormat("id-ID").format(calculateTotal("revenue"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/60">{new Intl.NumberFormat("id-ID").format(calculateTotal("cost"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/60">{new Intl.NumberFormat("id-ID").format(calculateTotal("barcode"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/60">{new Intl.NumberFormat("id-ID").format(calculateTotal("serviceCharge"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/60">{new Intl.NumberFormat("id-ID").format(calculateTotal("kukuluban"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/60">{new Intl.NumberFormat("id-ID").format(calculateTotal("tabungan"))}</TableCell>
-                  <TableCell className="text-right text-lg text-white/80">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit80"))}</TableCell>
-                  <TableCell className="text-right text-lg text-emerald-400">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit20"))}</TableCell>
-                  <TableCell className="no-print"></TableCell>
+                <TableRow className="bg-slate-950/60 border-t-2 border-white/10 font-bold print:bg-gray-100">
+                  <TableCell colSpan={2} className="text-center text-[9px] font-black tracking-[0.1em] uppercase py-6 print:text-black text-slate-400 px-2">Total</TableCell>
+                  <TableCell className="text-right text-base font-black text-white py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("revenue"))}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("cost"))}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("barcode"))}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("serviceCharge"))}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("kukuluban"))}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("tabungan"))}</TableCell>
+                  <TableCell className="text-right text-base font-black text-blue-400/80 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit80"))}</TableCell>
+                  <TableCell className="text-right text-lg font-black text-emerald-400 py-6 px-2 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit20"))}</TableCell>
+                  <TableCell className="no-print px-2"></TableCell>
                 </TableRow>
               </TableBody>
             </Table>

@@ -20,14 +20,17 @@ export async function GET(req: Request) {
     const whereClause: any = {};
     if (supplierId) whereClause.supplierId = supplierId;
     if (noteNumber) whereClause.noteNumber = noteNumber;
-    if (date) {
-      const startOfDay = new Date(date);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(date);
-      endOfDay.setHours(23, 59, 59, 999);
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+
+    if (date || (startDate && endDate)) {
+      const start = new Date(startDate || date!);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate || date!);
+      end.setHours(23, 59, 59, 999);
       whereClause.date = {
-        gte: startOfDay,
-        lte: endOfDay
+        gte: start,
+        lte: end
       };
     }
 
