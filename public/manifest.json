@@ -3,7 +3,9 @@
   "short_name": "JJS",
   "description": "Aplikasi Manajemen Jajanan Subuh",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
   "icons": [

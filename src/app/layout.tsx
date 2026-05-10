@@ -17,14 +17,14 @@ export const metadata: Metadata = {
   title: "JjsManage - Solusi Manajemen Konsinyasi",
   description: "Aplikasi manajemen bagi hasil konsinyasi yang modern dan efisien.",
   manifest: "/manifest.json",
-  icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
-  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "JJS Manage",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
   },
   formatDetection: {
     telephone: false,
