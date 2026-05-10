@@ -230,9 +230,9 @@ export async function GET(request: Request) {
     if (isSupplier && supplierId) {
       const supplier = await prisma.supplier.findUnique({
         where: { id: supplierId },
-        select: { balance: true }
+        select: { validatedBalance: true }
       });
-      currentBalance = supplier?.balance || 0;
+      currentBalance = supplier?.validatedBalance || 0;
     }
 
     return NextResponse.json({

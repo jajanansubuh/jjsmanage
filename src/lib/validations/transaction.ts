@@ -5,9 +5,9 @@ export const transactionRowSchema = z.object({
   revenue: z.number().min(0, "Pendapatan tidak boleh negatif"),
   barcode: z.number().min(0, "Barcode tidak boleh negatif"),
   cost: z.number().min(0, "Cost tidak boleh negatif"),
-  serviceCharge: z.number().min(0, "Service charge tidak boleh negatif"),
-  kukuluban: z.number().min(0, "Kukuluban tidak boleh negatif"),
-  tabungan: z.number().min(0, "Tabungan tidak boleh negatif"),
+  serviceCharge: z.number().min(0).optional().default(0),
+  kukuluban: z.number().min(0).optional().default(0),
+  tabungan: z.number().min(0).optional().default(0),
   profit80: z.number(), // This is calculated on the client, but we can re-verify or just accept it
   profit20: z.number(),
   items: z.array(z.object({

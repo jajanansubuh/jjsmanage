@@ -41,7 +41,8 @@ export async function POST(req: Request) {
         ownerName, 
         bankName,
         accountNumber,
-        balance: 0
+        balance: 0,
+        validatedBalance: 0
       },
     });
     return NextResponse.json(supplier);

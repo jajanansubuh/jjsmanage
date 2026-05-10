@@ -35,13 +35,15 @@ export async function POST(req: Request) {
     await prisma.$transaction(async (tx: any) => {
       // For each report, we need to subtract the profit80 from the supplier's balance
       for (const report of reports) {
+        const dataToUpdate: any = {
+          balance: { decrement: report.profit80 }
+        };
+        if (report.isValidated) {
+          dataToUpdate.validatedBalance = { decrement: report.profit80 };
+        }
         await tx.supplier.update({
           where: { id: report.supplierId },
-          data: {
-            balance: {
-              decrement: report.profit80
-            }
-          }
+          data: dataToUpdate
         });
       }
 

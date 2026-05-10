@@ -7,17 +7,18 @@ datasource db {
 }
 
 model Supplier {
-  id            String              @id @default(cuid())
-  name          String
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  accountNumber String?
-  balance       Float               @default(0)
-  ownerName     String?
-  bankName      String?
-  reports       ConsignmentReport[]
-  users         User[]
-  payouts       SupplierPayout[]
+  id               String              @id @default(cuid())
+  name             String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  accountNumber    String?
+  balance          Float               @default(0)
+  validatedBalance Float               @default(0)
+  ownerName        String?
+  bankName         String?
+  reports          ConsignmentReport[]
+  users            User[]
+  payouts          SupplierPayout[]
 }
 
 model SupplierPayout {
@@ -40,34 +41,37 @@ model Cashier {
 }
 
 model ConsignmentReport {
-  id            String   @id @default(cuid())
-  date          DateTime @default(now())
-  supplierId    String
-  revenue       Float
-  profit80      Float
-  profit20      Float
-  barcode       Float
-  cost          Float
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  kukuluban     Float?   @default(0)
-  serviceCharge Float?   @default(0)
-  tabungan      Float?   @default(0)
-  noteNumber    String?
-  notes         String?
-  items         Json?    @default("[]")
-  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  id                  String    @id @default(cuid())
+  date                DateTime  @default(now())
+  supplierId          String
+  revenue             Float
+  profit80            Float
+  profit20            Float
+  barcode             Float
+  cost                Float
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  kukuluban           Float?    @default(0)
+  serviceCharge       Float?    @default(0)
+  tabungan            Float?    @default(0)
+  noteNumber          String?
+  notes               String?
+  deductionDate       DateTime?
+  deductionNoteNumber String?
+  items               Json?     @default("[]")
+  isValidated         Boolean   @default(false)
+  supplier            Supplier  @relation(fields: [supplierId], references: [id])
 }
 
 model User {
-  id         String    @id @default(cuid())
-  username   String    @unique
-  password   String
-  name       String?
-  role                String    @default("ADMIN") // "ADMIN", "CASHIER", "SUPPLIER"
-  supplierId          String?
-  supplier            Supplier? @relation(fields: [supplierId], references: [id])
+  id                   String    @id @default(cuid())
+  username             String    @unique
+  password             String
+  name                 String?
+  role                 String    @default("ADMIN") // "ADMIN", "CASHIER", "SUPPLIER"
+  supplierId           String?
+  supplier             Supplier? @relation(fields: [supplierId], references: [id])
   isCredentialsChanged Boolean   @default(false)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 }

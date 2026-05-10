@@ -22,6 +22,7 @@ interface DepositItem {
   bankName: string | null;
   accountNumber: string | null;
   dailyProfit: number;
+  isValidated: boolean;
 }
 
 export default function DepositsPage() {
@@ -33,28 +34,27 @@ export default function DepositsPage() {
     to: new Date()
   });
   const [bankFilter, setBankFilter] = useState<string>("ALL");
-  const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>({ key: "name", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>({ key: "dailyProfit", direction: "desc" });
   const [selectedSupplier, setSelectedSupplier] = useState<{ id: string, name: string } | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch role from lightweight API
-    fetch('/api/auth/role')
-      .then(res => res.json())
-      .then(data => setRole(data.role))
-      .catch(err => console.error("Failed to fetch role:", err));
-
     setLoading(true);
     const params = new URLSearchParams();
     if (dateRange?.from) params.append("startDate", format(dateRange.from, "yyyy-MM-dd"));
     if (dateRange?.to) params.append("endDate", format(dateRange.to, "yyyy-MM-dd"));
     params.append("limit", "2000");
 
-    fetch(`/api/reports?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const reports = Array.isArray(data) ? data : (data.reports || []);
+    Promise.all([
+      fetch('/api/auth/role').then(res => res.json()),
+      fetch(`/api/reports?${params.toString()}`).then(res => res.json())
+    ])
+      .then(([roleData, reportsData]) => {
+        const userRole = roleData.role;
+        setRole(userRole);
+
+        const reports = Array.isArray(reportsData) ? reportsData : (reportsData.reports || []);
         if (Array.isArray(reports)) {
           // Group by supplier and sum profit80 (Mitra Jjs share)
           const grouped: Record<string, DepositItem> = {};
@@ -63,6 +63,11 @@ export default function DepositsPage() {
             const s = r.supplier;
             if (!s) return;
             
+            // Jika role SUPPLIER, skip laporan yang belum divalidasi
+            if (userRole === "SUPPLIER" && !r.isValidated) {
+              return;
+            }
+            
             if (!grouped[s.id]) {
               grouped[s.id] = {
                 id: s.id,
@@ -70,10 +75,14 @@ export default function DepositsPage() {
                 ownerName: s.ownerName,
                 bankName: s.bankName,
                 accountNumber: s.accountNumber,
-                dailyProfit: 0
+                dailyProfit: 0,
+                isValidated: true
               };
             }
-            grouped[s.id].dailyProfit += r.profit80;
+            grouped[s.id].dailyProfit += Number(r.profit80 || 0);
+            if (!r.isValidated) {
+              grouped[s.id].isValidated = false;
+            }
           });
           
           setData(Object.values(grouped));
@@ -81,7 +90,7 @@ export default function DepositsPage() {
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch reports:", err);
+        console.error("Failed to fetch data:", err);
         setLoading(false);
       });
   }, [dateRange]);
@@ -116,8 +125,12 @@ export default function DepositsPage() {
 
     if (sortConfig) {
       result.sort((a, b) => {
-        const valA = (a[sortConfig.key] as any) || "";
-        const valB = (b[sortConfig.key] as any) || "";
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+        
+        if (valA === valB) return 0;
+        if (valA === null || valA === undefined) return 1;
+        if (valB === null || valB === undefined) return -1;
         
         if (typeof valA === 'string' && typeof valB === 'string') {
           return sortConfig.direction === "asc" 
@@ -125,14 +138,27 @@ export default function DepositsPage() {
             : valB.localeCompare(valA, 'id', { sensitivity: 'base' });
         }
 
-        if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
+        const numA = Number(valA);
+        const numB = Number(valB);
+
+        if (isNaN(numA) || isNaN(numB)) {
+          // Fallback to string comparison if not numbers
+          const strA = String(valA);
+          const strB = String(valB);
+          return sortConfig.direction === "asc" ? strA.localeCompare(strB) : strB.localeCompare(strA);
+        }
+
+        return sortConfig.direction === "asc" ? numA - numB : numB - numA;
       });
     }
 
     return result;
-  }, [data, searchTerm, sortConfig]);
+  }, [data, searchTerm, sortConfig, bankFilter]);
+
+  const getSortIcon = (key: keyof DepositItem) => {
+    if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />;
+    return sortConfig.direction === "asc" ? <ArrowUpDown className="w-3 h-3 text-emerald-400" /> : <ArrowUpDown className="w-3 h-3 text-emerald-400 rotate-180" />;
+  };
 
   const handlePrint = () => {
     const printWindow = window.open('', '_blank', 'width=900,height=700');
@@ -199,7 +225,7 @@ export default function DepositsPage() {
         </head>
         <body>
           <div class="header">
-            <h1>Laporan Penyetoran Mitra Jjs</h1>
+            <h1>${role === "SUPPLIER" ? "Laporan Saldo Mitra Jjs" : "Laporan Penyetoran Mitra Jjs"}</h1>
             <div class="meta">Periode: ${rangeText}</div>
             ${bankFilter !== "ALL" ? `<div class="meta" style="margin-top: 5px;">Filter: ${bankFilter}</div>` : ""}
           </div>
@@ -250,10 +276,10 @@ export default function DepositsPage() {
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white">
-            Data <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">Penyetoran</span>
+            Data <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">{role === "SUPPLIER" ? "Saldo" : "Penyetoran"}</span>
           </h2>
           <p className="text-slate-400 font-medium max-w-2xl">
-            Rekapitulasi transaksi harian yang siap disetorkan ke Mitra Jjs. Gunakan filter untuk melihat data spesifik.
+            {role === "SUPPLIER" ? "Rekapitulasi saldo pendapatan Anda yang siap dicairkan." : "Rekapitulasi transaksi harian yang siap disetorkan ke Mitra Jjs. Gunakan filter untuk melihat data spesifik."}
           </p>
         </div>
         
@@ -346,33 +372,39 @@ export default function DepositsPage() {
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
                     <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                      Nama UMKM <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
+                      Nama UMKM {getSortIcon("name")}
                     </div>
                   </TableHead>
                   <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("ownerName")}>
                     <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                      Pemilik <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
+                      Pemilik {getSortIcon("ownerName")}
                     </div>
                   </TableHead>
                   <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("bankName")}>
                     <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                      Bank <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
+                      Bank {getSortIcon("bankName")}
                     </div>
                   </TableHead>
                   <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("accountNumber")}>
                     <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                      No Rekening <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
+                      No Rekening {getSortIcon("accountNumber")}
                     </div>
                   </TableHead>
                   <TableHead className="py-6 px-8 text-right cursor-pointer group" onClick={() => handleSort("dailyProfit")}>
                     <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                      Total Setor <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />
+                      {role === "SUPPLIER" ? "Total Saldo" : "Total Setor"} {getSortIcon("dailyProfit")}
                     </div>
                   </TableHead>
-                  {role === "SUPPLIER" && (
+                  {role === "SUPPLIER" ? (
                     <TableHead className="py-6 px-8 text-center">
                       <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
                         Aksi
+                      </div>
+                    </TableHead>
+                  ) : (
+                    <TableHead className="py-6 px-8 text-center">
+                      <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
+                        Validasi
                       </div>
                     </TableHead>
                   )}
@@ -435,7 +467,7 @@ export default function DepositsPage() {
                           }).format(item.dailyProfit)}
                         </span>
                       </TableCell>
-                      {role === "SUPPLIER" && (
+                      {role === "SUPPLIER" ? (
                         <TableCell className="text-center px-8">
                           <Button
                             variant="ghost"
@@ -449,6 +481,43 @@ export default function DepositsPage() {
                           >
                             <History className="w-4 h-4" />
                           </Button>
+                        </TableCell>
+                      ) : (
+                        <TableCell className="text-center px-8">
+                          {item.isValidated ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                              Tervalidasi
+                            </span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const res = await fetch("/api/reports/validate", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({
+                                      supplierId: item.id,
+                                      startDate: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : undefined,
+                                      endDate: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : undefined,
+                                    }),
+                                  });
+                                  if (res.ok) {
+                                    // Refresh data
+                                    window.location.reload();
+                                  } else {
+                                    alert("Gagal memvalidasi setoran.");
+                                  }
+                                } catch (e) {
+                                  alert("Terjadi kesalahan.");
+                                }
+                              }}
+                              className="h-8 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-bold text-xs"
+                            >
+                              Validasi
+                            </Button>
+                          )}
                         </TableCell>
                       )}
                     </TableRow>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, memo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -101,6 +101,147 @@ function SupplierCombobox({ value, onValueChange, suppliers, id, onKeyDown }: { 
   );
 }
 
+const TransactionRow = memo(({
+  row,
+  index,
+  suppliers,
+  onUpdateField,
+  onKeyDown,
+  onRemove
+}: {
+  row: ReportRow;
+  index: number;
+  suppliers: any[];
+  onUpdateField: (id: string, field: keyof ReportRow, value: string) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, field: string) => void;
+  onRemove: (index: number) => void;
+}) => {
+  return (
+    <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
+      <TableCell className="font-medium text-slate-500 py-3 px-2 text-[11px]">{index + 1}</TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <div className="font-bold text-white print:text-black min-w-[150px]">
+            {suppliers.find(s => s.id === row.supplierId) ? (
+              row.items && row.items.length > 0 ? (
+                <Dialog>
+                  <DialogTrigger className="cursor-pointer hover:text-blue-400 transition-colors border-b border-dashed border-white/20 pb-0.5 flex items-center gap-2 group/text bg-transparent border-0 p-0 text-white font-bold h-auto">
+                    {suppliers.find(s => s.id === row.supplierId)?.name}
+                    <Plus className="w-3 h-3 text-white/20 group-hover/text:text-blue-400 transition-colors" />
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-900 border-white/10 text-white max-w-2xl p-0 overflow-hidden rounded-3xl shadow-2xl">
+                    <div className="p-8 bg-gradient-to-br from-blue-600/20 to-transparent border-b border-white/5">
+                      <div className="flex items-center gap-4 mb-2">
+                        <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
+                          <Calculator className="w-6 h-6 text-blue-400" />
+                        </div>
+                        <div>
+                          <DialogTitle className="text-2xl font-black tracking-tight">Rincian Produk</DialogTitle>
+                          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Suplier: {suppliers.find(s => s.id === row.supplierId)?.name}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-8">
+                      <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
+                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                          <Table>
+                            <TableHeader className="sticky top-0 bg-slate-900 z-10">
+                              <TableRow className="border-white/5 bg-white/5">
+                                <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Nama Barang</TableHead>
+                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Beli</TableHead>
+                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Jual</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {row.items.map((item, idx) => (
+                                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                                  <TableCell className="font-bold text-slate-200 py-4">{item.name}</TableCell>
+                                  <TableCell className="text-center font-black text-slate-400">{item.qtyBeli}</TableCell>
+                                  <TableCell className="text-center font-black text-emerald-400">{item.qtyJual}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                suppliers.find(s => s.id === row.supplierId)?.name
+              )
+            ) : (
+              <div className="space-y-2">
+                {row.importedSupplierName && (
+                  <div className="text-[10px] font-black text-red-400 uppercase tracking-widest bg-red-400/10 px-2 py-0.5 rounded-sm inline-block">
+                    Import: {row.importedSupplierName}
+                  </div>
+                )}
+                <SupplierCombobox
+                  value={row.supplierId}
+                  onValueChange={(val) => {
+                    onUpdateField(row.id, "supplierId", val);
+                  }}
+                  suppliers={suppliers}
+                />
+              </div>
+            )}
+          </div>
+          {row.items && row.items.length > 0 && (
+            <div className="text-[9px] text-blue-400/60 font-medium uppercase tracking-tighter">
+              {row.items.length} Produk Terlampir
+            </div>
+          )}
+        </div>
+      </TableCell>
+      <TableCell className="text-right p-2">
+        <Input
+          type="text"
+          value={row.revenue ? new Intl.NumberFormat("id-ID").format(row.revenue) : "0"}
+          onChange={(e) => onUpdateField(row.id, "revenue", e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, index, "revenue")}
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+        />
+      </TableCell>
+      <TableCell className="text-right p-2">
+        <Input
+          type="text"
+          value={row.cost ? new Intl.NumberFormat("id-ID").format(row.cost) : "0"}
+          onChange={(e) => onUpdateField(row.id, "cost", e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, index, "cost")}
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+        />
+      </TableCell>
+      <TableCell className="text-right p-2">
+        <Input
+          type="text"
+          value={row.barcode ? new Intl.NumberFormat("id-ID").format(row.barcode) : "0"}
+          onChange={(e) => onUpdateField(row.id, "barcode", e.target.value)}
+          onKeyDown={(e) => onKeyDown(e, index, "barcode")}
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+        />
+      </TableCell>
+      <TableCell className="text-right font-semibold text-white/70 print:text-black">
+        {new Intl.NumberFormat("id-ID").format(row.profit80)}
+      </TableCell>
+      <TableCell className="text-right font-bold text-emerald-400 print:text-black">
+        {new Intl.NumberFormat("id-ID").format(row.profit20)}
+      </TableCell>
+      <TableCell className="no-print px-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onRemove(index)}
+          className="w-8 h-8 text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+});
+TransactionRow.displayName = "TransactionRow";
+
 function TransactionsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -129,20 +270,14 @@ function TransactionsPageContent() {
     tabungan: "0"
   });
 
-  // Save Success Modal State
   const [isSaveSuccessModalOpen, setIsSaveSuccessModalOpen] = useState(false);
   const [savedNoteInfo, setSavedNoteInfo] = useState<{ noteNumber: string, date: string, cashierName: string } | null>(null);
 
-  const previewProfit80 = (Number(formData.cost) || 0) - (
-    (Number(formData.barcode) || 0) + 
-    (Number(formData.serviceCharge) || 0) + 
-    (Number(formData.kukuluban) || 0) + 
-    (Number(formData.tabungan) || 0)
-  );
+  const previewProfit80 = (Number(formData.cost) || 0) - (Number(formData.barcode) || 0);
   const previewProfit20 = (Number(formData.revenue) || 0) - (Number(formData.cost) || 0);
 
   useEffect(() => {
-    if (isEditMode) return; // Don't auto-generate note number in edit mode
+    if (isEditMode) return;
     const fetchNextNote = async () => {
       try {
         const res = await fetch(`/api/reports/next-note?date=${selectedDate}`);
@@ -159,9 +294,6 @@ function TransactionsPageContent() {
   const revenueRef = useRef<HTMLInputElement>(null);
   const costRef = useRef<HTMLInputElement>(null);
   const barcodeRef = useRef<HTMLInputElement>(null);
-  const serviceChargeRef = useRef<HTMLInputElement>(null);
-  const kukulubanRef = useRef<HTMLInputElement>(null);
-  const tabunganRef = useRef<HTMLInputElement>(null);
 
   const toggleSort = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc";
@@ -210,7 +342,7 @@ function TransactionsPageContent() {
           const res = await fetch(`/api/reports?noteNumber=${encodeURIComponent(editNoteParam)}`);
           const data = await res.json();
           const reportsData = Array.isArray(data) ? data : (data.reports || []);
-          
+
           if (reportsData.length > 0) {
             setIsEditMode(true);
             setEditNoteNumber(editNoteParam);
@@ -275,7 +407,7 @@ function TransactionsPageContent() {
     }
   }, [selectedCashiers, isMounted]);
 
-  const handleFormNumberChange = (field: "revenue" | "barcode" | "cost" | "serviceCharge" | "kukuluban" | "tabungan", rawValue: string) => {
+  const handleFormNumberChange = (field: "revenue" | "barcode" | "cost", rawValue: string) => {
     const numericString = rawValue.replace(/\D/g, "");
     setFormData(prev => ({ ...prev, [field]: numericString }));
   };
@@ -298,7 +430,7 @@ function TransactionsPageContent() {
       return;
     }
 
-    const profit80 = cst - (bc + sc + kukuluban + tabungan);
+    const profit80 = cst - bc;
     const profit20 = rev - cst;
 
     setRows([...rows, {
@@ -307,9 +439,9 @@ function TransactionsPageContent() {
       revenue: rev,
       barcode: bc,
       cost: cst,
-      serviceCharge: sc,
-      kukuluban,
-      tabungan,
+      serviceCharge: 0,
+      kukuluban: 0,
+      tabungan: 0,
       profit80,
       profit20
     }]);
@@ -365,42 +497,12 @@ function TransactionsPageContent() {
   };
 
   const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      serviceChargeRef.current?.focus();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      costRef.current?.focus();
-    }
-  };
-
-  const handleServiceChargeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      kukulubanRef.current?.focus();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      barcodeRef.current?.focus();
-    }
-  };
-
-  const handleKukulubanKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" || e.key === "ArrowRight") {
-      e.preventDefault();
-      tabunganRef.current?.focus();
-    } else if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      serviceChargeRef.current?.focus();
-    }
-  };
-
-  const handleTabunganKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleAddTransaction();
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
-      kukulubanRef.current?.focus();
+      costRef.current?.focus();
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
       // focus add button
@@ -408,9 +510,9 @@ function TransactionsPageContent() {
     }
   };
 
-  const removeRow = (index: number) => {
-    setRows(rows.filter((_, i) => i !== index));
-  };
+  const removeRow = useCallback((index: number) => {
+    setRows(prevRows => prevRows.filter((_, i) => i !== index));
+  }, []);
 
   const handleClearAll = () => {
     if (rows.length === 0) return;
@@ -423,22 +525,33 @@ function TransactionsPageContent() {
     toast.success("Semua data transaksi telah dihapus");
   };
 
-  const updateRowField = (id: string, field: keyof ReportRow, value: string) => {
-    const numericValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
+  const updateRowField = useCallback((id: string, field: keyof ReportRow, value: string) => {
     setRows(prevRows => prevRows.map(row => {
       if (row.id === id) {
-        const updatedRow = { ...row, [field]: numericValue };
-        // Recalculate profits
-        updatedRow.profit80 = updatedRow.cost - (updatedRow.barcode + updatedRow.serviceCharge + updatedRow.kukuluban + updatedRow.tabungan);
-        updatedRow.profit20 = updatedRow.revenue - updatedRow.cost;
+        let updatedValue: any = value;
+        if (field !== "supplierId") {
+          updatedValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
+        }
+
+        const updatedRow = { ...row, [field]: updatedValue };
+
+        // Recalculate profits if numerical fields change
+        if (field !== "supplierId") {
+          updatedRow.profit80 = updatedRow.cost - updatedRow.barcode;
+          updatedRow.profit20 = updatedRow.revenue - updatedRow.cost;
+        } else {
+          // If supplier changed, clear imported name
+          updatedRow.importedSupplierName = undefined;
+        }
+
         return updatedRow;
       }
       return row;
     }));
-  };
+  }, []);
 
-  const handleTableKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, field: string) => {
-    const fields = ["revenue", "cost", "barcode", "serviceCharge", "kukuluban", "tabungan"];
+  const handleTableKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, rowIndex: number, field: string) => {
+    const fields = ["revenue", "cost", "barcode"];
     const fieldIndex = fields.indexOf(field);
 
     if (e.key === "ArrowRight" || e.key === "Enter") {
@@ -448,10 +561,12 @@ function TransactionsPageContent() {
         nextInput?.focus();
       } else if (e.key === "Enter") {
         // If Enter on last column, go to next row first column if exists
-        if (rowIndex < rows.length - 1) {
-          const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
-          const targetInput = nextRow?.querySelectorAll("td")[2]?.querySelector("input");
-          targetInput?.focus();
+        const tableBody = e.currentTarget.closest("tbody");
+        const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
+        const targetInput = nextRow?.querySelectorAll("td")[2]?.querySelector("input");
+
+        if (targetInput) {
+          (targetInput as HTMLElement).focus();
         } else {
           // Or back to top form
           document.getElementById("supplier-combobox-trigger")?.focus();
@@ -465,24 +580,31 @@ function TransactionsPageContent() {
       }
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
-      if (rowIndex < rows.length - 1) {
-        const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
-        const targetInput = nextRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
-        targetInput?.focus();
-      }
+      const nextRow = e.currentTarget.closest("tr")?.nextElementSibling;
+      const targetInput = nextRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
+      if (targetInput) (targetInput as HTMLElement).focus();
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      if (rowIndex > 0) {
-        const prevRow = e.currentTarget.closest("tr")?.previousElementSibling;
-        const targetInput = prevRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
-        targetInput?.focus();
-      }
+      const prevRow = e.currentTarget.closest("tr")?.previousElementSibling;
+      const targetInput = prevRow?.querySelectorAll("td")[fieldIndex + 2]?.querySelector("input");
+      if (targetInput) (targetInput as HTMLElement).focus();
     }
-  };
+  }, []);
 
   const calculateTotal = (field: keyof ReportRow) => {
     return rows.reduce((sum, row) => sum + (Number(row[field]) || 0), 0);
   };
+
+  const totals = useMemo(() => ({
+    revenue: calculateTotal("revenue"),
+    cost: calculateTotal("cost"),
+    barcode: calculateTotal("barcode"),
+    serviceCharge: calculateTotal("serviceCharge"),
+    kukuluban: calculateTotal("kukuluban"),
+    tabungan: calculateTotal("tabungan"),
+    profit80: calculateTotal("profit80"),
+    profit20: calculateTotal("profit20"),
+  }), [rows]);
 
   const handleExportExcel = () => {
     const exportData = rows
@@ -563,21 +685,39 @@ function TransactionsPageContent() {
           return undefined;
         };
 
-        // Use a Map to group by supplier
-        const groupedData = new Map<string, ReportRow>();
+        // 1. Group data from Excel by supplier
+        // We use a Map where key is either the matched supplier ID or a normalized name
+        const excelGroups = new Map<string, ReportRow>();
 
         data.forEach((row) => {
-          let supplierName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Supl") || "").toString().trim();
+          let rawName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Supl") || "").toString().trim();
           
-          // Clean up "A1. Total" or "A1." to just "A1"
-          if (supplierName.toLowerCase().endsWith(". total")) {
-            supplierName = supplierName.substring(0, supplierName.length - 8).trim();
-          } else if (supplierName.endsWith(".")) {
-            supplierName = supplierName.substring(0, supplierName.length - 1).trim();
+          // Basic cleaning
+          if (rawName.toLowerCase().endsWith(". total")) {
+            rawName = rawName.substring(0, rawName.length - 8).trim();
+          } else if (rawName.endsWith(".")) {
+            rawName = rawName.substring(0, rawName.length - 1).trim();
           }
 
-          if (!supplierName) return;
+          if (!rawName) return;
 
+          const normalizedInputName = rawName.toLowerCase().trim();
+          
+          // Try to find a matching supplier from our database
+          let foundSupplier = suppliers.find(s => s.name.toLowerCase().trim() === normalizedInputName);
+
+          // If no exact match, try a slightly stricter fuzzy match (only if length > 3)
+          if (!foundSupplier && normalizedInputName.length > 3) {
+            foundSupplier = suppliers.find(s => {
+              const sName = s.name.toLowerCase().trim();
+              // Only match if one is contained within the other as a whole word
+              const regex = new RegExp(`\\b${normalizedInputName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+              return regex.test(sName) || new RegExp(`\\b${sName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(normalizedInputName);
+            });
+          }
+
+          const groupKey = foundSupplier ? foundSupplier.id : `UNMAPPED:${normalizedInputName}`;
+          
           const itemName = findValue(row, "Nama Barang", "Produk", "Barang");
           const qtyBeli = Number(findValue(row, "Qty Beli", "Beli", "Qty", "Jumlah Beli", "Stok", "Stock", "Masuk", "Jml Beli", "Awal", "Total Beli", "Supply")) || 0;
           const qtyJual = Number(findValue(row, "Qty Jual", "Jual", "Laku", "Terjual", "Jumlah Jual")) || 0;
@@ -589,35 +729,28 @@ function TransactionsPageContent() {
           const kuk = Number(findValue(row, "Kukuluban", "Kukulub")) || 0;
           const tab = Number(findValue(row, "Tabungan", "Tabung")) || 0;
 
-          if (groupedData.has(supplierName)) {
-            const existing = groupedData.get(supplierName)!;
-            // Sum values
+          if (excelGroups.has(groupKey)) {
+            const existing = excelGroups.get(groupKey)!;
             existing.revenue += rev;
             existing.cost += cst;
             existing.barcode += bc;
             existing.serviceCharge += sc;
             existing.kukuluban += kuk;
             existing.tabungan += tab;
-            
+
             if (itemName && itemName.toString().toLowerCase() !== "total") {
-              existing.items?.push({ name: itemName.toString(), qtyBeli, qtyJual, retureJual });
-            }
-          } else {
-            // New supplier entry
-            let foundSupplier = null;
-            foundSupplier = suppliers.find(s => s.name.toLowerCase().trim() === supplierName.toLowerCase());
-            if (!foundSupplier && supplierName.length >= 2) {
-              foundSupplier = suppliers.find(s => {
-                const sName = s.name.toLowerCase().trim();
-                const iName = supplierName.toLowerCase();
-                return sName.includes(iName) || iName.includes(sName);
+              existing.items?.push({ 
+                name: itemName.toString(), 
+                qtyBeli, 
+                qtyJual, 
+                retureJual: retureJual || 0 
               });
             }
-
-            groupedData.set(supplierName, {
+          } else {
+            excelGroups.set(groupKey, {
               id: Math.random().toString(36).substr(2, 9),
               supplierId: foundSupplier?.id || "",
-              importedSupplierName: foundSupplier ? undefined : supplierName,
+              importedSupplierName: foundSupplier ? undefined : rawName,
               revenue: rev,
               cost: cst,
               barcode: bc,
@@ -626,34 +759,48 @@ function TransactionsPageContent() {
               tabungan: tab,
               profit80: 0,
               profit20: 0,
-              items: itemName && itemName.toString().toLowerCase() !== "total" ? [{ name: itemName.toString(), qtyBeli, qtyJual, retureJual }] : []
+              items: itemName && itemName.toString().toLowerCase() !== "total" ? [{ 
+                name: itemName.toString(), 
+                qtyBeli, 
+                qtyJual, 
+                retureJual: retureJual || 0 
+              }] : []
             });
           }
         });
 
-        // Convert Map back to array and calculate profits
-        const newRows: ReportRow[] = Array.from(groupedData.values()).map(row => {
-          row.profit80 = row.cost - (row.barcode + row.serviceCharge + row.kukuluban + row.tabungan);
-          row.profit20 = row.revenue - row.cost;
-          return row;
+        // 2. Prepare final rows and handle duplicates against current table state
+        const existingSupplierIds = new Set(rows.map(r => r.supplierId).filter(Boolean));
+        const existingUnmappedNames = new Set(rows.filter(r => !r.supplierId).map(r => r.importedSupplierName?.toLowerCase().trim()));
+
+        const finalImportRows: ReportRow[] = [];
+        let skippedCount = 0;
+
+        excelGroups.forEach((groupRow, key) => {
+          // Calculate profits
+          groupRow.profit80 = groupRow.cost - (groupRow.barcode + groupRow.serviceCharge + groupRow.kukuluban + groupRow.tabungan);
+          groupRow.profit20 = groupRow.revenue - groupRow.cost;
+
+          // Check for duplication with existing table state
+          const isAlreadyInTable = groupRow.supplierId 
+            ? existingSupplierIds.has(groupRow.supplierId)
+            : existingUnmappedNames.has(groupRow.importedSupplierName?.toLowerCase().trim());
+
+          if (isAlreadyInTable) {
+            skippedCount++;
+          } else {
+            finalImportRows.push(groupRow);
+          }
         });
 
-        if (newRows.length > 0) {
-          // Check for duplicate suppliers in imported data
-          const existingSupplierIds = new Set(rows.map(r => r.supplierId));
-          const filteredNewRows = newRows.filter(r => {
-            if (r.supplierId && existingSupplierIds.has(r.supplierId)) {
-              return false;
-            }
-            return true;
-          });
-
-          if (filteredNewRows.length < newRows.length) {
-            toast.info(`${newRows.length - filteredNewRows.length} suplier sudah ada di daftar, dilewati.`);
+        if (finalImportRows.length > 0) {
+          setRows([...rows, ...finalImportRows]);
+          if (skippedCount > 0) {
+            toast.info(`${skippedCount} suplier sudah ada di daftar dan dilewati.`);
           }
-
-          setRows([...rows, ...filteredNewRows]);
-          toast.success(`Berhasil mengimport ${filteredNewRows.length} transaksi`);
+          toast.success(`Berhasil mengimport ${finalImportRows.length} transaksi`);
+        } else if (skippedCount > 0) {
+          toast.warning("Semua data di file Excel sudah ada di dalam daftar.");
         } else {
           toast.error("Format Excel tidak sesuai atau data tidak ditemukan");
         }
@@ -677,9 +824,6 @@ function TransactionsPageContent() {
     const totalRevenue = calculateTotal("revenue");
     const totalCost = calculateTotal("cost");
     const totalBarcode = calculateTotal("barcode");
-    const totalServiceCharge = calculateTotal("serviceCharge");
-    const totalKukuluban = calculateTotal("kukuluban");
-    const totalTabungan = calculateTotal("tabungan");
     const totalProfit80 = calculateTotal("profit80");
     const totalProfit20 = calculateTotal("profit20");
 
@@ -699,9 +843,6 @@ function TransactionsPageContent() {
           <td align="right">${new Intl.NumberFormat('id-ID').format(row.revenue)}</td>
           <td align="right">${new Intl.NumberFormat('id-ID').format(row.cost)}</td>
           <td align="right">${new Intl.NumberFormat('id-ID').format(row.barcode)}</td>
-          <td align="right">${new Intl.NumberFormat('id-ID').format(row.serviceCharge)}</td>
-          <td align="right">${new Intl.NumberFormat('id-ID').format(row.kukuluban)}</td>
-          <td align="right">${new Intl.NumberFormat('id-ID').format(row.tabungan)}</td>
           <td align="right">${new Intl.NumberFormat('id-ID').format(row.profit80)}</td>
           <td align="right">${new Intl.NumberFormat('id-ID').format(row.profit20)}</td>
         </tr>
@@ -732,7 +873,7 @@ function TransactionsPageContent() {
         </head>
         <body>
           <div class="header">
-            <h1>Laporan Mitra Jjs - Jajanan Subuh</h1>
+            <h1>Transaksi Mitra Jjs - Jajanan Subuh</h1>
           </div>
           
           <div class="meta-grid">
@@ -751,9 +892,6 @@ function TransactionsPageContent() {
                 <th align="right">Pendapatan</th>
                 <th align="right">Cost</th>
                 <th align="right">Barcode</th>
-                <th align="right">S.Charge</th>
-                <th align="right">Kukuluban</th>
-                <th align="right">Tabungan</th>
                 <th align="right">Mitra Jjs</th>
                 <th align="right">Toko</th>
               </tr>
@@ -765,9 +903,6 @@ function TransactionsPageContent() {
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalRevenue)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalCost)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalBarcode)}</td>
-                <td align="right">${new Intl.NumberFormat('id-ID').format(totalServiceCharge)}</td>
-                <td align="right">${new Intl.NumberFormat('id-ID').format(totalKukuluban)}</td>
-                <td align="right">${new Intl.NumberFormat('id-ID').format(totalTabungan)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalProfit80)}</td>
                 <td align="right">${new Intl.NumberFormat('id-ID').format(totalProfit20)}</td>
               </tr>
@@ -792,7 +927,7 @@ function TransactionsPageContent() {
 
   const handleSave = async () => {
     if (isSaving) return;
-    
+
     const validRows = rows.filter(r => r.supplierId && (r.revenue > 0 || r.cost > 0 || r.barcode > 0));
     if (validRows.length === 0) {
       toast.error("Tidak ada data transaksi untuk disimpan");
@@ -821,9 +956,6 @@ function TransactionsPageContent() {
           revenue: r.revenue,
           barcode: r.barcode,
           cost: r.cost,
-          serviceCharge: r.serviceCharge,
-          kukuluban: r.kukuluban,
-          tabungan: r.tabungan,
           profit80: r.profit80,
           profit20: r.profit20,
           items: r.items || []
@@ -832,12 +964,12 @@ function TransactionsPageContent() {
 
       if (result.success) {
         toast.success(isEditMode ? "Transaksi berhasil diperbarui" : "Laporan berhasil disimpan");
-        
+
         // Prepare info for printing modal
         const cashierName = selectedCashiers.length > 0
           ? cashiers.find(c => c.id === selectedCashiers[0])?.name || "Kasir"
           : "Kasir";
-        
+
         setSavedNoteInfo({
           noteNumber: currentNoteNumber,
           date: selectedDate,
@@ -845,14 +977,15 @@ function TransactionsPageContent() {
         });
         setIsSaveSuccessModalOpen(true);
       } else {
-        toast.error(result.error || "Gagal menyimpan laporan");
-        if (result.details) {
-          console.error("Save error details:", result.details);
-        }
+        toast.error(result.error || "Gagal menyimpan laporan", {
+          description: result.details
+        });
       }
     } catch (error) {
       console.error("Save report exception:", error);
-      toast.error(`Terjadi kesalahan sistem saat menyimpan`);
+      toast.error(`Terjadi kesalahan sistem saat menyimpan`, {
+        description: error instanceof Error ? error.message : String(error)
+      });
     } finally {
       setIsSaving(false);
     }
@@ -864,7 +997,7 @@ function TransactionsPageContent() {
     setRows([]);
     setNotes("");
     localStorage.removeItem("jjs-transactions-rows");
-    
+
     if (isEditMode) {
       setIsEditMode(false);
       setEditNoteNumber(null);
@@ -893,7 +1026,7 @@ function TransactionsPageContent() {
                 <CheckCircle2 className="w-10 h-10 text-emerald-400" />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-black text-white text-center">Berhasil Disimpan!</DialogTitle>
@@ -904,7 +1037,7 @@ function TransactionsPageContent() {
             </div>
 
             <div className="flex flex-col gap-3 pt-4">
-              <Button 
+              <Button
                 onClick={() => {
                   handlePrint();
                   // We stay in the modal after print to let user choose to finish
@@ -913,8 +1046,8 @@ function TransactionsPageContent() {
               >
                 <Printer className="w-6 h-6 mr-3" /> CETAK NOTA
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={handleFinishAndReset}
                 className="h-14 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold text-lg transition-all"
               >
@@ -922,7 +1055,7 @@ function TransactionsPageContent() {
               </Button>
             </div>
           </div>
-          
+
           <div className="bg-white/[0.02] p-4 border-t border-white/5">
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 text-center">
               Jajanan Subuh • Management System
@@ -934,7 +1067,7 @@ function TransactionsPageContent() {
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold tracking-tight text-white/90 print:text-black print:text-center print:mb-4 print:text-3xl print:uppercase">
-            {isEditMode ? 'Edit Transaksi' : 'Laporan Mitra Jjs'}
+            {isEditMode ? 'Edit Transaksi' : 'Transaksi Mitra Jjs'}
           </h2>
           {isEditMode && (
             <span className="px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-widest animate-pulse">
@@ -1012,7 +1145,7 @@ function TransactionsPageContent() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total Pendapatan</p>
-              <h4 className="text-2xl font-black text-white tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(calculateTotal("revenue"))}</h4>
+              <h4 className="text-2xl font-black text-white tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(totals.revenue)}</h4>
             </div>
           </CardContent>
         </Card>
@@ -1024,7 +1157,7 @@ function TransactionsPageContent() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total Toko (20%)</p>
-              <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(calculateTotal("profit20"))}</h4>
+              <h4 className="text-2xl font-black text-emerald-400 tracking-tighter">Rp {new Intl.NumberFormat("id-ID").format(totals.profit20)}</h4>
             </div>
           </CardContent>
         </Card>
@@ -1194,39 +1327,6 @@ function TransactionsPageContent() {
                 placeholder="0"
               />
             </div>
-            <div className="col-span-1 md:col-span-1">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block truncate" title="Service Charge">S.Charge</Label>
-              <Input
-                ref={serviceChargeRef}
-                value={formData.serviceCharge ? new Intl.NumberFormat("id-ID").format(Number(formData.serviceCharge)) : ""}
-                onChange={(e) => handleFormNumberChange("serviceCharge", e.target.value)}
-                onKeyDown={handleServiceChargeKeyDown}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-10 text-sm"
-                placeholder="0"
-              />
-            </div>
-            <div className="col-span-1 md:col-span-1">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block truncate">Kukuluban</Label>
-              <Input
-                ref={kukulubanRef}
-                value={formData.kukuluban ? new Intl.NumberFormat("id-ID").format(Number(formData.kukuluban)) : ""}
-                onChange={(e) => handleFormNumberChange("kukuluban", e.target.value)}
-                onKeyDown={handleKukulubanKeyDown}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-10 text-sm"
-                placeholder="0"
-              />
-            </div>
-            <div className="col-span-1 md:col-span-1">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block truncate">Tabungan</Label>
-              <Input
-                ref={tabunganRef}
-                value={formData.tabungan ? new Intl.NumberFormat("id-ID").format(Number(formData.tabungan)) : ""}
-                onChange={(e) => handleFormNumberChange("tabungan", e.target.value)}
-                onKeyDown={handleTabunganKeyDown}
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-10 text-sm"
-                placeholder="0"
-              />
-            </div>
             <div className="col-span-1 md:col-span-1 flex items-end">
               <Button onClick={handleAddTransaction} title="Tambah Transaksi" className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 px-0 flex justify-center items-center">
                 <Plus className="w-5 h-5" />
@@ -1266,9 +1366,6 @@ function TransactionsPageContent() {
                   <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Pendapatan</TableHead>
                   <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Cost</TableHead>
                   <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Barcode</TableHead>
-                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">S.Charge</TableHead>
-                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Kukuluban</TableHead>
-                  <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Tabungan</TableHead>
                   <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground px-2">Mitra Jjs</TableHead>
                   <TableHead className="text-right text-[9px] font-black uppercase tracking-wider text-muted-foreground text-emerald-400 px-2">Toko</TableHead>
                   <TableHead className="w-[30px] no-print px-2"></TableHead>
@@ -1286,175 +1383,26 @@ function TransactionsPageContent() {
                   </TableRow>
                 ) : (
                   rows.map((row, index) => (
-                    <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                      <TableCell className="font-medium text-slate-500 py-3 px-2 text-[11px]">{index + 1}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <div className="font-bold text-white print:text-black min-w-[150px]">
-                            {suppliers.find(s => s.id === row.supplierId) ? (
-                              row.items && row.items.length > 0 ? (
-                                <Dialog>
-                                  <DialogTrigger className="cursor-pointer hover:text-blue-400 transition-colors border-b border-dashed border-white/20 pb-0.5 flex items-center gap-2 group/text bg-transparent border-0 p-0 text-white font-bold h-auto">
-                                    {suppliers.find(s => s.id === row.supplierId)?.name}
-                                    <Plus className="w-3 h-3 text-white/20 group-hover/text:text-blue-400 transition-colors" />
-                                  </DialogTrigger>
-                                  <DialogContent className="bg-slate-900 border-white/10 text-white max-w-2xl p-0 overflow-hidden rounded-3xl shadow-2xl">
-                                    <div className="p-8 bg-gradient-to-br from-blue-600/20 to-transparent border-b border-white/5">
-                                      <div className="flex items-center gap-4 mb-2">
-                                        <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
-                                          <Calculator className="w-6 h-6 text-blue-400" />
-                                        </div>
-                                        <div>
-                                          <DialogTitle className="text-2xl font-black tracking-tight">Rincian Produk</DialogTitle>
-                                          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Suplier: {suppliers.find(s => s.id === row.supplierId)?.name}</p>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="p-8">
-                                      <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
-                                        <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-                                          <Table>
-                                            <TableHeader className="sticky top-0 bg-slate-900 z-10">
-                                              <TableRow className="border-white/5 bg-white/5">
-                                                <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Nama Barang</TableHead>
-                                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Beli</TableHead>
-                                                <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Jual</TableHead>
-                                              </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                              {row.items.map((item, idx) => (
-                                                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
-                                                  <TableCell className="font-bold text-slate-200 py-4">{item.name}</TableCell>
-                                                  <TableCell className="text-center font-black text-slate-400">{item.qtyBeli}</TableCell>
-                                                  <TableCell className="text-center font-black text-emerald-400">{item.qtyJual}</TableCell>
-                                                </TableRow>
-                                              ))}
-                                            </TableBody>
-                                          </Table>
-                                        </div>
-                                      </div>
-                                      <div className="mt-8 flex justify-end">
-                                        <DialogFooter>
-                                          <Button onClick={() => document.body.click()} className="bg-white/10 hover:bg-white/20 text-white font-bold px-8 rounded-xl border border-white/10 transition-all">
-                                            Tutup
-                                          </Button>
-                                        </DialogFooter>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              ) : (
-                                suppliers.find(s => s.id === row.supplierId)?.name
-                              )
-                            ) : (
-                              <div className="space-y-2">
-                                {row.importedSupplierName && (
-                                  <div className="text-[10px] font-black text-red-400 uppercase tracking-widest bg-red-400/10 px-2 py-0.5 rounded-sm inline-block">
-                                    Import: {row.importedSupplierName}
-                                  </div>
-                                )}
-                                <SupplierCombobox 
-                                  value={row.supplierId} 
-                                  onValueChange={(val) => {
-                                    setRows(prev => prev.map(r => r.id === row.id ? { ...r, supplierId: val, importedSupplierName: undefined } : r));
-                                  }} 
-                                  suppliers={suppliers} 
-                                />
-                              </div>
-                            )}
-                          </div>
-                          {row.items && row.items.length > 0 && (
-                            <div className="text-[9px] text-blue-400/60 font-medium uppercase tracking-tighter">
-                              {row.items.length} Produk Terlampir
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.revenue ? new Intl.NumberFormat("id-ID").format(row.revenue) : "0"}
-                          onChange={(e) => updateRowField(row.id, "revenue", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "revenue")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.cost ? new Intl.NumberFormat("id-ID").format(row.cost) : "0"}
-                          onChange={(e) => updateRowField(row.id, "cost", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "cost")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.barcode ? new Intl.NumberFormat("id-ID").format(row.barcode) : "0"}
-                          onChange={(e) => updateRowField(row.id, "barcode", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "barcode")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.serviceCharge ? new Intl.NumberFormat("id-ID").format(row.serviceCharge) : "0"}
-                          onChange={(e) => updateRowField(row.id, "serviceCharge", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "serviceCharge")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.kukuluban ? new Intl.NumberFormat("id-ID").format(row.kukuluban) : "0"}
-                          onChange={(e) => updateRowField(row.id, "kukuluban", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "kukuluban")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right p-2">
-                        <Input
-                          type="text"
-                          value={row.tabungan ? new Intl.NumberFormat("id-ID").format(row.tabungan) : "0"}
-                          onChange={(e) => updateRowField(row.id, "tabungan", e.target.value)}
-                          onKeyDown={(e) => handleTableKeyDown(e, index, "tabungan")}
-                          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
-                        />
-                      </TableCell>
-                      <TableCell className="text-right font-semibold text-white/70 print:text-black">
-                        {new Intl.NumberFormat("id-ID").format(row.profit80)}
-                      </TableCell>
-                      <TableCell className="text-right font-bold text-emerald-400 print:text-black">
-                        {new Intl.NumberFormat("id-ID").format(row.profit20)}
-                      </TableCell>
-                      <TableCell className="no-print px-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeRow(index)}
-                          className="w-8 h-8 text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    <TransactionRow
+                      key={row.id}
+                      row={row}
+                      index={index}
+                      suppliers={suppliers}
+                      onUpdateField={updateRowField}
+                      onKeyDown={handleTableKeyDown}
+                      onRemove={removeRow}
+                    />
                   ))
                 )}
 
                 {/* Total Row */}
                 <TableRow className="bg-slate-950/60 border-t-2 border-white/10 font-bold print:bg-gray-100">
                   <TableCell colSpan={2} className="text-center text-[9px] font-black tracking-[0.1em] uppercase py-6 print:text-black text-slate-400 px-2">Total</TableCell>
-                  <TableCell className="text-right text-base font-black text-white py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("revenue"))}</TableCell>
-                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("cost"))}</TableCell>
-                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("barcode"))}</TableCell>
-                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("serviceCharge"))}</TableCell>
-                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("kukuluban"))}</TableCell>
-                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("tabungan"))}</TableCell>
-                  <TableCell className="text-right text-base font-black text-blue-400/80 py-6 px-2">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit80"))}</TableCell>
-                  <TableCell className="text-right text-lg font-black text-emerald-400 py-6 px-2 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">{new Intl.NumberFormat("id-ID").format(calculateTotal("profit20"))}</TableCell>
+                  <TableCell className="text-right text-base font-black text-white py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.revenue)}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.cost)}</TableCell>
+                  <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.barcode)}</TableCell>
+                  <TableCell className="text-right text-base font-black text-blue-400/80 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.profit80)}</TableCell>
+                  <TableCell className="text-right text-lg font-black text-emerald-400 py-6 px-2 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">{new Intl.NumberFormat("id-ID").format(totals.profit20)}</TableCell>
                   <TableCell className="no-print px-2"></TableCell>
                 </TableRow>
               </TableBody>
@@ -1477,14 +1425,14 @@ function TransactionsPageContent() {
               </p>
             </div>
             <div className="flex flex-col w-full gap-3">
-              <Button 
+              <Button
                 onClick={confirmClearAll}
                 className="w-full h-12 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all active:scale-95"
               >
                 Ya, Hapus Semua
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setIsClearAllDialogOpen(false)}
                 className="w-full h-12 text-slate-400 hover:text-white hover:bg-white/5 font-bold rounded-xl transition-all"
               >

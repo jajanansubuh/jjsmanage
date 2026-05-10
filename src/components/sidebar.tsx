@@ -16,7 +16,8 @@ import {
   History,
   Coins,
   AlertCircle,
-  Package
+  Package,
+  Scissors
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -38,7 +39,8 @@ const navigation = [
   { name: "Setor", href: "/deposits", icon: Wallet },
   { name: "Tabungan", href: "/savings", icon: Coins },
   { name: "Produk", href: "/produk", icon: Package },
-  { name: "Laporan", href: "/reports", icon: FileText },
+  { name: "Potongan", href: "/potongan", icon: Scissors },
+  { name: "Arsip", href: "/reports", icon: FileText },
   { name: "Riwayat", href: "/payouts", icon: History },
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ];
@@ -57,6 +59,13 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
     }
     // Admin sees everything EXCEPT Riwayat
     return item.name !== "History" && item.name !== "Riwayat";
+  }).map(item => {
+    const userRole = role?.toUpperCase();
+    // Ganti tulisan Setor menjadi Saldo untuk Supplier
+    if (userRole === "SUPPLIER" && item.name === "Setor") {
+      return { ...item, name: "Saldo" };
+    }
+    return item;
   });
 
   return (
@@ -143,7 +152,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
                 className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-xs font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
               >
                 <LogOut className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                Keluar Sesi
+                Keluar
               </button>
             </div>
           </div>
@@ -167,7 +176,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
                 <AlertCircle className="w-8 h-8 text-amber-500" />
               </div>
               <DialogHeader>
-                <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Keluar Sesi?</DialogTitle>
+                <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Yakin Ingin Keluar ?</DialogTitle>
                 <DialogDescription className="text-slate-400 font-medium pt-2 text-center">
                   Anda akan keluar dari sistem. Pastikan semua pekerjaan telah disimpan.
                 </DialogDescription>

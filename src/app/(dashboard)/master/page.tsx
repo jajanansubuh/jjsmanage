@@ -25,6 +25,8 @@ export default function MasterDataPage() {
   const [suppliers, setSuppliers] = useState<{ id: string, name: string, ownerName?: string | null, bankName?: string | null, accountNumber?: string | null, balance: number, users?: { id: string, username: string, isCredentialsChanged: boolean }[] }[]>([]);
   const [cashiers, setCashiers] = useState<{ id: string, name: string, code: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [cashierSearch, setCashierSearch] = useState("");
 
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
@@ -38,10 +40,21 @@ export default function MasterDataPage() {
   const [supplierSortConfig, setSupplierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   const [cashierSortConfig, setCashierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
 
-  const sortedSuppliers = useMemo(() => {
-    let sortable = Array.isArray(suppliers) ? [...suppliers] : [];
+  const filteredSuppliers = useMemo(() => {
+    let result = Array.isArray(suppliers) ? [...suppliers] : [];
+    
+    if (supplierSearch) {
+      const query = supplierSearch.toLowerCase();
+      result = result.filter(s => 
+        s.name.toLowerCase().includes(query) || 
+        (s.ownerName && s.ownerName.toLowerCase().includes(query)) ||
+        (s.bankName && s.bankName.toLowerCase().includes(query)) ||
+        (s.accountNumber && s.accountNumber.toLowerCase().includes(query))
+      );
+    }
+
     if (supplierSortConfig !== null) {
-      sortable.sort((a, b) => {
+      result.sort((a, b) => {
         const aVal = a[supplierSortConfig.key as keyof typeof a] ?? null;
         const bVal = b[supplierSortConfig.key as keyof typeof b] ?? null;
         if (aVal === null && bVal === null) return 0;
@@ -52,13 +65,22 @@ export default function MasterDataPage() {
         return 0;
       });
     }
-    return sortable;
-  }, [suppliers, supplierSortConfig]);
+    return result;
+  }, [suppliers, supplierSortConfig, supplierSearch]);
 
-  const sortedCashiers = useMemo(() => {
-    let sortable = Array.isArray(cashiers) ? [...cashiers] : [];
+  const filteredCashiers = useMemo(() => {
+    let result = Array.isArray(cashiers) ? [...cashiers] : [];
+
+    if (cashierSearch) {
+      const query = cashierSearch.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.code.toLowerCase().includes(query)
+      );
+    }
+
     if (cashierSortConfig !== null) {
-      sortable.sort((a, b) => {
+      result.sort((a, b) => {
         const aVal = a[cashierSortConfig.key as keyof typeof a] ?? null;
         const bVal = b[cashierSortConfig.key as keyof typeof b] ?? null;
         if (aVal === null && bVal === null) return 0;
@@ -69,8 +91,8 @@ export default function MasterDataPage() {
         return 0;
       });
     }
-    return sortable;
-  }, [cashiers, cashierSortConfig]);
+    return result;
+  }, [cashiers, cashierSortConfig, cashierSearch]);
 
   const requestSupplierSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -260,23 +282,34 @@ export default function MasterDataPage() {
                 <CardTitle className="text-xl font-bold text-white">Daftar Suplier</CardTitle>
                 <CardDescription className="text-slate-400">Kelola informasi UMKM, pemilik, dan Pendapatan bagi hasil.</CardDescription>
               </div>
-              <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
-                <DialogTrigger render={
-                  <Button className="h-11 px-6 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-                    <Plus className="w-5 h-5 mr-2" /> Tambah Suplier
-                  </Button>
-                } />
-                <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-black text-white">Tambah Suplier</DialogTitle>
-                    <DialogDescription className="text-slate-400 font-medium">Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
-                  </DialogHeader>
-                  <SupplierAddForm 
-                    onSave={handleAddSupplier} 
-                    onCancel={() => setIsSupplierDialogOpen(false)} 
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+                <div className="relative w-full sm:w-64 group">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                  <Input 
+                    placeholder="Cari suplier..." 
+                    value={supplierSearch}
+                    onChange={(e) => setSupplierSearch(e.target.value)}
+                    className="pl-10 h-11 bg-white/5 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all text-white placeholder:text-slate-500 font-medium"
                   />
-                </DialogContent>
-              </Dialog>
+                </div>
+                <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
+                  <DialogTrigger render={
+                    <Button className="h-11 px-6 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                      <Plus className="w-5 h-5 mr-2" /> Tambah Suplier
+                    </Button>
+                  } />
+                  <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black text-white">Tambah Suplier</DialogTitle>
+                      <DialogDescription className="text-slate-400 font-medium">Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
+                    </DialogHeader>
+                    <SupplierAddForm 
+                      onSave={handleAddSupplier} 
+                      onCancel={() => setIsSupplierDialogOpen(false)} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -305,10 +338,10 @@ export default function MasterDataPage() {
                   <TableBody>
                     {loading ? (
                       <TableRow><TableCell colSpan={6} className="text-center py-20"><div className="flex flex-col items-center gap-3 text-slate-500"><div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /><span>Memuat data...</span></div></TableCell></TableRow>
-                    ) : sortedSuppliers.length === 0 ? (
-                      <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-500 font-medium italic">Belum ada data suplier yang terdaftar.</TableCell></TableRow>
+                    ) : filteredSuppliers.length === 0 ? (
+                      <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-500 font-medium italic">{supplierSearch ? "Tidak ada suplier yang cocok dengan pencarian." : "Belum ada data suplier yang terdaftar."}</TableCell></TableRow>
                     ) : (
-                      sortedSuppliers.map((s) => (
+                      filteredSuppliers.map((s) => (
                         <TableRow key={s.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
                           <TableCell 
                             className="font-bold text-white py-4 px-8 group-hover:text-blue-400 transition-colors cursor-pointer"
@@ -375,23 +408,34 @@ export default function MasterDataPage() {
                 <CardTitle>Daftar Kasir</CardTitle>
                 <CardDescription>Daftar kasir yang memiliki akses ke sistem.</CardDescription>
               </div>
-              <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-                <DialogTrigger render={
-                  <Button className="bg-purple-600 hover:bg-purple-700">
-                    <Plus className="w-4 h-4 mr-2" /> Tambah Kasir
-                  </Button>
-                } />
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Tambah Kasir Baru</DialogTitle>
-                    <DialogDescription>Masukkan detail kasir untuk disimpan ke sistem.</DialogDescription>
-                  </DialogHeader>
-                  <CashierAddForm 
-                    onSave={handleAddCashier} 
-                    onCancel={() => setIsCashierDialogOpen(false)} 
+              <div className="flex items-center gap-4">
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-purple-400 transition-colors" />
+                  <Input 
+                    placeholder="Cari kasir..." 
+                    value={cashierSearch}
+                    onChange={(e) => setCashierSearch(e.target.value)}
+                    className="pl-9 h-10 bg-white/5 border-white/5 rounded-lg focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
                   />
-                </DialogContent>
-              </Dialog>
+                </div>
+                <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
+                  <DialogTrigger render={
+                    <Button className="bg-purple-600 hover:bg-purple-700">
+                      <Plus className="w-4 h-4 mr-2" /> Tambah Kasir
+                    </Button>
+                  } />
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Tambah Kasir Baru</DialogTitle>
+                      <DialogDescription>Masukkan detail kasir untuk disimpan ke sistem.</DialogDescription>
+                    </DialogHeader>
+                    <CashierAddForm 
+                      onSave={handleAddCashier} 
+                      onCancel={() => setIsCashierDialogOpen(false)} 
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="rounded-md border border-border/50">
@@ -410,10 +454,10 @@ export default function MasterDataPage() {
                   <TableBody>
                     {loading ? (
                       <TableRow><TableCell colSpan={3} className="text-center py-8">Memuat data...</TableCell></TableRow>
-                    ) : sortedCashiers.length === 0 ? (
-                      <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">Tidak ada data kasir.</TableCell></TableRow>
+                    ) : filteredCashiers.length === 0 ? (
+                      <TableRow><TableCell colSpan={3} className="text-center py-8 text-muted-foreground">{cashierSearch ? "Tidak ada kasir yang cocok dengan pencarian." : "Tidak ada data kasir."}</TableCell></TableRow>
                     ) : (
-                      sortedCashiers.map((c) => (
+                      filteredCashiers.map((c) => (
                         <TableRow key={c.id}>
                           <TableCell className="font-medium">{c.name}</TableCell>
                           <TableCell>{c.code}</TableCell>

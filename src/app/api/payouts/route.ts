@@ -13,12 +13,16 @@ export async function GET(request: Request) {
       supplierId = session.user.supplierId;
     }
 
-    if (!supplierId) {
+    if (!supplierId && session?.user?.role !== "ADMIN") {
       return NextResponse.json({ error: "Supplier ID is required" }, { status: 400 });
     }
 
+    const whereClause: any = {};
+    if (supplierId) whereClause.supplierId = supplierId;
+
     const payouts = await prisma.supplierPayout.findMany({
-      where: { supplierId },
+      where: whereClause,
+      include: { supplier: true },
       orderBy: { date: "desc" },
     });
 
@@ -55,11 +59,12 @@ export async function POST(request: Request) {
         },
       });
 
-      // 2. Decrease supplier balance
+      // 2. Decrease supplier balance and validatedBalance
       await tx.supplier.update({
         where: { id: supplierId },
         data: {
           balance: { decrement: parseFloat(amount) },
+          validatedBalance: { decrement: parseFloat(amount) },
         },
       });
 
