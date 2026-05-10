@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  Database, 
-  ReceiptText, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Database,
+  ReceiptText,
+  FileText,
   Settings,
   Menu,
   X,
@@ -19,6 +19,7 @@ import {
   Package,
   Scissors
 } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { logoutAction } from "@/lib/actions/auth";
@@ -83,8 +84,14 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
           <span className="text-lg font-black tracking-tight text-white">
             Jjs<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Manage</span>
           </span>
-          <div className="p-1.5 rounded-lg bg-linear-to-tr from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20">
-            <ShieldCheck className="w-5 h-5 text-white" />
+          <div className="relative w-12 h-12 overflow-hidden">
+            <Image
+              src="/logojjsmanage.png"
+              alt="JJS Manage Logo"
+              fill
+              sizes="48px"
+              className="object-contain"
+            />
           </div>
         </div>
       </div>
@@ -95,12 +102,18 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full">
-          <div className="p-8">
-            <div className="flex items-center gap-3 group">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform duration-300">
-                <ShieldCheck className="w-6 h-6 text-white" />
+          <div className="px-6 py-8">
+            <div className="flex items-center gap-2.5 group">
+              <div className="relative w-[72px] h-[72px] overflow-hidden group-hover:scale-110 transition-transform duration-300 shrink-0">
+                <Image
+                  src="/logojjsmanage.png"
+                  alt="JJS Manage Logo"
+                  fill
+                  sizes="72px"
+                  className="object-contain"
+                />
               </div>
-              <h1 className="text-2xl font-black tracking-tighter text-white">
+              <h1 className="text-xl font-black tracking-tighter text-white leading-tight">
                 Jjs<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Manage</span>
               </h1>
             </div>
@@ -116,13 +129,13 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
                   onClick={() => setIsOpen(false)}
                   className={cn(
                     "flex items-center px-4 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 group",
-                    isActive 
-                      ? "bg-linear-to-r from-blue-600/20 to-purple-600/20 text-white shadow-[inset_0_0_20px_rgba(59,130,246,0.1)] ring-1 ring-blue-500/20" 
+                    isActive
+                      ? "bg-linear-to-r from-blue-600/20 to-purple-600/20 text-white shadow-[inset_0_0_20px_rgba(59,130,246,0.1)] ring-1 ring-blue-500/20"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
                   )}
                 >
                   <item.icon className={cn(
-                    "mr-3.5 h-5 w-5 transition-transform duration-300", 
+                    "mr-3.5 h-5 w-5 transition-transform duration-300",
                     isActive ? "text-blue-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"
                   )} />
                   {item.name}
@@ -133,7 +146,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
 
           <div className="p-4 mt-auto">
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
-              <Link 
+              <Link
                 href={role === "SUPPLIER" ? "/" : "/settings"}
                 className="flex items-center gap-3 group"
               >
@@ -146,8 +159,8 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
                   <p className="text-[10px] uppercase tracking-wider font-black text-blue-400/70">{role === "SUPPLIER" ? "Supplier" : "Master Admin"}</p>
                 </div>
               </Link>
-              
-              <button 
+
+              <button
                 onClick={() => setIsLogoutDialogOpen(true)}
                 className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-xs font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
               >
@@ -161,7 +174,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
 
       {/* Overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setIsOpen(false)}
         />

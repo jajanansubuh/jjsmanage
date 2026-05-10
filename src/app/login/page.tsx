@@ -8,19 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { KeyRound, User, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [state, formAction, isPending] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center bg-[#020617] p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-[100svh] flex items-center justify-center bg-[#020617] p-4 sm:p-6 relative overflow-hidden font-sans">
       {/* Premium Ambient Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse duration-[10s]" />
         <div className="absolute top-[20%] -right-[5%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[100px] animate-pulse duration-[8s] delay-700" />
         <div className="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[110px] animate-pulse duration-[12s] delay-1000" />
-        
+
         {/* Fine Grain Texture */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.15] mix-blend-overlay" />
       </div>
@@ -28,10 +29,17 @@ export default function LoginPage() {
       <div className="w-full max-w-[400px] relative z-10 flex flex-col items-center">
         {/* Logo Section */}
         <div className="text-center mb-8 animate-in fade-in slide-in-from-top-8 duration-1000 ease-out">
-          <div className="relative inline-flex mb-6 group">
-            <div className="absolute inset-0 bg-linear-to-tr from-blue-500 to-purple-500 rounded-2xl blur-2xl opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
-            <div className="relative inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-900 border border-white/10 shadow-2xl">
-              <ShieldCheck className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" />
+          <div className="relative inline-flex mb-0 group">
+            <div className="absolute inset-8 bg-linear-to-tr from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+            <div className="relative inline-flex items-center justify-center w-32 h-32 sm:w-40 sm:h-40 overflow-hidden">
+              <Image
+                src="/logojjsmanage.png"
+                alt="JJS Manage Logo"
+                fill
+                sizes="(max-width: 768px) 128px, 160px"
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-black tracking-tighter text-white mb-2">
@@ -65,7 +73,7 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-1">
                   <Label htmlFor="password" className="text-slate-300 text-xs font-semibold uppercase tracking-wider">Password</Label>

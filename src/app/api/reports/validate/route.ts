@@ -10,10 +10,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { supplierId, startDate, endDate } = await req.json();
+    const { supplierId, supplierIds, startDate, endDate } = await req.json();
 
-    if (!supplierId) {
-      return NextResponse.json({ error: "Missing supplierId" }, { status: 400 });
+    if (!supplierId && (!supplierIds || supplierIds.length === 0)) {
+      return NextResponse.json({ error: "Missing supplierId or supplierIds" }, { status: 400 });
     }
 
     let dateFilter: any = undefined;
@@ -31,9 +31,15 @@ export async function POST(req: Request) {
     const result = await prisma.$transaction(async (tx) => {
       // Find all unvalidated reports
       const whereClause: any = {
-        supplierId,
         isValidated: false,
       };
+      
+      if (supplierIds && supplierIds.length > 0) {
+        whereClause.supplierId = { in: supplierIds };
+      } else {
+        whereClause.supplierId = supplierId;
+      }
+
       if (dateFilter) {
         whereClause.date = dateFilter;
       }
@@ -48,6 +54,12 @@ export async function POST(req: Request) {
 
       const totalProfit = reports.reduce((sum, r) => sum + (r.profit80 || 0), 0);
 
+      const profitBySupplier: Record<string, number> = {};
+      reports.forEach(r => {
+        if (!profitBySupplier[r.supplierId]) profitBySupplier[r.supplierId] = 0;
+        profitBySupplier[r.supplierId] += (r.profit80 || 0);
+      });
+
       // Update reports to validated
       await tx.consignmentReport.updateMany({
         where: {
@@ -58,13 +70,15 @@ export async function POST(req: Request) {
         },
       });
 
-      // Increment validatedBalance
-      await tx.supplier.update({
-        where: { id: supplierId },
-        data: {
-          validatedBalance: { increment: totalProfit },
-        },
-      });
+      // Increment validatedBalance for each supplier
+      for (const [sId, profit] of Object.entries(profitBySupplier)) {
+        await tx.supplier.update({
+          where: { id: sId },
+          data: {
+            validatedBalance: { increment: profit },
+          },
+        });
+      }
 
       return { count: reports.length, totalProfit };
     });

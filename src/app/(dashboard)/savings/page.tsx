@@ -136,14 +136,14 @@ export default function SavingsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-10 px-4">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-10 px-0 md:px-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 md:px-0">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-white">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
             Tabungan <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-400">Mitra</span>
           </h2>
-          <p className="text-slate-400 font-medium">Akumulasi potongan tabungan dari setiap transaksi setoran.</p>
+          <p className="text-slate-400 text-sm md:text-base font-medium">Akumulasi potongan tabungan dari setiap transaksi setoran.</p>
         </div>
 
         {role !== "SUPPLIER" && (
@@ -161,37 +161,93 @@ export default function SavingsPage() {
 
       {role === "SUPPLIER" ? (
         supplierData ? (
-          <div className="grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 gap-6 md:gap-8">
             {/* Summary Card */}
-            <Card className="border-white/5 bg-linear-to-br from-blue-600 to-indigo-700 overflow-hidden relative group shadow-2xl shadow-blue-500/20 rounded-[2.5rem]">
-              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
-                <Coins size={180} className="text-white" />
+            <Card className="border-white/5 bg-linear-to-br from-blue-600 to-indigo-700 overflow-hidden relative group shadow-2xl shadow-blue-500/20 rounded-3xl md:rounded-[2.5rem] mx-4 md:mx-0">
+              <div className="absolute top-0 right-0 p-6 md:p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                <Coins size={140} className="text-white md:hidden" />
+                <Coins size={180} className="text-white hidden md:block" />
               </div>
-              <CardContent className="p-10 relative z-10">
-                <div className="flex flex-col gap-2">
-                  <span className="text-blue-100 font-black uppercase tracking-[0.2em] text-xs">Total Tabungan Terkumpul</span>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-5xl md:text-6xl font-black text-white tracking-tighter">
+              <CardContent className="p-6 md:p-10 relative z-10">
+                <div className="flex flex-col gap-2 text-center md:text-left">
+                  <span className="text-blue-100 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">Total Tabungan Terkumpul</span>
+                  <div className="flex flex-col md:flex-row md:items-baseline gap-3">
+                    <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
                         minimumFractionDigits: 0
                       }).format(supplierData.total || 0)}
                     </span>
-                    <div className="flex items-center gap-1 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white text-xs font-bold">
+                    <div className="flex items-center justify-center md:justify-start gap-1 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 text-white text-[10px] md:text-xs font-bold w-fit mx-auto md:mx-0">
                       <TrendingUp size={14} />
                       Auto-Save
                     </div>
                   </div>
-                  <p className="mt-4 text-blue-100/70 text-sm max-w-md font-medium leading-relaxed">
+                  <p className="mt-4 text-blue-100/70 text-xs md:text-sm max-w-md font-medium leading-relaxed mx-auto md:mx-0">
                     Tabungan ini dipotong secara otomatis dari setiap omset penjualan harian Anda.
                   </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* History Table */}
-            <div className="space-y-4">
+            {/* History Mobile View */}
+            <div className="md:hidden space-y-4 px-4">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <History className="w-5 h-5 text-blue-400" />
+                </div>
+                <h3 className="text-lg font-bold text-white">Riwayat Pemotongan</h3>
+              </div>
+
+              {!supplierData.history || supplierData.history.length === 0 ? (
+                <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-12 text-center border border-white/5">
+                  <p className="text-slate-500 font-medium italic">Belum ada riwayat tabungan.</p>
+                </div>
+              ) : (
+                supplierData.history.map((item) => (
+                  <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
+                    <CardContent className="p-5">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tanggal</span>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                            <p className="text-sm font-bold text-slate-200">
+                              {format(new Date(item.date), "dd MMM yyyy", { locale: localeId })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Potongan</span>
+                          <span className="text-lg font-black text-blue-400">
+                            +{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.tabungan)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                        <div className="space-y-1">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">No. Nota</span>
+                          <p className="text-sm font-mono font-bold text-slate-400">
+                            {item.noteNumber || "—"}
+                          </p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Omzet</span>
+                          <p className="text-sm font-bold text-slate-400">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.revenue)}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* History Table Desktop */}
+            <div className="hidden md:block space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <History className="w-5 h-5 text-blue-400" />
@@ -265,83 +321,85 @@ export default function SavingsPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-[2rem] border border-white/5">
+          <div className="mx-4 md:mx-0 flex flex-col items-center justify-center py-20 bg-slate-900/40 rounded-[2rem] border border-white/5">
             <Coins className="w-12 h-12 text-slate-600 mb-4" />
             <p className="text-slate-500 font-medium italic">Data tabungan tidak ditemukan.</p>
           </div>
         )
       ) : (
         /* Admin View */
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
-                      <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                        Nama Mitra <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("ownerName")}>
-                      <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                        Pemilik <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="py-6 px-8 text-right cursor-pointer group" onClick={() => handleSort("totalSavings")}>
-                      <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                        Total Tabungan <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
-                      </div>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAdminData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center py-24 text-slate-500 font-medium italic">
-                        Tidak ada data tabungan mitra.
-                      </TableCell>
+        <div className="px-4 md:px-0">
+          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                      <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
+                        <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
+                          Nama Mitra <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("ownerName")}>
+                        <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
+                          Pemilik <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="py-6 px-8 text-right cursor-pointer group" onClick={() => handleSort("totalSavings")}>
+                        <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
+                          Total Tabungan <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-blue-400 transition-colors" />
+                        </div>
+                      </TableHead>
                     </TableRow>
-                  ) : (
-                    filteredAdminData.map((item) => (
-                      <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
-                        <TableCell className="py-6 px-8">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <UserIcon className="w-5 h-5 text-blue-400" />
-                            </div>
-                            <span className="font-black text-lg text-white tracking-tight group-hover:text-blue-400 transition-colors uppercase">
-                              {item.name}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                            {item.ownerName}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right px-8">
-                          <div className="flex flex-col items-end">
-                            <span className="font-black text-xl tracking-tighter text-blue-400 transition-all duration-300 group-hover:scale-105 inline-block origin-right">
-                              {new Intl.NumberFormat("id-ID", {
-                                style: "currency",
-                                currency: "IDR",
-                                minimumFractionDigits: 0
-                              }).format(item.totalSavings)}
-                            </span>
-                            <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                              Accumulated <TrendingUp size={10} className="text-blue-500" />
-                            </div>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredAdminData.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-24 text-slate-500 font-medium italic">
+                          Tidak ada data tabungan mitra.
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    ) : (
+                      filteredAdminData.map((item) => (
+                        <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
+                          <TableCell className="py-6 px-8">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <UserIcon className="w-5 h-5 text-blue-400" />
+                              </div>
+                              <span className="font-black text-lg text-white tracking-tight group-hover:text-blue-400 transition-colors uppercase">
+                                {item.name}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
+                              {item.ownerName}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right px-8">
+                            <div className="flex flex-col items-end">
+                              <span className="font-black text-xl tracking-tighter text-blue-400 transition-all duration-300 group-hover:scale-105 inline-block origin-right">
+                                {new Intl.NumberFormat("id-ID", {
+                                  style: "currency",
+                                  currency: "IDR",
+                                  minimumFractionDigits: 0
+                                }).format(item.totalSavings)}
+                              </span>
+                              <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
+                                Accumulated <TrendingUp size={10} className="text-blue-500" />
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );

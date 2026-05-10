@@ -180,14 +180,14 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-10 px-4">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-10 px-0 md:px-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 md:px-0">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-white">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
             Katalog <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Produk</span>
           </h2>
-          <p className="text-slate-400 font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
+          <p className="text-slate-400 text-sm md:text-base font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
@@ -200,9 +200,9 @@ export default function ProductsPage() {
                     <CalendarIcon className="w-4 h-4 text-blue-400" />
                     {dateRange?.from ? (
                       dateRange.to ? (
-                        <>
+                        <span className="truncate">
                           {format(dateRange.from, "dd MMM", { locale: localeId })} - {format(dateRange.to, "dd MMM yyyy", { locale: localeId })}
-                        </>
+                        </span>
                       ) : (
                         format(dateRange.from, "dd MMM yyyy", { locale: localeId })
                       )
@@ -210,7 +210,7 @@ export default function ProductsPage() {
                       <span>Pilih Tanggal</span>
                     )}
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
+                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
                     <div className="flex flex-col md:flex-row">
                       <div className="p-2 border-r border-white/5 flex flex-col gap-1 bg-white/[0.02]">
                         <Button
@@ -274,15 +274,12 @@ export default function ProductsPage() {
                         defaultMonth={dateRange?.from}
                         selected={dateRange}
                         onSelect={(range, selectedDay) => {
-                          // Logika agar klik baru selalu mereset rentang jika sebelumnya sudah lengkap
                           if (dateRange?.from && dateRange?.to) {
                             setDateRange({ from: selectedDay, to: undefined });
                           } else {
                             setDateRange(range);
                           }
 
-                          // Jika sudah klik tanggal kedua (range lengkap), otomatis tutup
-                          // Kita cek dari 'range' yang baru atau logika manual
                           const nextRange = (dateRange?.from && dateRange?.to)
                             ? { from: selectedDay, to: undefined }
                             : range;
@@ -314,54 +311,109 @@ export default function ProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-blue-500/20 transition-all">
-          <CardContent className="p-8 flex items-center gap-6">
-            <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
-              <Box className="w-7 h-7 text-blue-400" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 px-4 md:px-0">
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden group hover:border-blue-500/20 transition-all">
+          <CardContent className="p-6 md:p-8 flex items-center gap-4 md:gap-6">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+              <Box className="w-6 h-6 md:w-7 md:h-7 text-blue-400" />
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Varian Produk</p>
-              <h4 className="text-3xl font-black text-white tracking-tighter">{stats.totalItems}</h4>
+              <h4 className="text-2xl md:text-3xl font-black text-white tracking-tighter">{stats.totalItems}</h4>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-purple-500/20 transition-all">
-          <CardContent className="p-8 flex items-center gap-6">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
-              <TrendingUp className="w-7 h-7 text-purple-400" />
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden group hover:border-purple-500/20 transition-all">
+          <CardContent className="p-6 md:p-8 flex items-center gap-4 md:gap-6">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+              <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-purple-400" />
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Total Terjual</p>
-              <h4 className="text-3xl font-black text-white tracking-tighter">{stats.totalSold} <span className="text-sm font-bold text-slate-500 ml-1">Pcs</span></h4>
+              <h4 className="text-2xl md:text-3xl font-black text-white tracking-tighter">{stats.totalSold} <span className="text-sm font-bold text-slate-500 ml-1">Pcs</span></h4>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden group hover:border-emerald-500/20 transition-all">
-          <CardContent className="p-8 flex items-center gap-6">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
-              <LayoutGrid className="w-7 h-7 text-emerald-400" />
+        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden group hover:border-emerald-500/20 transition-all">
+          <CardContent className="p-6 md:p-8 flex items-center gap-4 md:gap-6">
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+              <LayoutGrid className="w-6 h-6 md:w-7 md:h-7 text-emerald-400" />
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-500">Rasio Terjual</p>
-              <h4 className="text-3xl font-black text-white tracking-tighter">{stats.avgSellRate}%</h4>
+              <h4 className="text-2xl md:text-3xl font-black text-white tracking-tighter">{stats.avgSellRate}%</h4>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Table */}
-      <div className="space-y-4">
+      {/* Main Table / List */}
+      <div className="space-y-4 px-4 md:px-0">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
             <History className="w-5 h-5 text-blue-400" />
           </div>
-          <h3 className="text-xl font-bold text-white">Akumulasi Stok & Penjualan</h3>
+          <h3 className="text-lg md:text-xl font-bold text-white">Akumulasi Stok & Penjualan</h3>
         </div>
 
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="md:hidden space-y-4">
+          {filteredProducts.length === 0 ? (
+            <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-12 text-center border border-white/5">
+              <p className="text-slate-500 font-medium italic">Belum ada data produk.</p>
+            </div>
+          ) : (
+            filteredProducts.map((product, idx) => {
+              const sellRate = product.totalBeli > 0 ? ((product.totalJual / product.totalBeli) * 100).toFixed(1) : "0";
+              return (
+                <Card key={idx} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-white/5">
+                        <Package className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Barang</span>
+                        <h4 className="text-base font-black text-white truncate uppercase">{product.name}</h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">Terjual</span>
+                        <span className="text-xl font-black text-emerald-400">{product.totalJual}</span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 mb-4">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Beli</span>
+                        <p className="text-sm font-bold text-slate-300">{product.totalBeli} Pcs</p>
+                      </div>
+                      <div className="space-y-1 text-right">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Retur</span>
+                        <p className="text-sm font-bold text-rose-400">{product.totalRetureJual} Pcs</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t border-white/5">
+                      <div className="flex justify-between items-end">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rasio Penjualan</span>
+                        <span className="text-sm font-black text-white">{sellRate}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-linear-to-r from-blue-500 to-emerald-500"
+                          style={{ width: `${Math.min(100, Number(sellRate))}%` }}
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
+        </div>
+
+        <Card className="hidden md:block border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>

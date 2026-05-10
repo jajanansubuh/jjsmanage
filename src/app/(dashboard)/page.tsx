@@ -225,29 +225,29 @@ function DashboardContent() {
       <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 -left-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
-        <div className="space-y-2 pt-12 md:pt-0">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10 px-4 md:px-0">
+        <div className="space-y-2 pt-8 md:pt-0">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
             Ringkasan <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Statistik</span>
           </h2>
-          <p className="text-slate-400 text-sm sm:text-base font-medium opacity-80">Performa bisnis Anda dalam genggaman.</p>
+          <p className="text-slate-400 text-sm md:text-base font-medium opacity-80">Performa bisnis Anda dalam genggaman.</p>
         </div>
 
-        <div className="flex items-center gap-3 p-1.5 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 shadow-xl">
-          <div className="flex items-center gap-1">
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group">
-              <div className="flex flex-col">
+        <div className="flex flex-col sm:flex-row items-center gap-3 p-1.5 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 shadow-xl w-full lg:w-auto">
+          <div className="flex items-center gap-1 w-full sm:w-auto">
+            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group flex-1 sm:flex-none">
+              <div className="flex flex-col w-full">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-400 transition-colors">Dari</span>
                 <Popover>
                   <PopoverTrigger
                     className={cn(
-                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px]",
+                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px] w-full sm:w-auto",
                       !startDate && "text-slate-500"
                     )}
                   >
                     {startDate ? format(new Date(startDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
+                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
                     <Calendar
                       mode="single"
                       selected={startDate ? new Date(startDate) : undefined}
@@ -262,19 +262,19 @@ function DashboardContent() {
 
             <div className="h-8 w-px bg-white/10 mx-1" />
 
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group">
-              <div className="flex flex-col">
+            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group flex-1 sm:flex-none">
+              <div className="flex flex-col w-full">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-purple-400 transition-colors">Hingga</span>
                 <Popover>
                   <PopoverTrigger
                     className={cn(
-                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px]",
+                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px] w-full sm:w-auto",
                       !endDate && "text-slate-500"
                     )}
                   >
                     {endDate ? format(new Date(endDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
+                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
                     <Calendar
                       mode="single"
                       selected={endDate ? new Date(endDate) : undefined}
@@ -290,7 +290,7 @@ function DashboardContent() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 relative z-10">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 relative z-10 px-4 md:px-0">
         {cards.map((card, index) => (
           <Card
             key={card.title}
@@ -302,22 +302,22 @@ function DashboardContent() {
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">{card.title}</CardTitle>
-              <div className={cn("p-2.5 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner", card.bg)}>
-                <card.icon className={cn("h-5 w-5", card.color)} />
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-300 transition-colors">{card.title}</CardTitle>
+              <div className={cn("p-2 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner", card.bg)}>
+                <card.icon className={cn("h-4.5 w-4.5", card.color)} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-black text-white tracking-tight group-hover:scale-[1.02] transition-transform origin-left">{card.value}</div>
-              <div className="flex items-center mt-3 text-xs font-bold">
+              <div className="text-xl md:text-2xl font-black text-white tracking-tight group-hover:scale-[1.02] transition-transform origin-left">{card.value}</div>
+              <div className="flex items-center mt-3 text-[10px] font-bold">
                 <div className={cn(
-                  "flex items-center px-2 py-1 rounded-full mr-2",
+                  "flex items-center px-2 py-0.5 rounded-full mr-2",
                   card.trendUp ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
                 )}>
                   {card.trendUp ? (
-                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+                    <ArrowUpRight className="h-3 w-3 mr-1" />
                   ) : (
-                    <ArrowDownRight className="h-3.5 w-3.5 mr-1" />
+                    <ArrowDownRight className="h-3 w-3 mr-1" />
                   )}
                   {card.trend}
                 </div>
