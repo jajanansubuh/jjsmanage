@@ -425,7 +425,7 @@ export default function CetakLabelPage() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={fetchQueue} disabled={isQueueLoading} className="text-slate-400 hover:text-white">
+              <Button variant="ghost" size="sm" onClick={() => fetchQueue()} disabled={isQueueLoading} className="text-slate-400 hover:text-white">
                 <History className="w-4 h-4 mr-2" /> Refresh
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setIsClearQueueDialogOpen(true)} className="text-slate-500 hover:text-red-400">
