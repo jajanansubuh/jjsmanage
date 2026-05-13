@@ -13,15 +13,18 @@ export async function GET(req: Request) {
     const { getSession } = await import("@/lib/auth-utils");
     const session = await getSession();
     
-    if (session?.user?.role === "SUPPLIER") {
+    if (session?.user?.role?.toUpperCase() === "SUPPLIER") {
       supplierId = session.user.supplierId || "INVALID_SUPPLIER_ID"; // Force their own supplierId
     }
     
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
+    const deductionNoteNumber = searchParams.get('deductionNoteNumber');
+
     const whereClause: any = {};
     if (supplierId) whereClause.supplierId = supplierId;
     if (noteNumber) whereClause.noteNumber = noteNumber;
-    const startDate = searchParams.get('startDate');
-    const endDate = searchParams.get('endDate');
+    if (deductionNoteNumber) whereClause.deductionNoteNumber = deductionNoteNumber;
 
     if (date || (startDate && endDate)) {
       const start = new Date(startDate || date!);

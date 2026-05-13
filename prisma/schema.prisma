@@ -19,6 +19,20 @@ model Supplier {
   reports          ConsignmentReport[]
   users            User[]
   payouts          SupplierPayout[]
+  products         Product[]
+  labelPrints      LabelPrint[]
+}
+
+model LabelPrint {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  name       String
+  code       String?
+  qty        Int      @default(1)
+  status     String   @default("PENDING") // PENDING, DONE
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model SupplierPayout {
@@ -74,4 +88,16 @@ model User {
   isCredentialsChanged Boolean   @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+}
+
+model Product {
+  id         String    @id @default(cuid())
+  name       String
+  code       String?
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([name, supplierId])
 }

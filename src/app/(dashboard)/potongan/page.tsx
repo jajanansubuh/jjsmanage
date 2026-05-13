@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import {
@@ -35,7 +36,15 @@ import {
   CheckCircle2,
   AlertCircle,
   ArrowRight,
+  Printer,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { updateAggregatedDeductionsAction } from "@/lib/actions/deductions";
@@ -53,6 +62,10 @@ interface DeductionRow {
 }
 
 export default function PotonganPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const editNote = searchParams.get("edit");
+
   const [deductionDate, setDeductionDate] = useState(
     format(new Date(), "yyyy-MM-dd"),
   );
@@ -66,6 +79,20 @@ export default function PotonganPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isSaveSuccessModalOpen, setIsSaveSuccessModalOpen] = useState(false);
+  const [savedNoteInfo, setSavedNoteInfo] = useState<{
+    noteNumber: string;
+    date: string;
+    startDate: string;
+    endDate: string;
+    totals: {
+      serviceCharge: number;
+      kukuluban: number;
+      tabungan: number;
+      grandTotal: number;
+    };
+    details: DeductionRow[];
+  } | null>(null);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -173,12 +200,79 @@ export default function PotonganPage() {
     }
   }, []);
 
+  // Fetch specifically for editing an existing deduction note
+  const fetchDeductionForEdit = useCallback(async (noteNum: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/reports?deductionNoteNumber=${noteNum}&limit=2000`);
+      const data = await res.json();
+      const reports = Array.isArray(data) ? data : data.reports || [];
+
+      if (reports.length === 0) {
+        toast.error("Nota potongan tidak ditemukan");
+        router.push("/potongan");
+        return;
+      }
+
+      // Extract common fields from the first report
+      const first = reports[0];
+      if (first.deductionDate) setDeductionDate(format(new Date(first.deductionDate), "yyyy-MM-dd"));
+      setDeductionNoteNumber(first.deductionNoteNumber || noteNum);
+      
+      // Reconstruct the period range from the reports
+      const dates = reports.map((r: any) => new Date(r.date).getTime());
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
+      
+      setStartDate(format(minDate, "yyyy-MM-dd"));
+      setEndDate(format(maxDate, "yyyy-MM-dd"));
+      
+      const groups: Record<string, DeductionRow> = {};
+      reports.forEach((r: any) => {
+        const sId = r.supplierId;
+        if (!groups[sId]) {
+          groups[sId] = {
+            supplierId: sId,
+            supplierName: r.supplier?.name || "Unknown",
+            noteNumbers: [],
+            totalCost: 0,
+            totalBarcode: 0,
+            serviceCharge: 0,
+            kukuluban: 0,
+            tabungan: 0,
+            baseProfit80: 0,
+          };
+        }
+        if (r.noteNumber && !groups[sId].noteNumbers.includes(r.noteNumber)) {
+          groups[sId].noteNumbers.push(r.noteNumber);
+        }
+        groups[sId].totalCost += r.cost || 0;
+        groups[sId].totalBarcode += r.barcode || 0;
+        groups[sId].serviceCharge += r.serviceCharge || 0;
+        groups[sId].kukuluban += r.kukuluban || 0;
+        groups[sId].tabungan += r.tabungan || 0;
+        groups[sId].baseProfit80 += (r.cost || 0) - (r.barcode || 0);
+      });
+
+      setRows(Object.values(groups).sort((a, b) => a.supplierName.localeCompare(b.supplierName)));
+    } catch (error) {
+      console.error("Failed to fetch deduction for edit:", error);
+      toast.error("Gagal memuat data potongan");
+    } finally {
+      setLoading(false);
+    }
+  }, [router]);
+
   // Use a separate effect for initial load or manual refresh
   useEffect(() => {
     if (isMounted) {
-      fetchReports(startDate, endDate);
+      if (editNote) {
+        fetchDeductionForEdit(editNote);
+      } else {
+        fetchReports(startDate, endDate);
+      }
     }
-  }, [startDate, endDate, isMounted, fetchReports]);
+  }, [startDate, endDate, isMounted, fetchReports, editNote, fetchDeductionForEdit]);
 
   const updateField = (
     supplierId: string,
@@ -243,6 +337,109 @@ export default function PotonganPage() {
     [],
   );
 
+  const handlePrint = () => {
+    if (!savedNoteInfo) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const rowsHtml = [...savedNoteInfo.details]
+      .sort((a, b) => a.supplierName.localeCompare(b.supplierName))
+      .filter((r) => r.serviceCharge > 0 || r.kukuluban > 0 || r.tabungan > 0)
+      .map((r, index) => {
+        const total = r.serviceCharge + r.kukuluban + r.tabungan;
+        return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${r.supplierName}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(r.serviceCharge)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(r.kukuluban)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(r.tabungan)}</td>
+          <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(total)}</strong></td>
+        </tr>
+      `;
+      })
+      .join("");
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Nota Potongan - ${savedNoteInfo.noteNumber}</title>
+          <style>
+            @page { size: portrait; margin: 0; }
+            body { 
+              font-family: sans-serif; 
+              color: #333; 
+              line-height: 1.4; 
+              padding: 15mm; 
+              font-size: 12px;
+            }
+            .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+            h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+            .meta-item { margin-bottom: 3px; }
+            .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+            th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+            td { padding: 6px 5px; border: 1px solid #ddd; }
+            .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+            .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+            .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>Nota Potongan Mitra Jjs - Jajanan Subuh</h1>
+          </div>
+          
+          <div class="meta-grid">
+            <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${savedNoteInfo.noteNumber}</strong></div>
+            <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(savedNoteInfo.date), "dd MMMM yyyy")}</div>
+            <div class="meta-item"><span class="meta-label">Periode:</span> ${format(new Date(savedNoteInfo.startDate), "dd/MM")} - ${format(new Date(savedNoteInfo.endDate), "dd/MM/yy")}</div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th width="150">Suplier</th>
+                <th align="right">S.Charge</th>
+                <th align="right">Kukuluban</th>
+                <th align="right">Tabungan</th>
+                <th align="right">Total Pot.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+              <tr class="total-row">
+                <td colspan="2" align="center">TOTAL KESELURUHAN</td>
+                <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.serviceCharge)}</td>
+                <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.kukuluban)}</td>
+                <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.tabungan)}</td>
+                <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.grandTotal)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="footer-sig">
+            <div class="sig">Kasir / Admin</div>
+            <div class="sig">Manager Toko</div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999;">
+            Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   const handleSave = async () => {
     if (rows.length === 0) return;
     setIsSaving(true);
@@ -261,13 +458,30 @@ export default function PotonganPage() {
       );
 
       if (result.success) {
-        toast.success("Potongan berhasil disimpan dan disebar ke seluruh nota");
+        setSavedNoteInfo({
+          noteNumber: deductionNoteNumber,
+          date: deductionDate,
+          startDate,
+          endDate,
+          totals: {
+            serviceCharge: rows.reduce((sum, r) => sum + r.serviceCharge, 0),
+            kukuluban: rows.reduce((sum, r) => sum + r.kukuluban, 0),
+            tabungan: rows.reduce((sum, r) => sum + r.tabungan, 0),
+            grandTotal: rows.reduce(
+              (sum, r) => sum + r.serviceCharge + r.kukuluban + r.tabungan,
+              0,
+            ),
+          },
+          details: [...rows],
+        });
+        setIsSaveSuccessModalOpen(true);
+
         // Clear local storage and state on success
         localStorage.removeItem("jjs-potongan-rows");
-        // Generate new note number for next batch (simple increment or random for safety)
+        // Generate new note number for next batch
         const nextNum = Math.floor(Math.random() * 900) + 100;
         setDeductionNoteNumber(`POT-${format(new Date(), "ddMMyy")}${nextNum}`);
-        setRows([]); // Clear the table as requested
+        setRows([]);
       } else {
         toast.error(result.error || "Gagal menyimpan potongan", {
           description: result.details,
@@ -294,6 +508,62 @@ export default function PotonganPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-4">
+      <Dialog
+        open={isSaveSuccessModalOpen}
+        onOpenChange={setIsSaveSuccessModalOpen}
+      >
+        <DialogContent className="bg-slate-950/90 backdrop-blur-xl border-white/10 rounded-[2.5rem] shadow-2xl max-w-md p-0 overflow-hidden">
+          <div className="p-10 space-y-8 text-center">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 animate-bounce">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <DialogHeader>
+                <DialogTitle className="text-3xl font-black text-white text-center">
+                  Berhasil Disimpan!
+                </DialogTitle>
+                <DialogDescription className="text-slate-400 font-medium text-lg pt-2 text-center">
+                  Nota Potongan{" "}
+                  <span className="text-white font-bold">
+                    {savedNoteInfo?.noteNumber}
+                  </span>{" "}
+                  telah aman di sistem.
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-4">
+              <Button
+                onClick={() => {
+                  handlePrint();
+                }}
+                className="h-14 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-lg shadow-xl shadow-rose-600/20 transition-all active:scale-95"
+              >
+                <Printer className="w-6 h-6 mr-3" /> CETAK NOTA
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsSaveSuccessModalOpen(false);
+                  router.push("/potongan");
+                }}
+                className="h-14 rounded-2xl text-slate-400 hover:text-white hover:bg-white/5 font-bold text-lg transition-all"
+              >
+                Selesai
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-white/[0.02] p-4 border-t border-white/5">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 text-center">
+              Jajanan Subuh • Management System
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
           <h2 className="text-4xl font-black tracking-tight text-white">

@@ -74,7 +74,7 @@ export default function PayoutsPage() {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(undefined);
+  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import React from "react";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -170,7 +171,23 @@ export default function ReportsPage() {
       if (!r.isValidated) return;
       if (!r.supplier) return;
 
-      const dateStr = format(new Date(r.date || r.createdAt), "yyyy-MM-dd");
+      const reportDate = new Date(r.date || r.createdAt);
+      let matchDate = true;
+      if (startDate || endDate) {
+        if (startDate) {
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (reportDate < start) matchDate = false;
+        }
+        if (endDate) {
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (reportDate > end) matchDate = false;
+        }
+      }
+      if (!matchDate) return;
+
+      const dateStr = format(reportDate, "yyyy-MM-dd");
       const key = `${dateStr}_${r.supplier.id}`;
 
       if (!groups[key]) {
@@ -188,7 +205,7 @@ export default function ReportsPage() {
     return Object.values(groups)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .filter(d => d.supplierName.toLowerCase().includes(payoutSearch.toLowerCase()));
-  }, [reports, payoutSearch]);
+  }, [reports, payoutSearch, startDate, endDate]);
 
   // Setoran Memo (Validated Deposits grouped by supplier ONLY)
   const validatedSuppliers = useMemo(() => {
@@ -549,398 +566,689 @@ export default function ReportsPage() {
     }
   };
 
+  const handleReprint = () => {
+    if (!selectedNote || noteDetails.length === 0) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const first = noteDetails[0];
+    const reportDate = first.deductionDate || first.date || first.createdAt;
+    
+    let content = "";
+    if (isDeductionModal) {
+      // DEDUCTION TEMPLATE
+      const dates = noteDetails.map((r: any) => new Date(r.date).getTime());
+      const minDate = new Date(Math.min(...dates));
+      const maxDate = new Date(Math.max(...dates));
+      
+      const rowsHtml = [...noteDetails]
+        .sort((a, b) => (a.supplier?.name || "").localeCompare(b.supplier?.name || ""))
+        .filter((r) => (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0 || (r.tabungan || 0) > 0)
+        .map((r, index) => {
+          const total = (r.serviceCharge || 0) + (r.kukuluban || 0) + (r.tabungan || 0);
+          return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${r.supplier?.name || "Unknown"}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(r.serviceCharge || 0)}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(r.kukuluban || 0)}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(r.tabungan || 0)}</td>
+            <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(total)}</strong></td>
+          </tr>
+        `;
+        })
+        .join("");
+
+      const totals = {
+        sc: noteDetails.reduce((sum, r) => sum + (r.serviceCharge || 0), 0),
+        kuk: noteDetails.reduce((sum, r) => sum + (r.kukuluban || 0), 0),
+        tab: noteDetails.reduce((sum, r) => sum + (r.tabungan || 0), 0),
+        grand: noteDetails.reduce((sum, r) => sum + (r.serviceCharge || 0) + (r.kukuluban || 0) + (r.tabungan || 0), 0)
+      };
+
+      content = `
+        <div class="header"><h1>Nota Potongan Mitra Jjs - Jajanan Subuh</h1></div>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedNote}</strong></div>
+          <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(reportDate), "dd MMMM yyyy")}</div>
+          <div class="meta-item"><span class="meta-label">Periode:</span> ${format(minDate, "dd/MM")} - ${format(maxDate, "dd/MM/yy")}</div>
+        </div>
+        <table>
+          <thead>
+            <tr><th>No</th><th width="150">Suplier</th><th align="right">S.Charge</th><th align="right">Kukuluban</th><th align="right">Tabungan</th><th align="right">Total Pot.</th></tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr class="total-row">
+              <td colspan="2" align="center">TOTAL KESELURUHAN</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.sc)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.kuk)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.tab)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.grand)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer-sig">
+          <div class="sig">Kasir / Admin</div>
+          <div class="sig">Manager Toko</div>
+        </div>
+      `;
+    } else {
+      // TRANSACTION TEMPLATE
+      const rowsHtml = [...noteDetails]
+        .sort((a, b) => (a.supplier?.name || "").localeCompare(b.supplier?.name || ""))
+        .map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${row.supplier?.name || "-"}</td>
+          <td align="right">${new Intl.NumberFormat('id-ID').format(row.revenue)}</td>
+          <td align="right">${new Intl.NumberFormat('id-ID').format(row.cost)}</td>
+          <td align="right">${new Intl.NumberFormat('id-ID').format(row.barcode)}</td>
+          <td align="right">${new Intl.NumberFormat('id-ID').format(row.profit80)}</td>
+          <td align="right">${new Intl.NumberFormat('id-ID').format(row.profit20)}</td>
+        </tr>
+      `).join('');
+
+      const totals = {
+        rev: noteDetails.reduce((s, r) => s + r.revenue, 0),
+        cost: noteDetails.reduce((s, r) => s + r.cost, 0),
+        bc: noteDetails.reduce((s, r) => s + r.barcode, 0),
+        p80: noteDetails.reduce((s, r) => s + r.profit80, 0),
+        p20: noteDetails.reduce((s, r) => s + r.profit20, 0),
+      };
+
+      content = `
+        <div class="header"><h1>Transaksi Mitra Jjs - Jajanan Subuh</h1></div>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedNote}</strong></div>
+          <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(reportDate), "dd MMMM yyyy")}</div>
+        </div>
+        ${first.notes ? `<div style="margin: 15px 0; padding: 10px; border: 1px dashed #ccc; font-style: italic; font-size: 12px;"><strong>Catatan:</strong> "${first.notes}"</div>` : ''}
+        <table>
+          <thead>
+            <tr><th>No</th><th width="150">Suplier</th><th align="right">Pendapatan</th><th align="right">Cost</th><th align="right">Barcode</th><th align="right">Mitra Jjs</th><th align="right">Toko</th></tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr class="total-row">
+              <td colspan="2" align="center">TOTAL</td>
+              <td align="right">${new Intl.NumberFormat('id-ID').format(totals.rev)}</td>
+              <td align="right">${new Intl.NumberFormat('id-ID').format(totals.cost)}</td>
+              <td align="right">${new Intl.NumberFormat('id-ID').format(totals.bc)}</td>
+              <td align="right">${new Intl.NumberFormat('id-ID').format(totals.p80)}</td>
+              <td align="right">${new Intl.NumberFormat('id-ID').format(totals.p20)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer-sig">
+          <div class="sig">Kasir / Admin</div>
+          <div class="sig">Manager Toko</div>
+        </div>
+      `;
+    }
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Cetak Ulang - ${selectedNote}</title>
+          <style>
+            @page { size: portrait; margin: 0; }
+            body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+            .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+            h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+            .meta-item { margin-bottom: 3px; }
+            .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+            th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+            td { padding: 6px 5px; border: 1px solid #ddd; }
+            .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+            .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+            .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          ${content}
+          <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
+            Dicetak ulang pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
+  const handleReprintTabungan = () => {
+    if (!selectedTabunganNote) return;
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const rowsHtml = [...selectedTabunganNote.suppliers]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((s, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${s.name}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(s.revenue)}</td>
+          <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(s.tabungan)}</strong></td>
+        </tr>
+      `)
+      .join("");
+
+    const totalTabungan = selectedTabunganNote.suppliers.reduce((sum, s) => sum + s.tabungan, 0);
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Nota Tabungan - ${selectedTabunganNote.noteNumber}</title>
+          <style>
+            @page { size: portrait; margin: 0; }
+            body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+            .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+            h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+            .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+            .meta-item { margin-bottom: 3px; }
+            .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+            th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+            td { padding: 6px 5px; border: 1px solid #ddd; }
+            .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+            .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+            .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="header"><h1>Laporan Tabungan Mitra Jjs - Jajanan Subuh</h1></div>
+          <div class="meta-grid">
+            <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedTabunganNote.noteNumber}</strong></div>
+            <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(selectedTabunganNote.date), "dd MMMM yyyy")}</div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>No</th><th width="250">Nama Suplier</th><th align="right">Omzet</th><th align="right">Potongan Tabungan</th></tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+              <tr class="total-row">
+                <td colspan="3" align="center">TOTAL TABUNGAN</td>
+                <td align="right">${new Intl.NumberFormat("id-ID").format(totalTabungan)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="footer-sig">
+            <div class="sig">Kasir / Admin</div>
+            <div class="sig">Manager Toko</div>
+          </div>
+          <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
+            Dicetak ulang pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   if (!isMounted) return null;
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tight text-white">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
             Arsip <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-400">JjsManage</span>
           </h2>
-          <p className="text-slate-400 font-medium">Riwayat lengkap transaksi harian, setoran tunai, dan akumulasi tabungan mitra.</p>
+          <p className="text-slate-400 font-medium text-sm md:text-base">Riwayat lengkap transaksi harian, setoran tunai, dan akumulasi tabungan mitra.</p>
         </div>
-        <div className="flex items-center gap-4">
-          <Button onClick={handleExportExcel} className="h-12 px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 shadow-xl transition-all active:scale-95">
+        <div className="shrink-0">
+          <Button onClick={handleExportExcel} className="h-12 w-full sm:w-auto px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 shadow-xl transition-all active:scale-95">
             <Download className="w-5 h-5 mr-2 text-blue-400" /> Export Excel
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="transaksi" className="space-y-8" onValueChange={setActiveTab}>
-        <TabsList className="bg-slate-900/50 border border-white/5 p-1.5 rounded-2xl md:!h-14 w-full md:w-auto flex flex-wrap md:flex-nowrap items-center gap-1">
-          <TabsTrigger value="transaksi" className={`flex-1 h-full !py-3 md:px-6 rounded-xl font-bold transition-all ${activeTab === "transaksi" ? "!bg-blue-600 !text-white shadow-lg shadow-blue-900/50" : "text-slate-400 hover:text-white"}`}>
-            <FileText className="w-4 h-4 mr-2" /> Transaksi
-          </TabsTrigger>
-          <TabsTrigger value="setoran" className={`flex-1 h-full !py-3 md:px-6 rounded-xl font-bold transition-all ${activeTab === "setoran" ? "!bg-indigo-600 !text-white shadow-lg shadow-indigo-900/50" : "text-slate-400 hover:text-white"}`}>
-            <Wallet className="w-4 h-4 mr-2" /> Setoran
-          </TabsTrigger>
-          <TabsTrigger value="tabungan" className={`flex-1 h-full !py-3 md:px-6 rounded-xl font-bold transition-all ${activeTab === "tabungan" ? "!bg-purple-600 !text-white shadow-lg shadow-purple-900/50" : "text-slate-400 hover:text-white"}`}>
-            <Coins className="w-4 h-4 mr-2" /> Tabungan
-          </TabsTrigger>
-          <TabsTrigger value="potongan" className={`flex-1 h-full !py-3 md:px-6 rounded-xl font-bold transition-all ${activeTab === "potongan" ? "!bg-rose-600 !text-white shadow-lg shadow-rose-900/50" : "text-slate-400 hover:text-white"}`}>
-            <History className="w-4 h-4 mr-2" /> Potongan
-          </TabsTrigger>
-          <TabsTrigger value="produk" className={`flex-1 h-full !py-3 md:px-6 rounded-xl font-bold transition-all ${activeTab === "produk" ? "!bg-emerald-600 !text-white shadow-lg shadow-emerald-900/50" : "text-slate-400 hover:text-white"}`}>
-            <Package className="w-4 h-4 mr-2" /> Produk
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-4 scrollbar-hide">
+          <TabsList className="bg-slate-900/50 border border-white/5 p-2 rounded-[2rem] h-16 md:h-20 w-max flex items-center gap-2 min-w-full">
+            <LayoutGroup id="reports-nav">
+              {[
+                { id: "transaksi", label: "Transaksi", icon: FileText, color: "#2563eb", shadow: "shadow-blue-900/50" },
+                { id: "setoran", label: "Setoran", icon: Wallet, color: "#4f46e5", shadow: "shadow-indigo-900/50" },
+                { id: "tabungan", label: "Tabungan", icon: Coins, color: "#9333ea", shadow: "shadow-purple-900/50" },
+                { id: "potongan", label: "Potongan", icon: History, color: "#e11d48", shadow: "shadow-rose-900/50" },
+                { id: "produk", label: "Produk", icon: Package, color: "#059669", shadow: "shadow-emerald-900/50" },
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className={`relative !py-4 px-6 md:px-8 rounded-2xl font-black text-sm md:text-base transition-colors duration-200 whitespace-nowrap overflow-visible data-[state=active]:!bg-transparent data-[state=inactive]:!bg-transparent ${
+                    activeTab === tab.id ? "!text-white" : "text-slate-500 hover:text-slate-300"
+                  }`}
+                >
+                  {activeTab === tab.id && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className={`absolute inset-0 rounded-2xl shadow-xl ${tab.shadow}`}
+                      style={{ backgroundColor: tab.color }}
+                      animate={{ backgroundColor: tab.color }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center">
+                    <tab.icon className="w-5 h-5 mr-2" /> {tab.label}
+                  </span>
+                </TabsTrigger>
+              ))}
+            </LayoutGroup>
+          </TabsList>
+        </div>
 
-        <TabsContent value="transaksi" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border border-white/5 border-t-4 border-t-blue-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-900/10">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-400" /> Riwayat Transaksi
-                </CardTitle>
-                <CardDescription className="text-slate-400 font-medium mt-1">Dikelompokkan berdasarkan nomor nota.</CardDescription>
-              </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
-                  <div className="flex items-center gap-2 px-3">
-                    <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
-                    <Popover>
-                      <PopoverTrigger className="text-xs font-bold text-white">
-                        {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
-                        <div className="p-4 flex gap-4">
-                          <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                          <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+        <TabsContent value="transaksi" className="space-y-8">
+          {activeTab === "transaksi" && (
+            <Card className="border border-white/5 border-t-4 border-t-blue-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-blue-400" /> Riwayat Transaksi
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 font-medium mt-1">Dikelompokkan berdasarkan nomor nota.</CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+                      <Popover>
+                        <PopoverTrigger className="text-xs font-bold text-white">
+                          {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
+                          <div className="p-4 flex gap-4">
+                            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                    <Input placeholder={userRole === "SUPPLIER" ? "Cari nota..." : "Cari nota/catatan..."} className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                   </div>
                 </div>
-                <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
-                  <Input placeholder={userRole === "SUPPLIER" ? "Cari nota..." : "Cari nota/catatan..."} className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5">
-                    <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
-                    {userRole !== "SUPPLIER" && <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Catatan</TableHead>}
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Mitra Jjs</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Toko</TableHead>
-                    <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500">Memuat...</TableCell></TableRow>
-                  ) : filteredReports.length === 0 ? (
-                    <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500 italic">Tidak ada data.</TableCell></TableRow>
-                  ) : (
-                    filteredReports.map((r) => (
-                      <TableRow key={r.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => {
-                        setSelectedNote(r.noteNumber);
-                        setIsNoteModalOpen(true);
-                        setIsDeductionModal(false);
-                        setNoteDetails(reports.filter(item => item.noteNumber === r.noteNumber));
-                      }}>
-                        <TableCell className="py-5 px-8 font-bold text-white">{format(new Date(r.date), "dd MMM yyyy", { locale: id })}</TableCell>
-                        <TableCell className="font-black text-blue-400">{r.noteNumber || "-"}</TableCell>
-                        {userRole !== "SUPPLIER" && <TableCell className="text-slate-400 font-medium max-w-[200px] truncate">{r.notes}</TableCell>}
-                        <TableCell className="text-emerald-400 font-bold">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(r.profit80)}</TableCell>
-                        <TableCell className="text-blue-400 font-bold">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(r.profit20)}</TableCell>
-                        <TableCell className="text-right px-8">
-                          <Button variant="ghost" size="icon" className="hover:text-red-400" onClick={(e) => { e.stopPropagation(); setDeleteNoteNumber(r.noteNumber); setIsDeleteModalOpen(true); }}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="setoran" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border border-white/5 border-t-4 border-t-indigo-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-900/10">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Wallet className="w-5 h-5 text-indigo-400" /> Riwayat Setoran (Tervalidasi)
-                </CardTitle>
-                <CardDescription className="text-slate-400 font-medium mt-1">Daftar setoran / pendapatan mitra yang sudah divalidasi.</CardDescription>
-              </div>
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-                <Input placeholder="Cari mitra..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-indigo-500/20" value={payoutSearch} onChange={(e) => setPayoutSearch(e.target.value)} />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5">
-                    <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Mitra</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Jumlah Setoran</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Metode</TableHead>
-                    <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {validatedSuppliers.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20 text-slate-500 italic">Belum ada riwayat setoran.</TableCell></TableRow>
-                  ) : (
-                    validatedSuppliers.map((p) => (
-                      <TableRow key={p.id} className="border-white/5 hover:bg-white/[0.02] transition-colors cursor-pointer" onClick={() => {
-                        setSelectedSupplierForSetoran({
-                          name: p.supplierName,
-                          data: validatedDeposits.filter(d => d.supplierName === p.supplierName)
-                        });
-                        setIsSupplierSetoranModalOpen(true);
-                      }}>
-                        <TableCell className="py-5 px-8 font-black text-indigo-400 uppercase">{p.supplierName}</TableCell>
-                        <TableCell className="font-bold text-white">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(p.amount)}</TableCell>
-                        <TableCell className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">{p.paymentMethod}</TableCell>
-                        <TableCell className="text-right px-8">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-indigo-500/20 hover:text-indigo-400">
-                            <History className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="tabungan" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border border-white/5 border-t-4 border-t-purple-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-900/10">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Coins className="w-5 h-5 text-purple-400" /> Riwayat Tabungan
-                </CardTitle>
-                <CardDescription className="text-slate-400 font-medium mt-1">Potongan tabungan otomatis dari setiap transaksi (Dikelompokkan per Nota).</CardDescription>
-              </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
-                  <div className="flex items-center gap-2 px-3">
-                    <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
-                    <Popover>
-                      <PopoverTrigger className="text-xs font-bold text-white">
-                        {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
-                        <div className="p-4 flex gap-4">
-                          <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                          <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                </div>
-                <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
-                  <Input placeholder="Cari nota atau suplier..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-purple-500/20" value={savingsSearch} onChange={(e) => setSavingsSearch(e.target.value)} />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5">
-                    <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500 text-right">Total Omzet</TableHead>
-                    <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500 text-purple-400">Total Tabungan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {groupedSavingsByNote.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center py-20 text-slate-500 italic">Belum ada riwayat tabungan.</TableCell></TableRow>
-                  ) : (
-                    groupedSavingsByNote.map((s) => (
-                      <TableRow 
-                        key={s.id} 
-                        className="border-white/5 hover:bg-white/[0.02] cursor-pointer group transition-all"
-                        onClick={() => {
-                            setSelectedTabunganNote({
-                                noteNumber: s.noteNumber || "-",
-                                date: s.date,
-                                suppliers: Array.from(s.suppliers.values()).sort((a: any, b: any) => b.tabungan - a.tabungan)
-                            });
-                            setIsTabunganModalOpen(true);
-                        }}
-                      >
-                        <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(s.date), "dd MMM yyyy", { locale: id })}</TableCell>
-                        <TableCell className="font-black text-purple-400 group-hover:text-purple-300 transition-colors">{s.noteNumber}</TableCell>
-                        <TableCell className="text-right font-bold text-slate-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(s.totalRevenue)}</TableCell>
-                        <TableCell className="text-right px-8 font-black text-purple-400 text-lg">+ {new Intl.NumberFormat("id-ID").format(s.totalTabungan)}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="potongan" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border border-white/5 border-t-4 border-t-rose-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-rose-900/10">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <History className="w-5 h-5 text-rose-400" /> Riwayat Potongan
-                </CardTitle>
-                <CardDescription className="text-slate-400 font-medium mt-1">Arsip rincian biaya layanan dan iuran mitra.</CardDescription>
-              </div>
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
-                <Input placeholder="Cari suplier/nota..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-rose-500/20" value={deductionSearch} onChange={(e) => setDeductionSearch(e.target.value)} />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5">
-                    <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No. Nota</TableHead>
-                    <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-rose-400">S.Charge</TableHead>
-                    <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-orange-400">Kukuluban</TableHead>
-                    <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-purple-400">Tabungan</TableHead>
-                    <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-white">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDeductions.length === 0 ? (
-                    <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-500 italic">Tidak ada riwayat potongan dalam periode ini.</TableCell></TableRow>
-                  ) : (
-                    filteredDeductions.map((d) => {
-                      const totalDeduction = (d.serviceCharge || 0) + (d.kukuluban || 0) + (d.tabungan || 0);
-                      return (
-                        <TableRow
-                          key={d.id}
-                          className="border-white/5 hover:bg-white/[0.02] cursor-pointer"
-                          onClick={() => {
-                            // @ts-ignore
-                            const targetNote = d.deductionNoteNumber || d.noteNumber;
-                            setSelectedNote(targetNote);
-                            setNoteDetails(reports.filter(item =>
-                              item.noteNumber === targetNote ||
-                              // @ts-ignore
-                              item.deductionNoteNumber === targetNote
-                            ));
-                            setIsNoteModalOpen(true);
-                            setIsDeductionModal(true);
-                          }}
-                        >
-
-                          <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">
-                            {format(new Date(d.deductionDate || d.date || d.createdAt), "dd MMM yy")}
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5">
+                      <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
+                      {userRole !== "SUPPLIER" && <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Catatan</TableHead>}
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Mitra Jjs</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Toko</TableHead>
+                      <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500">Memuat...</TableCell></TableRow>
+                    ) : filteredReports.length === 0 ? (
+                      <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500 italic">Tidak ada data.</TableCell></TableRow>
+                    ) : (
+                      filteredReports.map((r) => (
+                        <TableRow key={r.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => {
+                          setSelectedNote(r.noteNumber);
+                          setIsNoteModalOpen(true);
+                          setIsDeductionModal(false);
+                          setNoteDetails(reports.filter(item => item.noteNumber === r.noteNumber));
+                        }}>
+                          <TableCell className="py-5 px-8 font-bold text-white">{format(new Date(r.date), "dd MMM yyyy", { locale: id })}</TableCell>
+                          <TableCell className="font-black text-blue-400">{r.noteNumber || "-"}</TableCell>
+                          {userRole !== "SUPPLIER" && <TableCell className="text-slate-400 font-medium max-w-[200px] truncate">{r.notes}</TableCell>}
+                          <TableCell className="text-emerald-400 font-bold">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(r.profit80)}</TableCell>
+                          <TableCell className="text-blue-400 font-bold">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(r.profit20)}</TableCell>
+                          <TableCell className="text-right px-8">
+                            <Button variant="ghost" size="icon" className="hover:text-red-400" onClick={(e) => { e.stopPropagation(); setDeleteNoteNumber(r.noteNumber); setIsDeleteModalOpen(true); }}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </TableCell>
-                          <TableCell className="font-black text-blue-400">
-                            {
-                              // @ts-ignore
-                              d.deductionNoteNumber || (d.deductionDate ? `POT-${format(new Date(d.deductionDate), "ddMMyy")}` : d.noteNumber || "-")
-                            }
-                          </TableCell>
-
-                          <TableCell className="text-right font-bold text-rose-400">{new Intl.NumberFormat("id-ID").format(d.serviceCharge || 0)}</TableCell>
-                          <TableCell className="text-right font-bold text-orange-400">{new Intl.NumberFormat("id-ID").format(d.kukuluban || 0)}</TableCell>
-                          <TableCell className="text-right font-bold text-purple-400">{new Intl.NumberFormat("id-ID").format(d.tabungan || 0)}</TableCell>
-                          <TableCell className="text-right px-8 font-black text-white">{new Intl.NumberFormat("id-ID").format(totalDeduction)}</TableCell>
                         </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
-        <TabsContent value="produk" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Card className="border border-white/5 border-t-4 border-t-emerald-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                  <Package className="w-5 h-5 text-emerald-400" /> Arsip Produk
-                </CardTitle>
-                <CardDescription className="text-slate-400 font-medium mt-1">Akumulasi stok dan penjualan produk berdasarkan riwayat transaksi.</CardDescription>
-              </div>
-              <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
-                  <div className="flex items-center gap-2 px-3">
-                    <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
-                    <Popover>
-                      <PopoverTrigger className="text-xs font-bold text-white">
-                        {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
-                        <div className="p-4 flex gap-4">
-                          <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                          <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                        </div>
-                      </PopoverContent>
-                    </Popover>
+
+        <TabsContent value="setoran" className="space-y-8">
+          {activeTab === "setoran" && (
+            <Card className="border border-white/5 border-t-4 border-t-indigo-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-indigo-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <Wallet className="w-5 h-5 text-indigo-400" /> Riwayat Setoran (Tervalidasi)
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 font-medium mt-1">Daftar setoran / pendapatan mitra yang sudah divalidasi.</CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+                      <Popover>
+                        <PopoverTrigger className="text-xs font-bold text-white">
+                          {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
+                          <div className="p-4 flex gap-4">
+                            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
+                    <Input placeholder="Cari mitra..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-indigo-500/20" value={payoutSearch} onChange={(e) => setPayoutSearch(e.target.value)} />
                   </div>
                 </div>
-                <div className="relative group">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
-                  <Input placeholder="Cari produk..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-emerald-500/20" value={produkSearch} onChange={(e) => setProdukSearch(e.target.value)} />
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5">
+                      <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Mitra</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Jumlah Setoran</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Metode</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {validatedDeposits.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-20 text-slate-500 italic">Belum ada riwayat setoran.</TableCell></TableRow>
+                    ) : (
+                      validatedDeposits.map((p) => (
+                        <TableRow key={p.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                          <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">
+                            {format(new Date(p.date), "dd MMM yyyy", { locale: id })}
+                          </TableCell>
+                          <TableCell className="py-5 font-black text-indigo-400 uppercase">{p.supplierName}</TableCell>
+                          <TableCell className="font-bold text-white">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(p.amount)}</TableCell>
+                          <TableCell className="text-slate-500 font-bold uppercase text-[10px] tracking-widest">{p.paymentMethod}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tabungan" className="space-y-8">
+          {activeTab === "tabungan" && (
+            <Card className="border border-white/5 border-t-4 border-t-purple-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <Coins className="w-5 h-5 text-purple-400" /> Riwayat Tabungan
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 font-medium mt-1">Potongan tabungan otomatis dari setiap transaksi (Dikelompokkan per Nota).</CardDescription>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader className="bg-white/[0.02]">
-                  <TableRow className="border-white/5">
-                    <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
-                    <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
-                    <TableHead className="py-5 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">Total Beli</TableHead>
-                    <TableHead className="py-5 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">Total Jual</TableHead>
-                    <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Persentase</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {groupedProductsByNote.length === 0 ? (
-                    <TableRow><TableCell colSpan={5} className="text-center py-20 text-slate-500 italic">Tidak ada data produk dalam periode ini.</TableCell></TableRow>
-                  ) : (
-                    groupedProductsByNote.map((g, idx) => {
-                      const sellRate = g.totalBeli > 0 ? ((g.totalJual / g.totalBeli) * 100).toFixed(1) : "0";
-                      return (
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+                      <Popover>
+                        <PopoverTrigger className="text-xs font-bold text-white">
+                          {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
+                          <div className="p-4 flex gap-4">
+                            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
+                    <Input placeholder="Cari nota atau suplier..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-purple-500/20" value={savingsSearch} onChange={(e) => setSavingsSearch(e.target.value)} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5">
+                      <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500 text-right">Total Omzet</TableHead>
+                      <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500 text-purple-400">Total Tabungan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupedSavingsByNote.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-20 text-slate-500 italic">Belum ada riwayat tabungan.</TableCell></TableRow>
+                    ) : (
+                      groupedSavingsByNote.map((s) => (
                         <TableRow 
-                          key={idx} 
+                          key={s.id} 
                           className="border-white/5 hover:bg-white/[0.02] cursor-pointer group transition-all"
                           onClick={() => {
-                            setSelectedProdukNote({
-                              noteNumber: g.noteNumber || "-",
-                              products: Array.from(g.products.values()).sort((a: any, b: any) => b.totalJual - a.totalJual)
-                            });
-                            setIsProdukModalOpen(true);
+                              setSelectedTabunganNote({
+                                  noteNumber: s.noteNumber || "-",
+                                  date: s.date,
+                                  suppliers: Array.from(s.suppliers.values()).sort((a: any, b: any) => b.tabungan - a.tabungan)
+                              });
+                              setIsTabunganModalOpen(true);
                           }}
                         >
-                          <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(g.date), "dd MMM yyyy", { locale: id })}</TableCell>
-                          <TableCell className="font-black text-blue-400 group-hover:text-emerald-400 transition-colors">{g.noteNumber || "-"}</TableCell>
-                          <TableCell className="text-center font-bold text-slate-400">{g.totalBeli}</TableCell>
-                          <TableCell className="text-center font-black text-emerald-400">{g.totalJual}</TableCell>
-                          <TableCell className="text-right px-8">
-                            <div className="flex flex-col items-end">
-                              <span className="font-black text-white">{sellRate}%</span>
-                              <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
-                                <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, Number(sellRate))}%` }} />
-                              </div>
-                            </div>
-                          </TableCell>
+                          <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(s.date), "dd MMM yyyy", { locale: id })}</TableCell>
+                          <TableCell className="font-black text-purple-400 group-hover:text-purple-300 transition-colors">{s.noteNumber}</TableCell>
+                          <TableCell className="text-right font-bold text-slate-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(s.totalRevenue)}</TableCell>
+                          <TableCell className="text-right px-8 font-black text-purple-400 text-lg">+ {new Intl.NumberFormat("id-ID").format(s.totalTabungan)}</TableCell>
                         </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="potongan" className="space-y-8">
+          {activeTab === "potongan" && (
+            <Card className="border border-white/5 border-t-4 border-t-rose-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-rose-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <History className="w-5 h-5 text-rose-400" /> Riwayat Potongan
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 font-medium mt-1">Arsip rincian biaya layanan dan iuran mitra.</CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+                      <Popover>
+                        <PopoverTrigger className="text-xs font-bold text-white">
+                          {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
+                          <div className="p-4 flex gap-4">
+                            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
+                    <Input placeholder="Cari suplier/nota..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-rose-500/20" value={deductionSearch} onChange={(e) => setDeductionSearch(e.target.value)} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5">
+                      <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No. Nota</TableHead>
+                      <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-rose-400">S.Charge</TableHead>
+                      <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-orange-400">Kukuluban</TableHead>
+                      <TableHead className="py-5 text-right font-black text-[10px] uppercase tracking-widest text-purple-400">Tabungan</TableHead>
+                      <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-white">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDeductions.length === 0 ? (
+                      <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-500 italic">Tidak ada riwayat potongan dalam periode ini.</TableCell></TableRow>
+                    ) : (
+                      filteredDeductions.map((d) => {
+                        const totalDeduction = (d.serviceCharge || 0) + (d.kukuluban || 0) + (d.tabungan || 0);
+                        return (
+                          <TableRow
+                            key={d.id}
+                            className="border-white/5 hover:bg-white/[0.02] cursor-pointer"
+                            onClick={() => {
+                              // @ts-ignore
+                              const targetNote = d.deductionNoteNumber || d.noteNumber;
+                              setSelectedNote(targetNote);
+                              setNoteDetails(reports.filter(item =>
+                                item.noteNumber === targetNote ||
+                                // @ts-ignore
+                                item.deductionNoteNumber === targetNote
+                              ));
+                              setIsNoteModalOpen(true);
+                              setIsDeductionModal(true);
+                            }}
+                          >
+
+                            <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">
+                              {format(new Date(d.deductionDate || d.date || d.createdAt), "dd MMM yy")}
+                            </TableCell>
+                            <TableCell className="font-black text-blue-400">
+                              {
+                                // @ts-ignore
+                                d.deductionNoteNumber || (d.deductionDate ? `POT-${format(new Date(d.deductionDate), "ddMMyy")}` : d.noteNumber || "-")
+                              }
+                            </TableCell>
+
+                            <TableCell className="text-right font-bold text-rose-400">{new Intl.NumberFormat("id-ID").format(d.serviceCharge || 0)}</TableCell>
+                            <TableCell className="text-right font-bold text-orange-400">{new Intl.NumberFormat("id-ID").format(d.kukuluban || 0)}</TableCell>
+                            <TableCell className="text-right font-bold text-purple-400">{new Intl.NumberFormat("id-ID").format(d.tabungan || 0)}</TableCell>
+                            <TableCell className="text-right px-8 font-black text-white">{new Intl.NumberFormat("id-ID").format(totalDeduction)}</TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+        <TabsContent value="produk" className="space-y-8">
+          {activeTab === "produk" && (
+            <Card className="border border-white/5 border-t-4 border-t-emerald-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <Package className="w-5 h-5 text-emerald-400" /> Arsip Produk
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 font-medium mt-1">Akumulasi stok dan penjualan produk berdasarkan riwayat transaksi.</CardDescription>
+                </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
+                    <div className="flex items-center gap-2 px-3">
+                      <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
+                      <Popover>
+                        <PopoverTrigger className="text-xs font-bold text-white">
+                          {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
+                          <div className="p-4 flex gap-4">
+                            <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                            <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
+                    <Input placeholder="Cari produk..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-emerald-500/20" value={produkSearch} onChange={(e) => setProdukSearch(e.target.value)} />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader className="bg-white/[0.02]">
+                    <TableRow className="border-white/5">
+                      <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
+                      <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
+                      <TableHead className="py-5 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">Total Beli</TableHead>
+                      <TableHead className="py-5 text-center font-black text-[10px] uppercase tracking-widest text-slate-500">Total Jual</TableHead>
+                      <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Persentase</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {groupedProductsByNote.length === 0 ? (
+                      <TableRow><TableCell colSpan={5} className="text-center py-20 text-slate-500 italic">Tidak ada data produk dalam periode ini.</TableCell></TableRow>
+                    ) : (
+                      groupedProductsByNote.map((g, idx) => {
+                        const sellRate = g.totalBeli > 0 ? ((g.totalJual / g.totalBeli) * 100).toFixed(1) : "0";
+                        return (
+                          <TableRow 
+                            key={idx} 
+                            className="border-white/5 hover:bg-white/[0.02] cursor-pointer group transition-all"
+                            onClick={() => {
+                              setSelectedProdukNote({
+                                noteNumber: g.noteNumber || "-",
+                                products: Array.from(g.products.values()).sort((a: any, b: any) => b.totalJual - a.totalJual)
+                              });
+                              setIsProdukModalOpen(true);
+                            }}
+                          >
+                            <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(g.date), "dd MMM yyyy", { locale: id })}</TableCell>
+                            <TableCell className="font-black text-blue-400 group-hover:text-emerald-400 transition-colors">{g.noteNumber || "-"}</TableCell>
+                            <TableCell className="text-center font-bold text-slate-400">{g.totalBeli}</TableCell>
+                            <TableCell className="text-center font-black text-emerald-400">{g.totalJual}</TableCell>
+                            <TableCell className="text-right px-8">
+                              <div className="flex flex-col items-end">
+                                <span className="font-black text-white">{sellRate}%</span>
+                                <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                                  <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, Number(sellRate))}%` }} />
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -1021,20 +1329,28 @@ export default function ReportsPage() {
           </div>
           <div className="p-6 border-t border-white/5 flex justify-end gap-3">
             {userRole !== "SUPPLIER" && (
-              <Button
-                onClick={() => {
-                  setIsNoteModalOpen(false);
-                  if (isDeductionModal) {
-                    router.push("/potongan");
-                  } else {
-                    router.push(`/transactions?edit=${selectedNote}`);
-                  }
-                }}
-                className={`${isDeductionModal ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"} text-white font-bold rounded-xl h-11 px-6`}
-              >
-                {isDeductionModal ? <Save className="w-4 h-4 mr-2" /> : <Pencil className="w-4 h-4 mr-2" />}
-                {isDeductionModal ? "Edit Potongan" : "Edit Transaksi"}
-              </Button>
+              <>
+                <Button
+                  onClick={handleReprint}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-11 px-6"
+                >
+                  <Printer className="w-4 h-4 mr-2" /> Cetak Ulang
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsNoteModalOpen(false);
+                    if (isDeductionModal) {
+                      router.push(`/potongan?edit=${selectedNote}`);
+                    } else {
+                      router.push(`/transactions?edit=${selectedNote}`);
+                    }
+                  }}
+                  className={`${isDeductionModal ? "bg-rose-600 hover:bg-rose-700" : "bg-amber-600 hover:bg-amber-700"} text-white font-bold rounded-xl h-11 px-6`}
+                >
+                  {isDeductionModal ? <Save className="w-4 h-4 mr-2" /> : <Pencil className="w-4 h-4 mr-2" />}
+                  {isDeductionModal ? "Edit Potongan" : "Edit Transaksi"}
+                </Button>
+              </>
             )}
             <Button onClick={() => setIsNoteModalOpen(false)} className="bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl h-11 px-8">Tutup</Button>
           </div>
@@ -1125,6 +1441,14 @@ export default function ReportsPage() {
             </Table>
           </div>
           <div className="p-6 border-t border-white/5 flex justify-end gap-3 shrink-0">
+            {userRole !== "SUPPLIER" && (
+              <Button
+                onClick={handleReprintTabungan}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-11 px-6"
+              >
+                <Printer className="w-4 h-4 mr-2" /> Cetak Ulang
+              </Button>
+            )}
             <Button onClick={() => setIsTabunganModalOpen(false)} className="bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl h-11 px-8">Tutup</Button>
           </div>
         </DialogContent>

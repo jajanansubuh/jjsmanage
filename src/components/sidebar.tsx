@@ -17,7 +17,8 @@ import {
   Coins,
   AlertCircle,
   Package,
-  Scissors
+  Scissors,
+  Printer
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ const navigation = [
   { name: "Potongan", href: "/potongan", icon: Scissors },
   { name: "Arsip", href: "/reports", icon: FileText },
   { name: "Riwayat", href: "/payouts", icon: History },
+  { name: "Cetak", href: "/cetak", icon: Printer },
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ];
 
@@ -53,13 +55,22 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
 
   // Filter navigation based on role
   const filteredNavigation = navigation.filter(item => {
-    const userRole = role?.toUpperCase();
+    const userRole = (role || "").toUpperCase();
+    
     if (userRole === "SUPPLIER") {
-      // Supplier sees ONLY Riwayat, Setor, Tabungan, Produk and Pengaturan
-      return ["Riwayat", "Setor", "Tabungan", "Produk", "Pengaturan"].includes(item.name);
+      // Supplier sees these specific paths
+      const allowedPaths = ["/payouts", "/deposits", "/savings", "/produk", "/cetak", "/settings"];
+      return allowedPaths.includes(item.href);
     }
-    // Admin sees everything EXCEPT Riwayat
-    return item.name !== "History" && item.name !== "Riwayat";
+    
+    if (userRole === "CASHIER") {
+      // Cashier sees everything except admin master and payouts
+      const forbiddenPaths = ["/master", "/payouts", "/settings"];
+      return !forbiddenPaths.includes(item.href);
+    }
+
+    // Admin sees everything except Riwayat (which is for suppliers)
+    return item.href !== "/payouts";
   }).map(item => {
     const userRole = role?.toUpperCase();
     // Ganti tulisan Setor menjadi Saldo untuk Supplier
