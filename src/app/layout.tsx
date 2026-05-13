@@ -23,8 +23,8 @@ export const metadata: Metadata = {
     title: "JJS Manage",
   },
   icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-192.png",
+    icon: "/logojjsmanage.png",
+    apple: "/logojjsmanage.png",
   },
   formatDetection: {
     telephone: false,

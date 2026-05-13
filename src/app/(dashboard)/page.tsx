@@ -214,16 +214,18 @@ function DashboardContent() {
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700 ease-out relative pb-10">
+    <div className="space-y-10 animate-in fade-in duration-700 ease-out relative pb-10 overflow-x-hidden">
       {/* Payout History Modal */}
       <PayoutHistoryModal 
         isOpen={isPayoutModalOpen} 
         onOpenChange={setIsPayoutModalOpen} 
       />
 
-      {/* Subtle background decoration */}
-      <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute top-1/2 -left-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+      {/* Subtle background decoration - Wrapped to prevent overflow */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]" />
+        <div className="absolute top-1/2 -left-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[120px]" />
+      </div>
 
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10 px-4 md:px-0">
         <div className="space-y-2 pt-8 md:pt-0">
@@ -247,7 +249,7 @@ function DashboardContent() {
                   >
                     {startDate ? format(new Date(startDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
                   </PopoverTrigger>
-                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
+                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
                     <Calendar
                       mode="single"
                       selected={startDate ? new Date(startDate) : undefined}
@@ -274,7 +276,7 @@ function DashboardContent() {
                   >
                     {endDate ? format(new Date(endDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
                   </PopoverTrigger>
-                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
+                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
                     <Calendar
                       mode="single"
                       selected={endDate ? new Date(endDate) : undefined}

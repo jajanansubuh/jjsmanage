@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logoutAction } from "@/lib/actions/auth";
 import {
   Dialog,
@@ -52,6 +52,18 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
+  
+  // Prevent scrolling when sidebar is open on mobile
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   // Filter navigation based on role
   const filteredNavigation = navigation.filter(item => {
@@ -109,28 +121,30 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 bg-slate-900/50 backdrop-blur-3xl border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-40 w-72 lg:w-64 bg-slate-900/60 backdrop-blur-3xl border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0 h-[100dvh]",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <div className="flex flex-col h-full">
-          <div className="px-6 py-8">
-            <div className="flex items-center gap-2.5 group">
-              <div className="relative w-[72px] h-[72px] overflow-hidden group-hover:scale-110 transition-transform duration-300 shrink-0">
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Header - More compact on mobile */}
+          <div className="px-6 py-6 lg:py-8">
+            <div className="flex items-center gap-3 group">
+              <div className="relative w-12 h-12 lg:w-[72px] lg:h-[72px] overflow-hidden group-hover:scale-110 transition-transform duration-300 shrink-0">
                 <Image
                   src="/logojjsmanage.png"
                   alt="JJS Manage Logo"
                   fill
-                  sizes="72px"
+                  sizes="(max-width: 1024px) 48px, 72px"
                   className="object-contain"
                 />
               </div>
-              <h1 className="text-xl font-black tracking-tighter text-white leading-tight">
+              <h1 className="text-xl lg:text-2xl font-black tracking-tighter text-white leading-tight">
                 Jjs<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Manage</span>
               </h1>
             </div>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1.5">
+          {/* Nav - Scrollable with custom scrollbar hide */}
+          <nav className="flex-1 px-4 space-y-1 lg:space-y-1.5 overflow-y-auto custom-scrollbar pb-6">
             {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -139,7 +153,7 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center px-4 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 group",
+                    "flex items-center px-4 py-3 lg:py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 group",
                     isActive
                       ? "bg-linear-to-r from-blue-600/20 to-purple-600/20 text-white shadow-[inset_0_0_20px_rgba(59,130,246,0.1)] ring-1 ring-blue-500/20"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -155,7 +169,8 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
             })}
           </nav>
 
-          <div className="p-4 mt-auto">
+          {/* Footer Profile - Fixed at bottom */}
+          <div className="p-4 mt-auto border-t border-white/5 bg-slate-900/40 backdrop-blur-md">
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
               <Link
                 href={role === "SUPPLIER" ? "/" : "/settings"}
@@ -208,21 +223,23 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
             </div>
           </div>
 
-          <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3 sm:gap-0">
-            <Button
-              variant="ghost"
-              onClick={() => setIsLogoutDialogOpen(false)}
-              className="flex-1 h-12 rounded-xl text-slate-400 font-bold hover:bg-white/5"
-            >
-              Batal
-            </Button>
-            <Button
-              onClick={() => logoutAction()}
-              className="flex-1 h-12 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 active:scale-95 transition-all"
-            >
-              YA, KELUAR
-            </Button>
-          </DialogFooter>
+          <div className="p-6 md:p-8 bg-white/[0.02] border-t border-white/5">
+            <div className="flex flex-col gap-3">
+              <Button
+                onClick={() => logoutAction()}
+                className="w-full h-14 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 active:scale-95 transition-all text-sm uppercase tracking-wider"
+              >
+                YA, KELUAR SEKARANG
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setIsLogoutDialogOpen(false)}
+                className="w-full h-12 rounded-2xl text-slate-500 font-bold hover:bg-white/5 hover:text-white transition-all text-xs uppercase tracking-widest"
+              >
+                Kembali ke Aplikasi
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

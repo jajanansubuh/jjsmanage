@@ -417,7 +417,7 @@ export default function ProductsPage() {
     <>
       <Button
         variant="outline"
-        className="h-12 px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all"
+        className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
         onClick={() => setIsImportOpen(true)}
       >
         <Upload className="w-4 h-4 text-purple-400" />
@@ -425,10 +425,15 @@ export default function ProductsPage() {
       </Button>
       <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
         <DialogContent className="bg-slate-900 border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>Import Data Produk</DialogTitle>
+          <DialogHeader className="p-8 pb-4">
+            <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                <Upload className="w-5 h-5 text-purple-400" />
+              </div>
+              <span>Import <span className="text-purple-400">Produk</span></span>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="p-8 pt-0 space-y-6">
             <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-blue-200">
               <p className="font-bold mb-1">Petunjuk Format Excel:</p>
               <ul className="list-disc list-inside space-y-1 opacity-80">
@@ -472,7 +477,7 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1800px] mx-auto pb-10 px-4">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 md:px-0">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 px-4 md:px-0">
         <div className="space-y-1">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
             Katalog <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Produk</span>
@@ -480,30 +485,36 @@ export default function ProductsPage() {
           <p className="text-slate-400 text-sm md:text-base font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
         </div>
 
-        <div className="flex items-center gap-3 no-print">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 no-print">
           <Button
             onClick={handleExport}
             disabled={isExporting}
             variant="outline"
-            className="h-12 px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all"
+            className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
           >
             <Download className="w-4 h-4 text-blue-400" />
-            <span>{isExporting ? "Memproses..." : "Export"}</span>
+            <span>{isExporting ? "..." : "Export"}</span>
           </Button>
           <ImportDialog />
           <>
             <Button
-              className="h-12 px-6 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white gap-2 transition-all"
+              className="h-11 md:h-12 px-4 md:px-6 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white gap-2 transition-all w-full md:w-auto text-xs md:text-sm font-black"
               onClick={() => setIsAddOpen(true)}
             >
               <PlusCircle className="w-4 h-4" />
               <span>Tambah Produk</span>
             </Button>
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogContent className="bg-slate-900/95 border-white/10 text-white backdrop-blur-2xl shadow-2xl rounded-[2rem] p-8 max-w-md">
-                <DialogHeader className="mb-6">
-                  <DialogTitle className="text-2xl font-black tracking-tight">Tambah <span className="text-emerald-400">Produk Baru</span></DialogTitle>
-                </DialogHeader>
+              <DialogContent className="bg-slate-950 border-white/10 text-white backdrop-blur-3xl shadow-2xl rounded-[2.5rem] p-0 max-w-md overflow-hidden gap-0">
+                <div className="p-8 pb-4">
+                  <DialogHeader className="mb-8">
+                    <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                        <PlusCircle className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <span>Tambah <span className="text-emerald-400">Produk</span></span>
+                    </DialogTitle>
+                  </DialogHeader>
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Suplier *</label>
@@ -577,36 +588,27 @@ export default function ProductsPage() {
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Kode Barang</label>
                     <Input
                       placeholder="Contoh: BRG001 (opsional)"
-                      className="h-12 bg-slate-950/50 border-white/5 rounded-2xl text-white font-mono font-bold placeholder:text-slate-600 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all px-4"
+                      className="h-14 lg:h-12 bg-slate-900/50 border-white/5 rounded-2xl text-white font-mono font-bold placeholder:text-slate-700 focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all px-4"
                       value={addForm.code}
                       onChange={e => setAddForm(f => ({ ...f, code: e.target.value }))}
                     />
                   </div>
                 </div>
-                <div className="flex gap-4 mt-10">
+                </div>
+                <div className="p-8 bg-white/[0.02] border-t border-white/5 flex flex-col gap-3">
                   <Button
-                    variant="ghost"
-                    className="flex-1 h-12 rounded-2xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-                    onClick={() => { setIsAddOpen(false); setAddForm({ name: "", code: "", supplierId: "" }); }}
-                  >
-                    Batal
-                  </Button>
-                  <Button
-                    className="flex-[2] h-12 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-900/20 transition-all"
+                    className="w-full h-14 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-900/20 transition-all text-sm uppercase tracking-wider"
                     onClick={handleAddProduct}
                     disabled={isSaving}
                   >
-                    {isSaving ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        <span>Menyimpan...</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Save className="w-4 h-4" />
-                        <span>Simpan Produk</span>
-                      </div>
-                    )}
+                    {isSaving ? "Menyimpan..." : "Simpan Produk Baru"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-12 rounded-2xl font-bold text-slate-500 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-widest"
+                    onClick={() => { setIsAddOpen(false); setAddForm({ name: "", code: "", supplierId: "" }); }}
+                  >
+                    Batal
                   </Button>
                 </div>
               </DialogContent>
@@ -617,8 +619,8 @@ export default function ProductsPage() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 md:px-0">
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-          <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 no-print w-full sm:w-auto">
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group cursor-pointer w-full">
+          <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 no-print w-full lg:w-auto">
+            <div className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 rounded-xl transition-colors group cursor-pointer w-full">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Periode Laporan</span>
                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
@@ -636,7 +638,7 @@ export default function ProductsPage() {
                       <span>Pilih Tanggal</span>
                     )}
                   </PopoverTrigger>
-                  <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
+                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
                     <div className="flex flex-col md:flex-row">
                       <div className="p-2 border-r border-white/5 flex flex-col gap-1 bg-white/[0.02]">
                         <Button
@@ -724,11 +726,11 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          <div className="relative group w-full md:w-80">
+          <div className="relative group w-full lg:w-80">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
             <Input
               placeholder="Cari nama produk..."
-              className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-medium text-white"
+              className="pl-11 pr-4 h-14 lg:h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-bold text-white placeholder:text-slate-600"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -796,32 +798,26 @@ export default function ProductsPage() {
             filteredProducts.map((product, idx) => {
               const sellRate = product.totalBeli > 0 ? ((product.totalJual / product.totalBeli) * 100).toFixed(1) : "0";
               return (
-                <Card key={idx} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center border border-white/5">
-                        <Package className="w-5 h-5 text-blue-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                            {product.code ? `[${product.code}]` : "Tanpa Kode"}
-                          </span>
-                          <h4 className="text-base font-black text-white truncate uppercase">{product.name}</h4>
+                <Card key={idx} className="bg-slate-900/40 border-white/5 rounded-3xl overflow-hidden group hover:border-blue-500/20 transition-all">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center border border-white/5 group-hover:border-blue-500/30 transition-all">
+                          <Package className="w-6 h-6 text-blue-400" />
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block">Terjual</span>
-                        <span className="text-xl font-black text-emerald-400">
-                          {product.totalJual % 1 === 0 ? product.totalJual : product.totalJual.toFixed(2)}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-1 block">
+                            {product.code || "No Code"}
+                          </span>
+                          <h4 className="text-lg font-black text-white leading-tight uppercase line-clamp-2">{product.name}</h4>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 mb-4">
+                    <div className="grid grid-cols-2 gap-4 mb-6 p-4 rounded-2xl bg-white/[0.02] border border-white/5">
                       <div className="space-y-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Suplier</span>
-                        <p className="text-sm font-bold text-blue-400">{product.supplierName}</p>
+                        <p className="text-sm font-bold text-blue-400 truncate">{product.supplierName}</p>
                       </div>
                       <div className="space-y-1 text-right">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Beli</span>
@@ -829,27 +825,31 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5 mb-4">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Jual</span>
-                        <p className="text-sm font-bold text-emerald-400">
-                          {product.totalJual % 1 === 0 ? product.totalJual : product.totalJual.toFixed(2)} Pcs
+                    <div className="flex items-center justify-between gap-4 mb-6">
+                      <div className="flex-1 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500/70 block mb-1">Terjual</span>
+                        <p className="text-2xl font-black text-emerald-400 tracking-tighter">
+                          {product.totalJual % 1 === 0 ? product.totalJual : product.totalJual.toFixed(2)}
+                          <span className="text-xs font-bold ml-1 text-emerald-500/50">Pcs</span>
                         </p>
                       </div>
-                      <div className="space-y-1 text-right">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Retur</span>
-                        <p className="text-sm font-bold text-rose-400">{product.totalRetureJual} Pcs</p>
+                      <div className="flex-1 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-right">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-rose-500/70 block mb-1">Retur</span>
+                        <p className="text-2xl font-black text-rose-400 tracking-tighter">
+                          {product.totalRetureJual}
+                          <span className="text-xs font-bold ml-1 text-rose-500/50">Pcs</span>
+                        </p>
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-4 border-t border-white/5">
+                    <div className="space-y-3">
                       <div className="flex justify-between items-end">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rasio Penjualan</span>
-                        <span className="text-sm font-black text-white">{sellRate}%</span>
+                        <span className="text-base font-black text-white">{sellRate}%</span>
                       </div>
-                      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-linear-to-r from-blue-500 to-emerald-500"
+                          className="h-full bg-linear-to-r from-blue-500 via-purple-500 to-emerald-500 transition-all duration-1000"
                           style={{ width: `${Math.min(100, Number(sellRate))}%` }}
                         />
                       </div>

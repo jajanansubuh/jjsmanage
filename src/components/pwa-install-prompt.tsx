@@ -97,7 +97,7 @@ export function PWAInstallPrompt() {
             <div className="absolute inset-2 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-40" />
             <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/10 bg-slate-800 shadow-lg">
               <Image
-                src="/icon-512.png"
+                src="/logojjsmanage.png"
                 alt="JJS Manage"
                 fill
                 sizes="80px"
