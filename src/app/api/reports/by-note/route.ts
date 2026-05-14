@@ -26,7 +26,7 @@ export async function DELETE(req: Request) {
       for (const report of existingReports) {
         balanceMap.set(
           report.supplierId,
-          (balanceMap.get(report.supplierId) || 0) + report.profit80
+          (balanceMap.get(report.supplierId) || 0) + Number(report.profit80)
         );
       }
 

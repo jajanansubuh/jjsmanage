@@ -52,12 +52,12 @@ export async function POST(req: Request) {
         return { count: 0, totalProfit: 0 };
       }
 
-      const totalProfit = reports.reduce((sum, r) => sum + (r.profit80 || 0), 0);
+      const totalProfit = reports.reduce((sum, r) => sum + Number(r.profit80 || 0), 0);
 
       const profitBySupplier: Record<string, number> = {};
       reports.forEach(r => {
         if (!profitBySupplier[r.supplierId]) profitBySupplier[r.supplierId] = 0;
-        profitBySupplier[r.supplierId] += (r.profit80 || 0);
+        profitBySupplier[r.supplierId] += Number(r.profit80 || 0);
       });
 
       // Update reports to validated

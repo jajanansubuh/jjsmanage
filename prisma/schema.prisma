@@ -12,8 +12,8 @@ model Supplier {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   accountNumber    String?
-  balance          Float               @default(0)
-  validatedBalance Float               @default(0)
+  balance          Decimal             @default(0) @db.Decimal(20, 2)
+  validatedBalance Decimal             @default(0) @db.Decimal(20, 2)
   ownerName        String?
   bankName         String?
   reports          ConsignmentReport[]
@@ -37,7 +37,7 @@ model LabelPrint {
 
 model SupplierPayout {
   id         String   @id @default(cuid())
-  amount     Float
+  amount     Decimal  @db.Decimal(20, 2)
   date       DateTime @default(now())
   notes      String?
   supplierId String
@@ -58,16 +58,16 @@ model ConsignmentReport {
   id                  String    @id @default(cuid())
   date                DateTime  @default(now())
   supplierId          String
-  revenue             Float
-  profit80            Float
-  profit20            Float
-  barcode             Float
-  cost                Float
+  revenue             Decimal   @db.Decimal(20, 2)
+  profit80            Decimal   @db.Decimal(20, 2)
+  profit20            Decimal   @db.Decimal(20, 2)
+  barcode             Decimal   @db.Decimal(20, 2)
+  cost                Decimal   @db.Decimal(20, 2)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
-  kukuluban           Float?    @default(0)
-  serviceCharge       Float?    @default(0)
-  tabungan            Float?    @default(0)
+  kukuluban           Decimal?  @default(0) @db.Decimal(20, 2)
+  serviceCharge       Decimal?  @default(0) @db.Decimal(20, 2)
+  tabungan            Decimal?  @default(0) @db.Decimal(20, 2)
   noteNumber          String?
   notes               String?
   deductionDate       DateTime?

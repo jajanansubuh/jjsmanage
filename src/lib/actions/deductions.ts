@@ -17,10 +17,14 @@ export async function updateDeductionsAction(data: { id: string, serviceCharge: 
 
         // Calculate new profit80
         // New Profit80 = Cost - (Barcode + SC + Kukuluban + Tabungan)
-        const newProfit80 = oldReport.cost - (oldReport.barcode + item.serviceCharge + item.kukuluban + item.tabungan);
+        const cost = Number(oldReport.cost);
+        const barcode = Number(oldReport.barcode);
+        const oldProfit80 = Number(oldReport.profit80);
+        
+        const newProfit80 = cost - (barcode + item.serviceCharge + item.kukuluban + item.tabungan);
 
         // Adjustment to supplier balance
-        const adjustment = newProfit80 - oldReport.profit80;
+        const adjustment = newProfit80 - oldProfit80;
 
         // Update report
         await tx.consignmentReport.update({
@@ -107,8 +111,12 @@ export async function updateAggregatedDeductionsAction(data: {
           const tabungan = isFirst ? item.tabungan : 0;
 
           // New Profit80 calculation for this specific report
-          const newProfit80 = report.cost - (report.barcode + sc + kukuluban + tabungan);
-          const adjustment = newProfit80 - report.profit80;
+          const cost = Number(report.cost);
+          const barcode = Number(report.barcode);
+          const oldProfit80 = Number(report.profit80);
+          
+          const newProfit80 = cost - (barcode + sc + kukuluban + tabungan);
+          const adjustment = newProfit80 - oldProfit80;
           totalAdjustment += adjustment;
 
           // Update this report

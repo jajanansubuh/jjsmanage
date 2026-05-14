@@ -25,12 +25,12 @@ export default async function middleware(req: NextRequest) {
   // Supplier Role Based Access Control
   if (session?.user?.role?.toUpperCase() === "SUPPLIER") {
     const allowedPaths = ['/deposits', '/settings', '/payouts', '/savings', '/produk', '/cetak'];
-    
+
     // Protect UI routes
     if (path === '/' || (!allowedPaths.includes(path) && !path.startsWith('/api'))) {
       return NextResponse.redirect(new URL('/deposits', req.nextUrl));
     }
-    
+
     // Protect API routes
     if (path.startsWith('/api')) {
       const allowedApiPaths = ['/api/reports', '/api/users/profile', '/api/auth', '/api/savings', '/api/stats', '/api/print-queue', '/api/products'];
@@ -44,7 +44,7 @@ export default async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// Routes Middleware should not run on
+
 export const config = {
   matcher: ["/((?!_next/static|_next/image|.*\\.png$).*)"],
 };

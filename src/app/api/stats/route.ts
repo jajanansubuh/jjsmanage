@@ -57,10 +57,10 @@ export async function GET(request: Request) {
       }
     });
 
-    const totalRevenue = totals._sum.revenue || 0;
-    const totalProfit20 = totals._sum.profit20 || 0;
-    const totalProfit80 = totals._sum.profit80 || 0;
-    const totalSavings = totals._sum.tabungan || 0;
+    const totalRevenue = Number(totals._sum.revenue || 0);
+    const totalProfit20 = Number(totals._sum.profit20 || 0);
+    const totalProfit80 = Number(totals._sum.profit80 || 0);
+    const totalSavings = Number(totals._sum.tabungan || 0);
 
     // 2. Count Suppliers & Cashiers (Admin Only)
     let totalSuppliers = 0;
@@ -116,7 +116,7 @@ export async function GET(request: Request) {
         return {
           id: g.supplierId,
           name: supplier?.name || "Unknown",
-          totalRevenue: g._sum.revenue || 0,
+          totalRevenue: Number(g._sum.revenue || 0),
           transactionCount: uniqueCount
         };
       });
@@ -143,7 +143,7 @@ export async function GET(request: Request) {
       trendRecords.forEach(r => {
         const key = format(new Date(r.date), "yyyy-MM-dd");
         if (dataMap.has(key)) {
-          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
           dataMap.set(key, dataMap.get(key) + val);
         }
       });
@@ -165,7 +165,7 @@ export async function GET(request: Request) {
       trendRecords.forEach(r => {
         const key = `Mg ${format(new Date(r.date), "w", { locale: id })}`;
         if (weeksMap.has(key)) {
-          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
           weeksMap.set(key, weeksMap.get(key) + val);
         }
       });
@@ -183,7 +183,7 @@ export async function GET(request: Request) {
       trendRecords.forEach(r => {
         const key = format(new Date(r.date), "MMM", { locale: id });
         if (monthsMap.has(key)) {
-          const val = isSupplier ? (r.profit80 || 0) : (r.revenue || 0);
+          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
           monthsMap.set(key, monthsMap.get(key) + val);
         }
       });
@@ -212,9 +212,9 @@ export async function GET(request: Request) {
       }
     });
 
-    const prevRevenue = prevTotals._sum.revenue || 0;
-    const prevProfit20 = prevTotals._sum.profit20 || 0;
-    const prevProfit80 = prevTotals._sum.profit80 || 0;
+    const prevRevenue = Number(prevTotals._sum.revenue || 0);
+    const prevProfit20 = Number(prevTotals._sum.profit20 || 0);
+    const prevProfit80 = Number(prevTotals._sum.profit80 || 0);
 
     const calculateGrowth = (current: number, previous: number) => {
       if (previous === 0) return current > 0 ? 100 : 0;
@@ -232,7 +232,7 @@ export async function GET(request: Request) {
         where: { id: supplierId },
         select: { validatedBalance: true }
       });
-      currentBalance = supplier?.validatedBalance || 0;
+      currentBalance = Number(supplier?.validatedBalance || 0);
     }
 
     return NextResponse.json({

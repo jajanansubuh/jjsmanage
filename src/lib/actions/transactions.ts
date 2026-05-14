@@ -16,7 +16,7 @@ export async function saveTransactionAction(rawData: any) {
     const data: SaveTransactionData = validationResult.data;
 
     const validRows = data.rows.filter(
-      (r) => r.supplierId && (r.revenue > 0 || r.cost > 0 || r.barcode > 0)
+      (r) => r.supplierId && (r.revenue > 0 || r.cost > 0 || r.barcode > 0 || (r.items && r.items.length > 0))
     );
 
     if (validRows.length === 0) {
@@ -47,9 +47,13 @@ export async function saveTransactionAction(rawData: any) {
           if (oldReports.length > 0) {
             const oldBalanceMap = new Map<string, number>();
             for (const report of oldReports) {
+              const profit80 = typeof report.profit80 === 'object' && report.profit80 !== null && 'toNumber' in report.profit80 
+                ? (report.profit80 as any).toNumber() 
+                : Number(report.profit80);
+
               oldBalanceMap.set(
                 report.supplierId,
-                (oldBalanceMap.get(report.supplierId) || 0) + report.profit80
+                (oldBalanceMap.get(report.supplierId) || 0) + profit80
               );
             }
 

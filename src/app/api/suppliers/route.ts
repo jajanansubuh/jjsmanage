@@ -15,7 +15,13 @@ export async function GET() {
       orderBy: { updatedAt: "desc" },
     });
     
-    return NextResponse.json(suppliers);
+    const formattedSuppliers = suppliers.map(s => ({
+      ...s,
+      balance: Number(s.balance),
+      validatedBalance: Number(s.validatedBalance)
+    }));
+    
+    return NextResponse.json(formattedSuppliers);
   } catch (error: any) {
     console.error("GET /api/suppliers error:", error);
     // Jika gagal dengan include, coba ambil data dasar saja
@@ -23,7 +29,12 @@ export async function GET() {
       const basicSuppliers = await prisma.supplier.findMany({
         orderBy: { updatedAt: "desc" },
       });
-      return NextResponse.json(basicSuppliers);
+      const formattedBasicSuppliers = basicSuppliers.map(s => ({
+        ...s,
+        balance: Number(s.balance),
+        validatedBalance: Number(s.validatedBalance)
+      }));
+      return NextResponse.json(formattedBasicSuppliers);
     } catch (innerError) {
       return NextResponse.json([], { status: 500 });
     }

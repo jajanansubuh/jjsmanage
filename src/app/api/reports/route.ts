@@ -53,8 +53,25 @@ export async function GET(req: Request) {
       prisma.consignmentReport.count({ where: whereClause })
     ]);
 
+    const formattedReports = reports.map((r: any) => ({
+      ...r,
+      revenue: Number(r.revenue),
+      profit80: Number(r.profit80),
+      profit20: Number(r.profit20),
+      barcode: Number(r.barcode),
+      cost: Number(r.cost),
+      serviceCharge: Number(r.serviceCharge || 0),
+      kukuluban: Number(r.kukuluban || 0),
+      tabungan: Number(r.tabungan || 0),
+      supplier: r.supplier ? {
+        ...r.supplier,
+        balance: Number(r.supplier.balance),
+        validatedBalance: Number(r.supplier.validatedBalance)
+      } : undefined
+    }));
+
     return NextResponse.json({
-      reports,
+      reports: formattedReports,
       pagination: {
         total,
         page,
