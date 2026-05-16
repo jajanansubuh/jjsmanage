@@ -105,6 +105,7 @@ export default function CetakLabelPage() {
         const row = {
           "Kode Barang": item.code || codeLookupMap[normalizeName(item.name)] || "",
           "Nama Barang": item.name,
+          "Suplier": item.supplier?.name || "Tanpa Suplier",
           "Qty": 1,
         };
         // Generate multiple rows based on quantity

@@ -20,15 +20,15 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "JJS Manage",
-    startupImage: "/icon-512.png",
+    startupImage: "/logojjsmanage.png",
   },
   icons: {
     icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/logojjsmanage.png", sizes: "192x192", type: "image/png" },
+      { url: "/logojjsmanage.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/logojjsmanage.png", sizes: "180x180", type: "image/png" },
     ],
   },
   formatDetection: {

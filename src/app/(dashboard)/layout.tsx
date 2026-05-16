@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/sidebar";
-import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+
 import { getSession } from "@/lib/auth-utils";
 
 export default async function DashboardLayout({
@@ -21,11 +21,7 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
-      <MobileBottomNav 
-        role={session?.user?.role} 
-        name={session?.user?.name || session?.user?.username} 
-        permissions={session?.user?.permissions}
-      />
+
     </>
   );
 }
