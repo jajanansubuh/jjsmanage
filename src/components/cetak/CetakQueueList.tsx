@@ -9,6 +9,7 @@ interface CetakQueueListProps {
   onClear: () => void;
   onAddFromQueue: (item: any) => void;
   onMarkAsDone: (id: string) => void;
+  onUpdateQty?: (id: string, qty: number) => void;
 }
 
 export function CetakQueueList({
@@ -17,7 +18,8 @@ export function CetakQueueList({
   onRefresh,
   onClear,
   onAddFromQueue,
-  onMarkAsDone
+  onMarkAsDone,
+  onUpdateQty
 }: CetakQueueListProps) {
   return (
     <div className="space-y-6 no-print">
@@ -28,7 +30,9 @@ export function CetakQueueList({
           </div>
           <div>
             <h3 className="text-xl font-black text-white">Antrean Dari Suplier</h3>
-            <p className="text-slate-400 text-xs font-medium">Klik untuk menambahkan ke daftar cetak.</p>
+            <p className="text-slate-400 text-xs font-medium">
+              {onUpdateQty ? "Kelola antrean dan ekspor ke Excel." : "Klik untuk menambahkan ke daftar cetak."}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -50,8 +54,8 @@ export function CetakQueueList({
           queueItems.map((item) => (
             <Card 
               key={item.id} 
-              className="bg-slate-900/40 border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group"
-              onClick={() => onAddFromQueue(item)}
+              className={`bg-slate-900/40 border-white/5 hover:border-purple-500/30 transition-all group ${onUpdateQty ? "" : "cursor-pointer"}`}
+              onClick={onUpdateQty ? undefined : () => onAddFromQueue(item)}
             >
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="min-w-0">
@@ -60,7 +64,18 @@ export function CetakQueueList({
                   <p className="text-[10px] font-mono text-slate-500">{item.code || "-"}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                  <div className="bg-white/5 px-2 py-1 rounded-lg font-black text-white text-xs">x{item.qty}</div>
+                  {onUpdateQty ? (
+                    <input
+                      type="number"
+                      min="1"
+                      className="w-16 h-8 bg-white/5 border border-white/10 rounded-lg text-center font-black text-white text-xs focus:outline-none focus:border-purple-500/50"
+                      value={item.qty}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => onUpdateQty(item.id, parseInt(e.target.value) || 1)}
+                    />
+                  ) : (
+                    <div className="bg-white/5 px-2 py-1 rounded-lg font-black text-white text-xs">x{item.qty}</div>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"

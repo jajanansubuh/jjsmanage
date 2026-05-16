@@ -32,7 +32,7 @@ export default function ProductsPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const { loading, error, products, suppliers, role, refresh } = useProductsData(dateRange);
+  const { loading, error, products, allMasterProducts, suppliers, role, refresh } = useProductsData(dateRange);
 
   const handleSort = (key: keyof AggregatedProduct) => {
     let direction: "asc" | "desc" = "asc";
@@ -165,7 +165,8 @@ export default function ProductsPage() {
       <ImportProductDialog 
         isOpen={isImportOpen}
         onOpenChange={setIsImportOpen}
-        products={products}
+        products={allMasterProducts}
+        suppliers={suppliers}
         onSuccess={() => window.location.reload()}
       />
     </div>

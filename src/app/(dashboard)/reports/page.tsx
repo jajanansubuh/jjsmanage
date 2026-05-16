@@ -156,7 +156,7 @@ export default function ReportsPage() {
     <div className="space-y-10 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10">
       <ReportsHeader onExport={handleExport} />
 
-      <Tabs defaultValue="transaksi" className="space-y-8" onValueChange={setActiveTab}>
+      <Tabs defaultValue="transaksi" className="space-y-8" onValueChange={(val) => val && setActiveTab(val)}>
         <div className="overflow-x-auto pb-4 scrollbar-hide">
           <TabsList className="bg-slate-900/50 border border-white/5 p-2 rounded-[2rem] h-16 md:h-20 w-max flex items-center gap-2 min-w-full">
             <LayoutGroup id="reports-nav">

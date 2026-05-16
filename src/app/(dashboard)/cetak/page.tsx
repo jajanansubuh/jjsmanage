@@ -18,6 +18,7 @@ import { CetakPrintView } from "@/components/cetak/CetakPrintView";
 
 // Dialogs
 import { ClearQueueDialog } from "@/components/cetak/ClearQueueDialog";
+import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
 
 export default function CetakLabelPage() {
   const { 
@@ -90,11 +91,19 @@ export default function CetakLabelPage() {
     if (queueItems.length === 0) return;
     setIsExporting(true);
     try {
-      const dataToExport = queueItems.map(item => ({
-        "Kode Barang": item.code || codeLookupMap[item.name] || "",
-        "Nama Barang": item.name,
-        "Qty": item.qty,
-      }));
+      const dataToExport: any[] = [];
+      queueItems.forEach(item => {
+        const row = {
+          "Kode Barang": item.code || codeLookupMap[normalizeName(item.name)] || "",
+          "Nama Barang": item.name,
+          "Qty": 1,
+        };
+        // Generate multiple rows based on quantity
+        for (let i = 0; i < (item.qty || 1); i++) {
+          dataToExport.push({ ...row });
+        }
+      });
+
       const ws = XLSX.utils.json_to_sheet(dataToExport);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Label Cetak");
@@ -104,6 +113,44 @@ export default function CetakLabelPage() {
       toast.error("Gagal mengekspor data");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleUpdateQueueQty = async (id: string, qty: number) => {
+    try {
+      await fetch("/api/print-queue", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, qty })
+      });
+      fetchQueue();
+    } catch (err) {
+      toast.error("Gagal memperbarui jumlah");
+    }
+  };
+
+  const handleAdminAddItem = async (product: any) => {
+    try {
+      const res = await fetch("/api/print-queue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([{
+          name: product.name,
+          code: product.code,
+          qty: 1,
+          supplierId: product.supplierId
+        }])
+      });
+      if (res.ok) {
+        toast.success(`Berhasil menambahkan ${product.name}`);
+        setSearchTerm("");
+        fetchQueue();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Gagal menambahkan");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan jaringan");
     }
   };
 
@@ -148,6 +195,14 @@ export default function CetakLabelPage() {
         hasQueue={queueItems.length > 0}
       />
 
+      <CetakProductSearch 
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        filteredProducts={filteredProducts}
+        onAddItem={userRole === "ADMIN" ? handleAdminAddItem : addItem}
+        placeholder={userRole === "ADMIN" ? "Cari barang tambahan..." : "Cari barang yang ingin dicetak..."}
+      />
+
       {userRole === "ADMIN" && (
         <CetakQueueList 
           queueItems={queueItems}
@@ -156,25 +211,20 @@ export default function CetakLabelPage() {
           onClear={() => setIsClearQueueDialogOpen(true)}
           onAddFromQueue={(item) => addFromQueue(item, codeLookupMap)}
           onMarkAsDone={handleMarkAsDone}
+          onUpdateQty={handleUpdateQueueQty}
         />
       )}
 
-      <CetakProductSearch 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredProducts={filteredProducts}
-        onAddItem={addItem}
-        placeholder={userRole === "ADMIN" ? "Cari barang tambahan..." : "Cari barang yang ingin dicetak..."}
-      />
+      {userRole === "SUPPLIER" && (
+        <CetakSelectedTable 
+          items={sortedSelectedItems}
+          onUpdateQty={updateQty}
+          onRemoveItem={removeItem}
+          userRole={userRole}
+        />
+      )}
 
-      <CetakSelectedTable 
-        items={sortedSelectedItems}
-        onUpdateQty={updateQty}
-        onRemoveItem={removeItem}
-        userRole={userRole}
-      />
-
-      <CetakPrintView items={sortedSelectedItems} />
+      {userRole === "SUPPLIER" && <CetakPrintView items={sortedSelectedItems} />}
 
       <ClearQueueDialog 
         isOpen={isClearQueueDialogOpen}

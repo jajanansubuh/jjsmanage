@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { X, Download, Share, MoreVertical } from "lucide-react";
 
@@ -10,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export function PWAInstallPrompt() {
+  const pathname = usePathname();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -74,7 +76,8 @@ export function PWAInstallPrompt() {
     localStorage.setItem("pwa-install-dismissed", Date.now().toString());
   };
 
-  if (isStandalone || !showPrompt) return null;
+  // Only show on login page to avoid disturbing user flow
+  if (pathname !== "/login" || isStandalone || !showPrompt) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-300">

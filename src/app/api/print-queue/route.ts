@@ -76,11 +76,14 @@ export async function PUT(req: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id, status } = await req.json();
+    const { id, status, qty } = await req.json();
     
     const updated = await prisma.labelPrint.update({
       where: { id },
-      data: { status }
+      data: { 
+        ...(status && { status }),
+        ...(qty !== undefined && { qty: parseInt(qty) })
+      }
     });
 
     return NextResponse.json(updated);

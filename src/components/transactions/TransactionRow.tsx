@@ -112,7 +112,7 @@ export const TransactionRow = memo(({
                 <SupplierCombobox
                   value={row.supplierId}
                   onValueChange={(val) => {
-                    onUpdateField(row.id, "supplierId", val);
+                    onUpdateField(row.id, "supplierId", val || "");
                   }}
                   suppliers={suppliers}
                 />

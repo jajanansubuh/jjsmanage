@@ -439,7 +439,7 @@ export default function UserManagement() {
                       <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Role / Jabatan</Label>
                       <Select 
                         value={formData.role} 
-                        onValueChange={(val) => setFormData({ ...formData, role: val, supplierId: val === "SUPPLIER" ? formData.supplierId : "" })}
+                        onValueChange={(val) => setFormData({ ...formData, role: val || "ADMIN", supplierId: (val === "SUPPLIER") ? formData.supplierId : "" })}
                       >
                         <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl focus:border-blue-500/50">
                           <SelectValue placeholder="Pilih Role" />
@@ -487,7 +487,7 @@ export default function UserManagement() {
                         <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Afiliasi Suplier</Label>
                         <Select 
                           value={formData.supplierId} 
-                          onValueChange={(val) => setFormData({ ...formData, supplierId: val })}
+                          onValueChange={(val) => setFormData({ ...formData, supplierId: val || "" })}
                         >
                           <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl">
                             <SelectValue placeholder="Pilih Suplier" />

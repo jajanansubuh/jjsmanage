@@ -41,7 +41,7 @@ export function SupplierCombobox({
     : suppliers;
 
   return (
-    <Combobox value={value} onValueChange={onValueChange}>
+    <Combobox value={value} onValueChange={(val) => onValueChange(val || "")}>
       <ComboboxTrigger id={id} onKeyDown={onKeyDown} className="w-full bg-white/5 border-white/10 h-10 text-white hover:bg-white/10 transition-all">
         {suppliers.find(s => s.id === value)?.name || "Pilih Suplier"}
       </ComboboxTrigger>

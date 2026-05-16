@@ -25,7 +25,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<AggregatedProduct[]>([]);
-  const [masterProducts, setMasterProducts] = useState<Record<string, string>>({});
+  const [allMasterProducts, setAllMasterProducts] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [role, setRole] = useState<string | null>(null);
 
@@ -73,10 +73,12 @@ export function useProductsData(dateRange: DateRange | undefined) {
       const reports = reportsData.reports || [];
       const masterData = masterRes.ok ? await masterRes.json() : [];
 
-      const masterMap: Record<string, { code: string; supplierName: string; supplierId: string }> = {};
+      const masterMap: Record<string, { name: string; code: string; supplierName: string; supplierId: string }> = {};
       masterData.forEach((p: any) => {
-        const key = normalizeName(p.name);
+        // Gunakan kunci kombinasi Nama + SupplierId agar tidak tertukar
+        const key = `${normalizeName(p.name)}_${p.supplierId || 'null'}`;
         masterMap[key] = {
+          name: p.name,
           code: p.code || "",
           supplierName: p.supplier?.name || "Tanpa Suplier",
           supplierId: p.supplierId || ""
@@ -91,7 +93,8 @@ export function useProductsData(dateRange: DateRange | undefined) {
           items.forEach((item: any) => {
             const rawName = (item.name || '').trim();
             if (!rawName) return;
-            const name = rawName.toUpperCase();
+            const name = normalizeName(rawName);
+            if (!name) return;
 
             if (productMap.has(name)) {
               const existing = productMap.get(name)!;
@@ -117,8 +120,11 @@ export function useProductsData(dateRange: DateRange | undefined) {
       });
 
       const productsList = Array.from(productMap.values()).map(p => {
-        const key = normalizeName(p.name);
-        const master = masterMap[key];
+        const normalizedName = normalizeName(p.name);
+        // Cari dengan kunci kombinasi
+        const key = `${normalizedName}_${p.supplierId || 'null'}`;
+        const master = masterMap[key] || Object.values(masterMap).find(m => normalizeName(m.supplierName) === normalizeName(p.supplierName) && normalizeName(m.name) === normalizedName);
+        
         return {
           ...p,
           code: master?.code || "",
@@ -128,7 +134,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       });
 
       setProducts(productsList);
-      setMasterProducts(Object.fromEntries(Object.entries(masterMap).map(([k, v]) => [k, v.code])));
+      setAllMasterProducts(masterData);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan sistem");
     } finally {
@@ -142,5 +148,5 @@ export function useProductsData(dateRange: DateRange | undefined) {
     fetchRole();
   }, [dateRange]);
 
-  return { loading, error, products, masterProducts, suppliers, role, refresh: fetchData };
+  return { loading, error, products, allMasterProducts, suppliers, role, refresh: fetchData };
 }

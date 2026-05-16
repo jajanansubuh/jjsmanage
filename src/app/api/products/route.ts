@@ -65,25 +65,29 @@ export async function POST(req: Request) {
           const name = normalize(item.name);
           const supplierId = item.supplierId || null;
 
-          // Manual upsert to bypass client sync issues
+          // Try to find existing product by name and supplierId
+          // Using case-insensitive match for robustness
           const existing = await prisma.product.findFirst({
-            where: { name, supplierId }
+            where: { 
+              name: { equals: name, mode: "insensitive" },
+              ...(supplierId ? { supplierId } : {})
+            }
           });
 
           if (existing) {
             const product = await prisma.product.update({
               where: { id: existing.id },
-              data: { code: item.code ? String(item.code) : undefined }
+              data: { code: (item.code !== undefined && item.code !== null) ? String(item.code) : undefined }
             });
             results.push(product);
           } else {
-            const product = await prisma.product.create({
-              data: {
-                name,
-                code: item.code ? String(item.code) : undefined,
-                supplierId
-              }
-            });
+        const product = await prisma.product.create({
+          data: {
+            name,
+            code: (item.code !== undefined && item.code !== null) ? String(item.code) : undefined,
+            supplierId
+          }
+        });
             results.push(product);
           }
         }
@@ -106,7 +110,7 @@ export async function POST(req: Request) {
     const product = await prisma.product.create({
       data: {
         name: normalizedName,
-        code: code ? String(code) : undefined,
+        code: (code !== undefined && code !== null) ? String(code) : undefined,
         supplierId: supplierId || null,
       },
       include: { supplier: { select: { id: true, name: true } } },
@@ -130,7 +134,7 @@ export async function PUT(req: Request) {
       where: { id },
       data: {
         name: name?.trim().toUpperCase(),
-        code: code ? String(code) : undefined,
+        code: (code !== undefined && code !== null) ? String(code) : undefined,
         supplierId: supplierId || null,
       },
       include: { supplier: { select: { id: true, name: true } } },
