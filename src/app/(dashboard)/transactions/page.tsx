@@ -286,15 +286,23 @@ function TransactionsPageContent() {
 
         const importedRowsMap = new Map<string, ReportRow>();
 
+        const normalize = (name: string) => {
+          return name
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, " ");
+        };
+
         data.forEach(row => {
-          let rawName = (findValue(row, "Nama Supl", "Suplier", "Supplier") || "").toString().trim();
+          let rawName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Nama UMKM", "UMKM", "Penjual", "Nama") || "").toString().trim();
           if (!rawName) return;
 
-          const supplier = suppliers.find(s => s.name.toLowerCase() === rawName.toLowerCase());
-          const supplierKey = supplier?.id || rawName;
+          const normalizedImportName = normalize(rawName);
+          const supplier = suppliers.find(s => normalize(s.name) === normalizedImportName);
+          const supplierKey = supplier?.id || normalizedImportName;
           
-          const revenue = Number(findValue(row, "Pendapatan", "Omset")) || 0;
-          const cost = Number(findValue(row, "Cost", "Harga Pokok")) || 0;
+          const revenue = Number(findValue(row, "Pendapatan", "Omset", "Omzet", "Total Jual", "Penjualan")) || 0;
+          const cost = Number(findValue(row, "Cost", "Harga Pokok", "Total Pokok", "HPP", "Modal")) || 0;
           const barcode = Number(findValue(row, "Barcode")) || 0;
 
           const itemName = (findValue(row, "Nama Barang", "Produk", "Item") || "").toString().trim();
@@ -347,10 +355,15 @@ function TransactionsPageContent() {
         setRows(prevRows => {
           const newRows = [...prevRows];
           importedRows.forEach(importedRow => {
-            const existingIndex = newRows.findIndex(r => 
-              (r.supplierId && r.supplierId === importedRow.supplierId) || 
-              (r.importedSupplierName && r.importedSupplierName === importedRow.importedSupplierName)
-            );
+            const existingIndex = newRows.findIndex(r => {
+              if (r.supplierId && importedRow.supplierId) {
+                return r.supplierId === importedRow.supplierId;
+              }
+              if (r.importedSupplierName && importedRow.importedSupplierName) {
+                return normalize(r.importedSupplierName) === normalize(importedRow.importedSupplierName);
+              }
+              return false;
+            });
             
             if (existingIndex >= 0) {
               const existingRow = newRows[existingIndex];

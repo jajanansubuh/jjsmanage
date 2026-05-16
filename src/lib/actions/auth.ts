@@ -38,8 +38,8 @@ export async function loginAction(prevState: any, formData: FormData) {
         username: user.username, 
         name: user.name, 
         role: user.role,
-        // @ts-ignore - supplierId exists in DB but TS cache is stale
-        supplierId: user.supplierId || null
+        supplierId: user.supplierId || null,
+        permissions: user.permissions || []
       }, 
       expires 
     });

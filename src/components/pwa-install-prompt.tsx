@@ -23,14 +23,6 @@ export function PWAInstallPrompt() {
 
     if (standalone) return;
 
-    // Check if dismissed recently (don't show again for 3 days)
-    const dismissed = localStorage.getItem("pwa-install-dismissed");
-    if (dismissed) {
-      const dismissedAt = parseInt(dismissed, 10);
-      const threeDays = 3 * 24 * 60 * 60 * 1000;
-      if (Date.now() - dismissedAt < threeDays) return;
-    }
-
     // Detect iOS
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(isIOSDevice);
@@ -45,16 +37,30 @@ export function PWAInstallPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Show prompt after 3 seconds
-      setTimeout(() => setShowPrompt(true), 3000);
+      // Show prompt after 2 seconds
+      setTimeout(() => setShowPrompt(true), 2000);
     };
 
+    // Fallback: If no event after 8 seconds, show manual help if not installed
+    const fallbackTimer = setTimeout(() => {
+      if (!deferredPrompt && !isIOSDevice) {
+        setShowPrompt(true);
+      }
+    }, 8000);
+
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      clearTimeout(fallbackTimer);
+    };
+  }, [deferredPrompt]);
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // If no prompt event, show manual instructions
+      alert("Untuk menginstall di Android: \n1. Klik tombol titik tiga (⋮) di pojok kanan atas Chrome\n2. Pilih 'Instal aplikasi' atau 'Tambahkan ke Layar Utama'");
+      return;
+    }
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
@@ -109,23 +115,23 @@ export function PWAInstallPrompt() {
           {/* Text */}
           <div className="space-y-1.5">
             <h3 className="text-lg font-black text-white tracking-tight">
-              Install JjsManage
+              Gunakan JjsManage App
             </h3>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Tambahkan ke layar utama untuk akses lebih cepat dan pengalaman seperti aplikasi native.
+              Install untuk akses cepat tanpa browser dan tampilan penuh seperti aplikasi native.
             </p>
           </div>
 
           {isIOS ? (
             /* iOS Instructions */
             <div className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-              <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Cara Install di iOS:</p>
+              <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider text-center">Cara Install di iOS:</p>
               <div className="flex items-center gap-3 text-left">
                 <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
                   <Share size={16} className="text-blue-400" />
                 </div>
                 <p className="text-sm text-slate-300">
-                  Ketuk tombol <span className="font-bold text-white">Share</span> di browser
+                  Ketuk tombol <span className="font-bold text-white">Share</span>
                 </p>
               </div>
               <div className="flex items-center gap-3 text-left">
@@ -133,20 +139,43 @@ export function PWAInstallPrompt() {
                   <Download size={16} className="text-purple-400" />
                 </div>
                 <p className="text-sm text-slate-300">
-                  Pilih <span className="font-bold text-white">&quot;Add to Home Screen&quot;</span>
+                  Pilih <span className="font-bold text-white">Add to Home Screen</span>
                 </p>
               </div>
             </div>
           ) : (
             /* Android/Chrome Install Button */
             <div className="w-full space-y-3 pt-1">
-              <button
-                onClick={handleInstall}
-                className="w-full flex items-center justify-center gap-2.5 h-13 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.97] transition-all duration-200"
-              >
-                <Download size={18} />
-                Install Sekarang
-              </button>
+              {deferredPrompt ? (
+                <button
+                  onClick={handleInstall}
+                  className="w-full flex items-center justify-center gap-2.5 h-13 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.97] transition-all duration-200"
+                >
+                  <Download size={18} />
+                  Install Sekarang
+                </button>
+              ) : (
+                /* Manual Help for Android */
+                <div className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 space-y-3 text-left">
+                  <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider text-center">Cara Install di Android:</p>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <MoreVertical size={16} className="text-blue-400" />
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Klik <span className="font-bold text-white">titik tiga (⋮)</span> di pojok kanan atas browser
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Download size={16} className="text-purple-400" />
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      Pilih <span className="font-bold text-white">Instal aplikasi</span>
+                    </p>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={handleDismiss}
                 className="w-full text-xs text-slate-500 hover:text-slate-300 font-medium py-2 transition-colors"

@@ -123,16 +123,27 @@
 
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   html {
     @apply font-sans;
+    overscroll-behavior-y: none;
+    height: 100%;
+  }
+
+  input, textarea, [contenteditable="true"] {
+    user-select: text;
   }
 
   button, 
   [role="button"],
   .cursor-pointer {
     cursor: pointer !important;
+    touch-action: manipulation;
   }
 }
 

@@ -83,6 +83,7 @@ model User {
   password             String
   name                 String?
   role                 String    @default("ADMIN") // "ADMIN", "CASHIER", "SUPPLIER"
+  permissions          Json?     @default("[]")    // Array of allowed menu paths
   supplierId           String?
   supplier             Supplier? @relation(fields: [supplierId], references: [id])
   isCredentialsChanged Boolean   @default(false)

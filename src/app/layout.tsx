@@ -16,15 +16,20 @@ import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 export const metadata: Metadata = {
   title: "JjsManage - Solusi Manajemen Konsinyasi",
   description: "Aplikasi manajemen bagi hasil konsinyasi yang modern dan efisien.",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "JJS Manage",
+    startupImage: "/icon-512.png",
   },
   icons: {
-    icon: "/logojjsmanage.png",
-    apple: "/logojjsmanage.png",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   formatDetection: {
     telephone: false,

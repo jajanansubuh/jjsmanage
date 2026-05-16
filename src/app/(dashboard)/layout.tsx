@@ -1,4 +1,5 @@
 import { Sidebar } from "@/components/sidebar";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { getSession } from "@/lib/auth-utils";
 
 export default async function DashboardLayout({
@@ -10,12 +11,21 @@ export default async function DashboardLayout({
   
   return (
     <>
-      <Sidebar role={session?.user?.role} name={session?.user?.name || session?.user?.username} />
+      <Sidebar 
+        role={session?.user?.role} 
+        name={session?.user?.name || session?.user?.username} 
+        permissions={session?.user?.permissions}
+      />
       <main className="lg:pl-64 min-h-screen pt-16 lg:pt-0">
         <div className="p-4 lg:p-8 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
+      <MobileBottomNav 
+        role={session?.user?.role} 
+        name={session?.user?.name || session?.user?.username} 
+        permissions={session?.user?.permissions}
+      />
     </>
   );
 }

@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { importDatabaseAction } from "@/lib/actions/import";
+import UserManagement from "@/components/settings/UserManagement";
+
 
 export default function SettingsPage() {
   const [user, setUser] = useState<{ id: string, username: string, role: string, isCredentialsChanged: boolean } | null>(null);
@@ -180,7 +182,7 @@ export default function SettingsPage() {
   const isAdmin = user?.role?.toUpperCase().includes("ADMIN");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-2xl mx-auto pb-20">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-20">
       <div className="space-y-2 text-center sm:text-left">
         <h2 className="text-3xl font-black tracking-tight text-white">
           Pengaturan <span className="text-blue-500">{isAdmin ? "Sistem" : "Akun"}</span>
@@ -250,8 +252,8 @@ export default function SettingsPage() {
         </Card>
 
         {isAdmin && (
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col md:col-span-2 border-b-0">
+          <div className="space-y-8">
+            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col border-b-0">
               <CardHeader className="border-b border-white/5 bg-white/[0.02] p-8">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
@@ -340,68 +342,72 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                <CardTitle className="flex items-center text-lg font-bold text-white">
-                  <Download className="w-5 h-5 mr-3 text-emerald-500" /> Backup Data
-                </CardTitle>
-                <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
-                <Button 
-                  onClick={handleBackup} 
-                  disabled={isBackingUp}
-                  className="w-full h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
-                >
-                  {isBackingUp ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Memproses...
-                    </>
-                  ) : (
-                    <>
-                      <Download className="w-4 h-4" />
-                      Download ZIP
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            <UserManagement />
 
-            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-              <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                <CardTitle className="flex items-center text-lg font-bold text-white">
-                  <Upload className="w-5 h-5 mr-3 text-purple-500" /> Import Database
-                </CardTitle>
-                <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
-                <input 
-                  type="file" 
-                  accept=".xlsx" 
-                  ref={fileInputRef} 
-                  onChange={handleImport} 
-                  className="hidden" 
-                />
-                <Button 
-                  onClick={() => fileInputRef.current?.click()} 
-                  disabled={isImporting}
-                  className="w-full h-12 text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
-                >
-                  {isImporting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Mengimport...
-                    </>
-                  ) : (
-                    <>
-                      <FileSpreadsheet className="w-4 h-4" />
-                      Import XLSX
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                  <CardTitle className="flex items-center text-lg font-bold text-white">
+                    <Download className="w-5 h-5 mr-3 text-emerald-500" /> Backup Data
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
+                  <Button 
+                    onClick={handleBackup} 
+                    disabled={isBackingUp}
+                    className="w-full h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {isBackingUp ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Memproses...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Download ZIP
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
+                  <CardTitle className="flex items-center text-lg font-bold text-white">
+                    <Upload className="w-5 h-5 mr-3 text-purple-500" /> Import Database
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
+                  <input 
+                    type="file" 
+                    accept=".xlsx" 
+                    ref={fileInputRef} 
+                    onChange={handleImport} 
+                    className="hidden" 
+                  />
+                  <Button 
+                    onClick={() => fileInputRef.current?.click()} 
+                    disabled={isImporting}
+                    className="w-full h-12 text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {isImporting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Mengimport...
+                      </>
+                    ) : (
+                      <>
+                        <FileSpreadsheet className="w-4 h-4" />
+                        Import XLSX
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
       </div>

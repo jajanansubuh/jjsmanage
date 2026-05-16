@@ -48,11 +48,22 @@ const navigation = [
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: string, name?: string }) {
+export function Sidebar({ 
+  role = "ADMIN", 
+  name = "Administrator",
+  permissions = [] 
+}: { 
+  role?: string, 
+  name?: string,
+  permissions?: string[] 
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   
+  // Ensure permissions is an array
+  const userPermissions = Array.isArray(permissions) ? permissions : [];
+
   // Prevent scrolling when sidebar is open on mobile
   useEffect(() => {
     if (isOpen) {
@@ -65,23 +76,26 @@ export function Sidebar({ role = "ADMIN", name = "Administrator" }: { role?: str
     };
   }, [isOpen]);
 
-  // Filter navigation based on role
+  // Filter navigation based on permissions or role
   const filteredNavigation = navigation.filter(item => {
+    // If user has specific granular permissions set, use them
+    if (userPermissions.length > 0) {
+      return userPermissions.includes(item.href);
+    }
+
+    // Otherwise fallback to legacy role-based logic
     const userRole = (role || "").toUpperCase();
     
     if (userRole === "SUPPLIER") {
-      // Supplier sees these specific paths
       const allowedPaths = ["/payouts", "/deposits", "/savings", "/produk", "/cetak", "/settings"];
       return allowedPaths.includes(item.href);
     }
     
     if (userRole === "CASHIER") {
-      // Cashier sees everything except admin master and payouts
       const forbiddenPaths = ["/master", "/payouts", "/settings"];
       return !forbiddenPaths.includes(item.href);
     }
 
-    // Admin sees everything except Riwayat (which is for suppliers)
     return item.href !== "/payouts";
   }).map(item => {
     const userRole = role?.toUpperCase();
