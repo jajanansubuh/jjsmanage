@@ -10,10 +10,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "PENDING";
     
-    let where: any = { status };
+    const where: { status: string; supplierId?: string } = { status };
     
     if (session.user.role === "SUPPLIER") {
-      where.supplierId = session.user.supplierId;
+      where.supplierId = session.user.supplierId || "INVALID";
     }
 
     const items = await prisma.labelPrint.findMany({
@@ -23,7 +23,8 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(items);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("GET /api/print-queue error:", error);
     return NextResponse.json({ error: "Failed to fetch print queue" }, { status: 500 });
   }
 }
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
     
     // Use transaction to save all items
     const result = await prisma.$transaction(
-      items.map((item: any) => {
+      items.map((item: { name: string; code?: string; qty: number; supplierId?: string }) => {
         const finalSupplierId = supplierId || item.supplierId;
         if (!finalSupplierId) {
           throw new Error(`Produk "${item.name}" tidak memiliki data suplier.`);
@@ -52,8 +53,8 @@ export async function POST(req: Request) {
         return prisma.labelPrint.create({
           data: {
             name: item.name,
-            code: item.code,
-            qty: item.qty,
+            code: item.code || null,
+            qty: item.qty || 1,
             supplierId: finalSupplierId,
           }
         });
@@ -87,7 +88,8 @@ export async function PUT(req: Request) {
     });
 
     return NextResponse.json(updated);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("PUT /api/print-queue error:", error);
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
@@ -101,9 +103,9 @@ export async function DELETE(req: Request) {
     const { id, all } = await req.json();
     
     if (all) {
-      let where: any = { status: "PENDING" };
+      const where: { status: string; supplierId?: string } = { status: "PENDING" };
       if (session.user.role === "SUPPLIER") {
-        where.supplierId = session.user.supplierId;
+        where.supplierId = session.user.supplierId || "INVALID";
       }
       await prisma.labelPrint.deleteMany({ where });
     } else {
@@ -111,7 +113,8 @@ export async function DELETE(req: Request) {
     }
 
     return NextResponse.json({ message: "Deleted" });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("DELETE /api/print-queue error:", error);
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

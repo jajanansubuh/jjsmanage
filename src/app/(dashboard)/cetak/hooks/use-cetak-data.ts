@@ -56,43 +56,49 @@ export function useCetakData() {
       const res = await fetch("/api/products");
       if (res.ok) {
         const myProducts = await res.json();
-        let displayData = myProducts.map((p: any) => ({
-          ...p,
-          code: p.code || lookup[normalizeName(p.name)] || null,
-          supplierName: p.supplier?.name || "Tanpa Suplier"
-        }));
+        
+        // Use a Map to deduplicate products based on normalized name ONLY
+        // This handles cases like "PRODUK" vs "PRODUK." or different codes for same name
+        const finalProductsMap = new Map<string, Product>();
+        
+        // Process products
+        myProducts.forEach((p: any) => {
+          const normalizedName = normalizeName(p.name);
+          if (!normalizedName) return;
 
-        if (role === "SUPPLIER") {
-          try {
-            const reportRes = await fetch("/api/reports?limit=50");
-            if (reportRes.ok) {
-              const reportData = await reportRes.json();
-              const existingNames = new Set(displayData.map((p: any) => normalizeName(p.name)));
-
-              reportData.reports?.forEach((report: any) => {
-                report.items?.forEach((item: any) => {
-                  const rawName = item.name;
-                  if (!rawName) return;
-                  const normalized = normalizeName(rawName);
-                  if (!existingNames.has(normalized)) {
-                    displayData.push({
-                      id: `report-${normalized}`,
-                      name: rawName.toUpperCase(),
-                      code: lookup[normalized] || item.code || null,
-                      supplierId: report.supplierId,
-                      supplierName: report.supplier?.name || "Tanpa Suplier"
-                    });
-                    existingNames.add(normalized);
-                  }
-                });
-              });
+          const rawCode = p.code || lookup[normalizedName] || "";
+          const code = String(rawCode).trim();
+          
+          // Use ONLY normalized name as key to ensure no duplicates in search
+          const key = normalizedName;
+          
+          if (!finalProductsMap.has(key)) {
+            finalProductsMap.set(key, {
+              id: p.id,
+              name: normalizedName,
+              code: code || null,
+              supplierId: p.supplierId || null,
+              supplierName: p.supplier?.name || "Tanpa Suplier"
+            });
+          } else {
+            // If already exists, maybe update with a "better" code (e.g. numeric only)
+            const existing = finalProductsMap.get(key)!;
+            const existingCode = existing.code || "";
+            
+            // If current existing code has letters and new code is pure numeric, prioritize the numeric one
+            if (/[A-Z]/i.test(existingCode) && /^\d+$/.test(code)) {
+              existing.code = code;
+              existing.id = p.id; // Also use the ID from the cleaner product
             }
-          } catch (e) {}
-        }
+          }
+        });
+
+        const displayData = Array.from(finalProductsMap.values());
         setProducts(displayData);
         return displayData;
       }
     } catch (err) {
+      console.error("fetchProducts error:", err);
     } finally {
       setIsDataLoading(false);
     }

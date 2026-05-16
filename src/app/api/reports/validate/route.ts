@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("POST /api/reports/validate error:", error);
     return NextResponse.json({ error: "Failed to validate reports" }, { status: 500 });
   }

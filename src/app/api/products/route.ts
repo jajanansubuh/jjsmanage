@@ -44,7 +44,8 @@ export async function GET(req: Request) {
       orderBy: { name: "asc" },
     });
     return NextResponse.json(products);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("GET /api/products error:", error);
     return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
   }
 }
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
     // Import logic: array of { name, code, supplierId? }
     if (Array.isArray(data)) {
       const results = [];
-      const normalize = (val: any) => String(val || "").trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
+      const normalize = (val: string | null | undefined) => String(val || "").trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
       
       try {
         for (const item of data) {
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
           const existing = await prisma.product.findFirst({
             where: { 
               name: { equals: name, mode: "insensitive" },
-              ...(supplierId ? { supplierId } : {})
+              supplierId: supplierId || null
             }
           });
 
@@ -133,14 +134,15 @@ export async function PUT(req: Request) {
     const product = await prisma.product.update({
       where: { id },
       data: {
-        name: name?.trim().toUpperCase(),
+        name: name ? name.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ") : undefined,
         code: (code !== undefined && code !== null) ? String(code) : undefined,
         supplierId: supplierId || null,
       },
       include: { supplier: { select: { id: true, name: true } } },
     });
     return NextResponse.json(product);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("PUT /api/products error:", error);
     return NextResponse.json({ error: "Gagal memperbarui produk" }, { status: 500 });
   }
 }
@@ -152,7 +154,8 @@ export async function DELETE(req: Request) {
 
     await prisma.product.delete({ where: { id } });
     return NextResponse.json({ message: "Produk berhasil dihapus" });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error("DELETE /api/products error:", error);
     return NextResponse.json({ error: "Gagal menghapus produk" }, { status: 500 });
   }
 }

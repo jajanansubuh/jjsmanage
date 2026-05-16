@@ -54,10 +54,19 @@ export default function CetakLabelPage() {
   }, [userRole, products]);
 
   const filteredProducts = useMemo(() => {
-    return products.filter(p => 
+    const filtered = products.filter(p => 
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       (p.code && p.code.toLowerCase().includes(searchTerm.toLowerCase()))
     );
+
+    // Final fallback deduplication to ensure no double products in UI
+    const seen = new Set<string>();
+    return filtered.filter(p => {
+      const key = normalizeName(p.name);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 100); // Limit to 100 results for performance
   }, [products, searchTerm]);
 
   const handleSaveQueue = async () => {
