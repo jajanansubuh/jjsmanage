@@ -182,12 +182,12 @@ export default function SettingsPage() {
   const isAdmin = user?.role?.toUpperCase().includes("ADMIN");
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-20">
-      <div className="space-y-2 text-center sm:text-left">
-        <h2 className="text-3xl font-black tracking-tight text-white">
+    <div className="space-y-5 sm:space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto pb-20">
+      <div className="space-y-1 sm:space-y-2 text-center sm:text-left">
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
           Pengaturan <span className="text-blue-500">{isAdmin ? "Sistem" : "Akun"}</span>
         </h2>
-        <p className="text-slate-400 font-medium text-sm uppercase tracking-widest">
+        <p className="text-slate-400 font-medium text-xs sm:text-sm uppercase tracking-widest">
           {isAdmin ? "Kelola kredensial login dan data sistem Anda." : "Kelola keamanan dan akses akun suplier Anda."}
         </p>
       </div>
@@ -253,19 +253,19 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <div className="space-y-8">
-            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden flex flex-col border-b-0">
-              <CardHeader className="border-b border-white/5 bg-white/[0.02] p-8">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="flex items-center text-2xl font-black text-white tracking-tight">
-                      <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-4">
-                        <Database className="w-6 h-6 text-blue-400" />
+            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden flex flex-col border-b-0">
+              <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-8">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="space-y-1 min-w-0">
+                    <CardTitle className="flex items-center text-base sm:text-2xl font-black text-white tracking-tight">
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-2.5 sm:mr-4 shrink-0">
+                        <Database className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400" />
                       </div>
-                      Ringkasan Aktivitas Sistem
+                      <span className="truncate">Ringkasan Aktivitas</span>
                     </CardTitle>
-                    <CardDescription className="text-slate-400 font-medium ml-14">Status kesehatan database dan kapasitas penyimpanan.</CardDescription>
+                    <CardDescription className="text-slate-400 font-medium ml-[42px] sm:ml-14 text-xs sm:text-sm">Status database dan penyimpanan.</CardDescription>
                   </div>
-                  <div className="hidden sm:block">
+                  <div className="hidden sm:block shrink-0">
                     <div className="px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                       <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Sistem Online</span>
@@ -273,48 +273,55 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="p-8 space-y-8">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-blue-400 transition-colors">Total Nota</p>
-                    <p className="text-4xl font-black text-white tracking-tighter">{systemStats?.reportCount || 0}</p>
+              <CardContent className="p-4 sm:p-8 space-y-5 sm:space-y-8">
+                {/* Mobile: show system online badge */}
+                <div className="sm:hidden">
+                  <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2 w-fit">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Sistem Online</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">Total Nota</p>
+                    <p className="text-2xl sm:text-4xl font-black text-white tracking-tighter">{systemStats?.reportCount || 0}</p>
                   </div>
                   
-                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-blue-400 transition-colors">Penyimpanan</p>
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-blue-500/20 transition-all group">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">Penyimpanan</p>
                     <div className="flex items-baseline gap-1">
-                      <p className="text-4xl font-black text-blue-400 tracking-tighter">{systemStats?.estimatedSizeMB || "0.00"}</p>
-                      <span className="text-sm font-bold text-slate-500">MB</span>
+                      <p className="text-2xl sm:text-4xl font-black text-blue-400 tracking-tighter">{systemStats?.estimatedSizeMB || "0.00"}</p>
+                      <span className="text-xs sm:text-sm font-bold text-slate-500">MB</span>
                     </div>
                   </div>
 
-                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-emerald-400 transition-colors">Status DB</p>
-                    <div className="inline-flex items-center px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-fit">
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">{systemStats?.status || "Optimal"}</span>
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-emerald-500/20 transition-all group flex flex-col justify-between">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-emerald-400 transition-colors">Status DB</p>
+                    <div className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                      <span className="text-[9px] sm:text-[10px] font-black text-emerald-400 uppercase tracking-tight">{systemStats?.status || "Optimal"}</span>
                     </div>
                   </div>
 
-                  <div className="p-6 rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/20 transition-all group">
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-3 group-hover:text-purple-400 transition-colors">Suplier</p>
-                    <p className="text-4xl font-black text-purple-400 tracking-tighter">{systemStats?.supplierCount || 0}</p>
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/20 transition-all group">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-purple-400 transition-colors">Suplier</p>
+                    <p className="text-2xl sm:text-4xl font-black text-purple-400 tracking-tighter">{systemStats?.supplierCount || 0}</p>
                   </div>
                 </div>
 
-                <div className="relative p-8 rounded-[2.5rem] bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-white/10 overflow-hidden group">
-                  <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <ShieldCheck className="w-24 h-24 text-white" />
+                <div className="relative p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-white/10 overflow-hidden group">
+                  <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <ShieldCheck className="w-16 sm:w-24 h-16 sm:h-24 text-white" />
                   </div>
                   
-                  <div className="relative space-y-6">
-                    <div className="grid sm:grid-cols-2 gap-8">
+                  <div className="relative space-y-4 sm:space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tipe Database</p>
-                        <p className="text-sm font-bold text-white">{systemStats?.databaseType || "PostgreSQL (Cloud Indexed)"}</p>
+                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500">Tipe Database</p>
+                        <p className="text-xs sm:text-sm font-bold text-white">{systemStats?.databaseType || "PostgreSQL (Cloud Indexed)"}</p>
                       </div>
                       <div className="space-y-1 sm:text-right">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Aktifitas Terakhir</p>
-                        <p className="text-sm font-bold text-white">
+                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-slate-500">Aktifitas Terakhir</p>
+                        <p className="text-xs sm:text-sm font-bold text-white">
                           {systemStats?.lastActivity 
                             ? new Date(systemStats.lastActivity).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
                             : "Belum ada aktifitas"}
@@ -322,19 +329,19 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-end">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Kapasitas Penyimpanan</p>
-                        <p className="text-xs font-black text-white">{Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100).toFixed(2)}% Terpakai</p>
+                    <div className="space-y-2.5 sm:space-y-3">
+                      <div className="flex justify-between items-end gap-2">
+                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-blue-400">Kapasitas</p>
+                        <p className="text-[10px] sm:text-xs font-black text-white shrink-0">{Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100).toFixed(2)}%</p>
                       </div>
-                      <div className="h-3 w-full bg-slate-950/50 rounded-full border border-white/5 p-0.5">
+                      <div className="h-2.5 sm:h-3 w-full bg-slate-950/50 rounded-full border border-white/5 p-0.5">
                         <div 
                           className="h-full bg-linear-to-r from-blue-500 via-blue-400 to-indigo-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out" 
                           style={{ width: `${Math.max(2, Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100))}%` }}
                         />
                       </div>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider italic">
-                        * Berdasarkan alokasi kuota standar 1,024 MB (1GB)
+                      <p className="text-[8px] sm:text-[9px] text-slate-500 font-bold uppercase tracking-wider italic">
+                        * Kuota standar 1,024 MB (1GB)
                       </p>
                     </div>
                   </div>
@@ -344,19 +351,19 @@ export default function SettingsPage() {
 
             <UserManagement />
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                  <CardTitle className="flex items-center text-lg font-bold text-white">
-                    <Download className="w-5 h-5 mr-3 text-emerald-500" /> Backup Data
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+                <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-emerald-500" /> Backup Data
                   </CardTitle>
                   <CardDescription className="text-slate-400 text-xs">Unduh semua data (ZIP/Excel).</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
+                <CardContent className="flex-1 flex flex-col justify-center p-4 sm:pt-6 sm:px-6 sm:pb-6">
                   <Button 
                     onClick={handleBackup} 
                     disabled={isBackingUp}
-                    className="w-full h-12 text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                    className="w-full h-11 sm:h-12 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
                   >
                     {isBackingUp ? (
                       <>
@@ -373,14 +380,14 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-                <CardHeader className="border-b border-white/5 bg-white/[0.02]">
-                  <CardTitle className="flex items-center text-lg font-bold text-white">
-                    <Upload className="w-5 h-5 mr-3 text-purple-500" /> Import Database
+              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+                <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-purple-500" /> Import Database
                   </CardTitle>
                   <CardDescription className="text-slate-400 text-xs">Unggah data format .xlsx saja.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col justify-center pt-6 px-6 pb-6">
+                <CardContent className="flex-1 flex flex-col justify-center p-4 sm:pt-6 sm:px-6 sm:pb-6">
                   <input 
                     type="file" 
                     accept=".xlsx" 
@@ -391,7 +398,7 @@ export default function SettingsPage() {
                   <Button 
                     onClick={() => fileInputRef.current?.click()} 
                     disabled={isImporting}
-                    className="w-full h-12 text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                    className="w-full h-11 sm:h-12 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
                   >
                     {isImporting ? (
                       <>

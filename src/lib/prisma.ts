@@ -8,7 +8,10 @@ const prismaClientSingleton = () => {
     connectionString: process.env.DATABASE_URL,
     ssl: {
       rejectUnauthorized: false
-    }
+    },
+    max: 5,                          // Limit connections per serverless instance
+    idleTimeoutMillis: 20000,        // Close idle connections after 20s
+    connectionTimeoutMillis: 10000,  // Fail fast if can't connect in 10s
   });
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });

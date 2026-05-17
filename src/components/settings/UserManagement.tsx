@@ -262,31 +262,31 @@ export default function UserManagement() {
   };
 
   return (
-    <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden">
-      <CardHeader className="border-b border-white/5 bg-white/[0.02] p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <CardTitle className="flex items-center text-2xl font-black text-white tracking-tight">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-4">
-              <Users className="w-6 h-6 text-blue-400" />
+    <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+      <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+        <div className="space-y-1 min-w-0">
+          <CardTitle className="flex items-center text-base sm:text-2xl font-black text-white tracking-tight">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-2.5 sm:mr-4 shrink-0">
+              <Users className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400" />
             </div>
-            Manajemen User & Role
+            <span className="truncate">Manajemen User & Role</span>
           </CardTitle>
-          <CardDescription className="text-slate-400 font-medium ml-14">Kelola akses pengguna sistem dan hak akses mereka.</CardDescription>
+          <CardDescription className="text-slate-400 font-medium ml-[38px] sm:ml-14 text-xs sm:text-sm">Kelola akses pengguna dan hak akses.</CardDescription>
         </div>
         <Button 
           onClick={handleOpenAdd}
-          className="h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl gap-2 font-black uppercase tracking-widest text-xs px-6 shadow-lg shadow-blue-600/20 transition-all active:scale-95 ml-14 sm:ml-0"
+          className="h-10 sm:h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6 shadow-lg shadow-blue-600/20 transition-all active:scale-95 w-full sm:w-auto"
         >
           <UserPlus className="w-4 h-4" />
           Tambah User
         </Button>
       </CardHeader>
-      <CardContent className="p-8 space-y-8">
+      <CardContent className="p-4 sm:p-8 space-y-5 sm:space-y-8">
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
           <Input 
-            placeholder="Cari username atau nama lengkap..." 
-            className="pl-12 h-14 bg-white/5 border-white/10 text-white text-lg font-medium rounded-2xl focus:ring-blue-500/50 focus:bg-white/[0.08] transition-all"
+            placeholder="Cari username..." 
+            className="pl-11 sm:pl-12 h-11 sm:h-14 bg-white/5 border-white/10 text-white text-sm sm:text-lg font-medium rounded-2xl focus:ring-blue-500/50 focus:bg-white/[0.08] transition-all"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -298,105 +298,134 @@ export default function UserManagement() {
             <p className="text-slate-400 font-medium animate-pulse">Memuat database user...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="text-center py-24 border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.01]">
-            <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="text-center py-12 sm:py-24 border-2 border-dashed border-white/5 rounded-2xl sm:rounded-[2.5rem] bg-white/[0.01]">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Users className="w-10 h-10 text-slate-600" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">Tidak ada user ditemukan</h3>
             <p className="text-slate-500 max-w-xs mx-auto">Coba gunakan kata kunci pencarian lain atau tambahkan user baru.</p>
           </div>
         ) : (
-          <div className="rounded-[2rem] border border-white/5 overflow-hidden bg-white/[0.01] shadow-inner">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-white/[0.03]">
-                  <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Identitas User</TableHead>
-                    <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Hak Akses</TableHead>
-                    <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Afiliasi Toko</TableHead>
-                    <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6 text-right">Tindakan</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
-                            <UserIcon className="w-6 h-6" />
-                          </div>
-                          <div>
-                            <p className="text-base font-black text-white leading-tight">{user.username}</p>
-                            <p className="text-xs text-slate-500 font-medium mt-0.5">{user.name || "Administrator"}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-6 py-4">{getRoleBadge(user.role)}</TableCell>
-                      <TableCell className="px-6 py-4">
-                        {user.role === "SUPPLIER" ? (
-                          <div className="flex items-center gap-2 text-slate-300 font-medium bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 w-fit">
-                            <Store className="w-3.5 h-3.5 text-purple-400" />
-                            <span className="text-xs">{user.supplier?.name || "Toko Umum"}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-600 font-black opacity-30">— SISTEM UTAMA —</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-10 w-10 text-slate-400 hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 border border-transparent rounded-xl transition-all"
-                            onClick={() => handleOpenEdit(user)}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30 border border-transparent rounded-xl transition-all"
-                            onClick={() => handleDelete(user.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <>
+            {/* Mobile Card Layout */}
+            <div className="sm:hidden space-y-3">
+              {filteredUsers.map((user) => (
+                <div key={user.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
+                        <UserIcon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-black text-white truncate">{user.username}</p>
+                        <p className="text-[11px] text-slate-500 font-medium">{user.name || "Administrator"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-blue-500/20 rounded-lg" onClick={() => handleOpenEdit(user)}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg" onClick={() => handleDelete(user.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {getRoleBadge(user.role)}
+                    {user.role === "SUPPLIER" && (
+                      <div className="flex items-center gap-1.5 text-slate-300 font-medium bg-white/5 px-2.5 py-1 rounded-lg border border-white/5 text-[11px]">
+                        <Store className="w-3 h-3 text-purple-400" />
+                        {user.supplier?.name || "Toko Umum"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+
+            {/* Desktop Table Layout */}
+            <div className="hidden sm:block rounded-[2rem] border border-white/5 overflow-hidden bg-white/[0.01] shadow-inner">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-white/[0.03]">
+                    <TableRow className="border-white/5 hover:bg-transparent">
+                      <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Identitas User</TableHead>
+                      <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Hak Akses</TableHead>
+                      <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Afiliasi Toko</TableHead>
+                      <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6 text-right">Tindakan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                              <UserIcon className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <p className="text-base font-black text-white leading-tight">{user.username}</p>
+                              <p className="text-xs text-slate-500 font-medium mt-0.5">{user.name || "Administrator"}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-6 py-4">{getRoleBadge(user.role)}</TableCell>
+                        <TableCell className="px-6 py-4">
+                          {user.role === "SUPPLIER" ? (
+                            <div className="flex items-center gap-2 text-slate-300 font-medium bg-white/5 px-3 py-1.5 rounded-xl border border-white/5 w-fit">
+                              <Store className="w-3.5 h-3.5 text-purple-400" />
+                              <span className="text-xs">{user.supplier?.name || "Toko Umum"}</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-600 font-black opacity-30">— SISTEM UTAMA —</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 border border-transparent rounded-xl transition-all" onClick={() => handleOpenEdit(user)}>
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30 border border-transparent rounded-xl transition-all" onClick={() => handleDelete(user.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {/* Force a larger width and prevent squishing with min-width on desktop */}
-        <DialogContent className="bg-slate-950 border-white/10 text-white rounded-[2.5rem] p-0 overflow-hidden sm:max-w-[850px] w-[95vw] shadow-2xl flex flex-col max-h-[90vh]">
+        <DialogContent className="bg-slate-950 border-white/10 text-white rounded-2xl sm:rounded-[2.5rem] p-0 overflow-hidden sm:max-w-[850px] w-[95vw] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh]">
           {/* Header Section */}
-          <div className="p-8 border-b border-white/5 bg-white/[0.01] shrink-0">
-            <div className="flex items-center gap-5">
-              <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/5">
-                {editingUser ? <Pencil className="w-7 h-7 text-blue-400" /> : <UserPlus className="w-7 h-7 text-blue-400" />}
+          <div className="p-4 sm:p-8 border-b border-white/5 bg-white/[0.01] shrink-0">
+            <div className="flex items-center gap-3 sm:gap-5">
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/5 shrink-0">
+                {editingUser ? <Pencil className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" /> : <UserPlus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" />}
               </div>
-              <div className="space-y-1">
-                <DialogTitle className="text-2xl font-black tracking-tight text-white uppercase italic">
+              <div className="space-y-0.5 sm:space-y-1 min-w-0">
+                <DialogTitle className="text-lg sm:text-2xl font-black tracking-tight text-white uppercase italic">
                   {editingUser ? "Edit Akses User" : "Tambah User Baru"}
                 </DialogTitle>
-                <DialogDescription className="text-slate-400 font-medium">
-                  {editingUser ? "Sesuaikan profil dan izin menu sistem." : "Daftarkan pengguna baru dengan hak akses spesifik."}
+                <DialogDescription className="text-slate-400 font-medium text-xs sm:text-sm">
+                  {editingUser ? "Sesuaikan profil dan izin menu." : "Daftarkan pengguna baru."}
                 </DialogDescription>
               </div>
             </div>
           </div>
 
-          {/* Main Body - Use Flexbox for guaranteed side-by-side on desktop */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-8 bg-slate-950/40">
-            <div className="flex flex-col lg:flex-row gap-10 items-start">
+          {/* Main Body */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-8 bg-slate-950/40">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-10 items-start">
               
               {/* Left Side: Account Form (Fixed width on desktop) */}
-              <div className="w-full lg:w-[340px] space-y-8 shrink-0">
+              <div className="w-full lg:w-[340px] space-y-6 sm:space-y-8 shrink-0">
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
                     <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
@@ -525,19 +554,19 @@ export default function UserManagement() {
                 </div>
                 
                 {/* Grid for menu items - Responsive columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-2 gap-2.5 sm:gap-3.5">
                   {MENU_ITEMS.map((item) => (
                     <button
                       key={item.href}
                       onClick={() => togglePermission(item.href)}
                       className={cn(
-                        "flex items-center justify-between px-4 py-4 rounded-2xl border transition-all duration-200 group text-left",
+                        "flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border transition-all duration-200 group text-left",
                         formData.permissions.includes(item.href)
                           ? "bg-purple-500/10 border-purple-500/40 text-white shadow-[0_0_20px_rgba(168,85,247,0.05)]"
                           : "bg-white/5 border-white/5 text-slate-500 hover:border-white/10 hover:bg-white/[0.07]"
                       )}
                     >
-                      <span className="text-[13px] font-bold tracking-tight truncate pr-2">{item.name}</span>
+                      <span className="text-[11px] sm:text-[13px] font-bold tracking-tight truncate pr-2">{item.name}</span>
                       <div className={cn(
                         "w-5 h-5 rounded-lg flex items-center justify-center transition-all duration-300 border shrink-0",
                         formData.permissions.includes(item.href)
@@ -554,25 +583,25 @@ export default function UserManagement() {
           </div>
 
           {/* Action Footer */}
-          <div className="p-8 border-t border-white/5 bg-white/[0.02] flex items-center justify-end gap-4 shrink-0">
+          <div className="p-4 sm:p-8 border-t border-white/5 bg-white/[0.02] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-4 shrink-0">
             <Button 
               variant="ghost" 
               onClick={() => setIsDialogOpen(false)}
-              className="h-12 rounded-2xl text-slate-500 hover:text-white font-bold uppercase tracking-widest text-[10px] px-8 transition-all active:scale-95"
+              className="h-10 sm:h-12 rounded-2xl text-slate-500 hover:text-white font-bold uppercase tracking-widest text-[10px] px-6 sm:px-8 transition-all active:scale-95"
             >
               Batal
             </Button>
             <Button 
               onClick={handleSave}
               disabled={isSaving}
-              className="h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] px-12 shadow-xl shadow-blue-600/20 transition-all active:scale-95 disabled:opacity-50"
+              className="h-10 sm:h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 sm:px-12 shadow-xl shadow-blue-600/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {isSaving ? (
                 <div className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>Proses...</span>
                 </div>
-              ) : (editingUser ? "Simpan Perubahan" : "Konfirmasi & Tambah")}
+              ) : (editingUser ? "Simpan" : "Tambah User")}
             </Button>
           </div>
         </DialogContent>

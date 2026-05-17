@@ -33,6 +33,9 @@ model LabelPrint {
   status     String   @default("PENDING") // PENDING, DONE
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
+  @@index([status])
 }
 
 model SupplierPayout {
@@ -44,6 +47,8 @@ model SupplierPayout {
   supplier   Supplier @relation(fields: [supplierId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([supplierId])
 }
 
 model Cashier {
@@ -75,6 +80,9 @@ model ConsignmentReport {
   items               Json?     @default("[]")
   isValidated         Boolean   @default(false)
   supplier            Supplier  @relation(fields: [supplierId], references: [id])
+
+  @@index([supplierId])
+  @@index([date])
 }
 
 model User {
@@ -89,6 +97,8 @@ model User {
   isCredentialsChanged Boolean   @default(false)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+
+  @@index([supplierId])
 }
 
 model Product {
