@@ -128,6 +128,7 @@ export function Sidebar({
               fill
               sizes="48px"
               className="object-contain"
+              unoptimized
             />
           </div>
         </div>
@@ -149,6 +150,7 @@ export function Sidebar({
                   fill
                   sizes="(max-width: 1024px) 48px, 72px"
                   className="object-contain"
+                  unoptimized
                 />
               </div>
               <h1 className="text-xl lg:text-2xl font-black tracking-tighter text-white leading-tight">

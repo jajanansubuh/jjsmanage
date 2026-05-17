@@ -24,11 +24,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/logojjsmanage.png", sizes: "192x192", type: "image/png" },
-      { url: "/logojjsmanage.png", sizes: "512x512", type: "image/png" },
+      { url: "/logojjsmanage.png", sizes: "500x500", type: "image/png" },
     ],
     apple: [
-      { url: "/logojjsmanage.png", sizes: "180x180", type: "image/png" },
+      { url: "/logojjsmanage.png", sizes: "500x500", type: "image/png" },
     ],
   },
   formatDetection: {

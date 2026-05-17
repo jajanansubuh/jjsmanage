@@ -111,6 +111,7 @@ export function PWAInstallPrompt() {
                 fill
                 sizes="80px"
                 className="object-contain p-1"
+                unoptimized
               />
             </div>
           </div>

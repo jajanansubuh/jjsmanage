@@ -17,8 +17,9 @@ export const normalizeName = (name: any) => {
   return String(name || "")
     .trim()
     .toUpperCase()
-    .replace(/[.,\s]+$/, "")
-    .replace(/\s+/g, " ");
+    .replace(/[.,\-\/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 };
 
 export function useProductsData(dateRange: DateRange | undefined) {

@@ -12,28 +12,16 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       {
         src: '/logojjsmanage.png',
-        sizes: '192x192',
+        sizes: '500x500',
         type: 'image/png',
         purpose: 'any',
       },
       {
         src: '/logojjsmanage.png',
-        sizes: '192x192',
+        sizes: '500x500',
         type: 'image/png',
         purpose: 'maskable',
-      },
-      {
-        src: '/logojjsmanage.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any',
-      },
-      {
-        src: '/logojjsmanage.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
+      }
     ],
   }
 }
