@@ -63,7 +63,22 @@ function PotonganPageContent() {
 
   const updateField = (supplierId: string, field: "serviceCharge" | "kukuluban" | "tabungan", value: string) => {
     const numericValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
-    setRows((prev) => prev.map((row) => (row.supplierId === supplierId ? { ...row, [field]: numericValue } : row)));
+    setRows((prev) => prev.map((row) => {
+      if (row.supplierId === supplierId) {
+        const newRow = { ...row, [field]: numericValue };
+        const totalPotongan = newRow.serviceCharge + newRow.kukuluban + newRow.tabungan;
+        
+        if (totalPotongan > row.totalCost) {
+          toast.error(`Total potongan tidak boleh melebihi total cost (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(row.totalCost)})`);
+          
+          const otherFieldsTotal = totalPotongan - numericValue;
+          const maxAllowed = Math.max(0, row.totalCost - otherFieldsTotal);
+          newRow[field] = maxAllowed;
+        }
+        return newRow;
+      }
+      return row;
+    }));
   };
 
   const totals = useMemo(() => {

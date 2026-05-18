@@ -11,9 +11,8 @@ interface DepositsTableProps {
   loading: boolean;
   role: string | null;
   sortConfig: { key: keyof DepositItem; direction: "asc" | "desc" } | null;
-  onSort: (key: keyof DepositItem) => void;
-  onViewDetails: (item: any) => void;
   onValidate: (id: string) => void;
+  onSort: (key: keyof DepositItem) => void;
 }
 
 export function DepositsTable({
@@ -22,7 +21,6 @@ export function DepositsTable({
   role,
   sortConfig,
   onSort,
-  onViewDetails,
   onValidate
 }: DepositsTableProps) {
 
@@ -94,38 +92,22 @@ export function DepositsTable({
                   </div>
                 </div>
 
-                <div className="mt-5 pt-5 border-t border-white/5 flex gap-2">
-                  {role === "SUPPLIER" ? (
-                    <Button
-                      onClick={() => onViewDetails(item)}
-                      className="w-full h-11 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-white font-bold border border-white/10 gap-2 transition-all"
-                    >
-                      <Eye className="w-4 h-4" /> Lihat Detail
-                    </Button>
-                  ) : (
-                    <>
-                       {!item.isValidated ? (
-                         <Button
-                          onClick={() => onValidate(item.id)}
-                          className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> Validasi
-                        </Button>
-                       ) : (
-                        <div className="flex-1 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-widest">
-                          <CheckCircle2 className="w-4 h-4" /> Tervalidasi
-                        </div>
-                       )}
-                       <Button
-                        variant="ghost"
-                        onClick={() => onViewDetails(item)}
-                        className="h-11 w-11 p-0 rounded-xl bg-white/5 border border-white/10"
+                {role !== "SUPPLIER" && (
+                  <div className="mt-5 pt-5 border-t border-white/5 flex gap-2">
+                    {!item.isValidated ? (
+                      <Button
+                        onClick={() => onValidate(item.id)}
+                        className="flex-1 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-2"
                       >
-                        <Eye className="w-4 h-4" />
+                        <CheckCircle2 className="w-4 h-4" /> Validasi
                       </Button>
-                    </>
-                  )}
-                </div>
+                    ) : (
+                      <div className="flex-1 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-emerald-400 text-xs font-black uppercase tracking-widest">
+                        <CheckCircle2 className="w-4 h-4" /> Tervalidasi
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))
@@ -164,13 +146,7 @@ export function DepositsTable({
                       {role === "SUPPLIER" ? "Pendapatan" : "Total Setor"} {getSortIcon("dailyProfit")}
                     </div>
                   </TableHead>
-                  {role === "SUPPLIER" ? (
-                    <TableHead className="py-6 px-8 text-center">
-                      <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
-                        Aksi
-                      </div>
-                    </TableHead>
-                  ) : (
+                  {role !== "SUPPLIER" && (
                     <TableHead className="py-6 px-8 text-center">
                       <div className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">
                         Validasi
@@ -234,55 +210,21 @@ export function DepositsTable({
                           }).format(item.dailyProfit)}
                         </span>
                       </TableCell>
-                      {role === "SUPPLIER" ? (
-                        <TableCell className="text-center px-8">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onViewDetails(item)}
-                            className="h-9 w-9 p-0 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-400 transition-all border border-white/5"
-                            title="Lihat Detail Transaksi"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      ) : (
+                      {role !== "SUPPLIER" && (
                         <TableCell className="text-center px-8">
                           {item.isValidated ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
-                                Tervalidasi
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onViewDetails(item)}
-                                className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
-                                title="Lihat Detail"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20">
+                              Tervalidasi
+                            </span>
                           ) : (
-                            <div className="flex items-center justify-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onValidate(item.id)}
-                                className="h-8 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-bold text-xs"
-                              >
-                                Validasi
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onViewDetails(item)}
-                                className="h-8 w-8 p-0 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
-                                title="Lihat Detail"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onValidate(item.id)}
+                              className="h-8 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all font-bold text-xs"
+                            >
+                              Validasi
+                            </Button>
                           )}
                         </TableCell>
                       )}

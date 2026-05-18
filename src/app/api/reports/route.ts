@@ -91,10 +91,9 @@ export async function POST(req: Request) {
     // Support single or multiple reports
     if (Array.isArray(data)) {
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Batch create all reports
-        const reports = [];
-        for (const r of data) {
-          const report = await tx.consignmentReport.create({
+        // 1. Batch create all reports concurrently
+        const reports = await Promise.all(
+          data.map(r => tx.consignmentReport.create({
             data: {
               supplierId: r.supplierId,
               noteNumber: r.noteNumber || null,
@@ -109,10 +108,9 @@ export async function POST(req: Request) {
               tabungan: Number(r.tabungan) || 0,
               notes: r.notes || null,
               items: r.items || [],
-            },
-          });
-          reports.push(report);
-        }
+            }
+          }))
+        );
         
         // 2. Aggregate balance increments per supplier (reduces DB calls)
         const balanceMap = new Map<string, number>();
@@ -121,17 +119,20 @@ export async function POST(req: Request) {
           balanceMap.set(r.supplierId, (balanceMap.get(r.supplierId) || 0) + profit);
         }
         
-        // 3. Update supplier balances (one query per unique supplier)
-        for (const [supplierId, totalProfit] of balanceMap) {
-          await tx.supplier.update({
-            where: { id: supplierId },
-            data: { balance: { increment: totalProfit } }
-          });
-        }
+        // 3. Update supplier balances concurrently
+        await Promise.all(
+          Array.from(balanceMap.entries()).map(([supplierId, totalProfit]) => 
+            tx.supplier.update({
+              where: { id: supplierId },
+              data: { balance: { increment: totalProfit } }
+            })
+          )
+        );
         
         return reports;
       }, {
-        timeout: 30000, // 30 seconds timeout for large batches
+        maxWait: 10000,
+        timeout: 120000, // 120 seconds timeout for large batches
       });
       return NextResponse.json(result);
     } else {

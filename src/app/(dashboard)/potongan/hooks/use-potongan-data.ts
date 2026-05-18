@@ -24,8 +24,10 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
 
   const fetchReports = useCallback(async (start: string, end: string) => {
     setLoading(true);
+    setActualStartDate(start);
+    setActualEndDate(end);
     try {
-      const res = await fetch(`/api/reports?startDate=${start}&endDate=${end}&limit=2000`);
+      const res = await fetch(`/api/reports?startDate=${start}&endDate=${end}&limit=5000`);
       const data = await res.json();
       const reports = Array.isArray(data) ? data : data.reports || [];
 
@@ -83,7 +85,7 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
   const fetchDeductionForEdit = useCallback(async (noteNum: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/reports?deductionNoteNumber=${noteNum}&limit=2000`);
+      const res = await fetch(`/api/reports?deductionNoteNumber=${noteNum}&limit=5000`);
       const data = await res.json();
       const reports = Array.isArray(data) ? data : data.reports || [];
 

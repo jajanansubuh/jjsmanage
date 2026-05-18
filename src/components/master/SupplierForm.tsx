@@ -58,9 +58,9 @@ export function SupplierAddForm({ onSave, onCancel }: SupplierAddFormProps) {
           />
         </div>
       </div>
-      <DialogFooter className="gap-3 sm:gap-0">
-        <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-        <Button onClick={() => onSave(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Simpan Suplier</Button>
+      <DialogFooter className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-white/10">
+        <Button variant="ghost" onClick={onCancel} className="h-12 w-full sm:w-auto rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+        <Button onClick={() => onSave(data)} className="h-12 w-full sm:w-auto px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Simpan Suplier</Button>
       </DialogFooter>
     </>
   );
@@ -147,28 +147,28 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
           />
         </div>
 
-        <div className="pt-4 border-t border-white/10 mt-2">
+        <div className="pt-2">
           <Button 
             type="button"
             variant="outline" 
-            className="w-full h-12 rounded-xl border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold"
+            className="w-full h-12 rounded-xl border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold transition-all"
             onClick={handleCreateAccount}
           >
             Buat Akun Login
           </Button>
         </div>
       </div>
-      <DialogFooter className="flex flex-col sm:flex-row gap-3">
+      <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-3 pt-6 border-t border-white/10">
         <Button 
           variant="ghost" 
           onClick={onDelete} 
-          className="h-12 rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold sm:mr-auto"
+          className="h-12 w-full sm:w-auto rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 font-bold"
         >
-          <Trash2 className="w-4 h-4 mr-2" /> Hapus
+          <Trash2 className="w-4 h-4 mr-2" /> Hapus UMKM
         </Button>
-        <div className="flex gap-3">
-          <Button variant="ghost" onClick={onCancel} className="h-12 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-          <Button onClick={() => onUpdate(data)} className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button variant="ghost" onClick={onCancel} className="h-12 flex-1 sm:flex-none rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
+          <Button onClick={() => onUpdate(data)} className="h-12 flex-1 sm:flex-none px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
         </div>
       </DialogFooter>
     </>

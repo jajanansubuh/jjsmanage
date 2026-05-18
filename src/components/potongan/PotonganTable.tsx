@@ -2,13 +2,72 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { DeductionRow } from "@/app/(dashboard)/potongan/hooks/use-potongan-data";
-import { useCallback } from "react";
+import { useCallback, memo } from "react";
 
 interface PotonganTableProps {
   loading: boolean;
   rows: DeductionRow[];
   onUpdateField: (supplierId: string, field: "serviceCharge" | "kukuluban" | "tabungan", value: string) => void;
 }
+
+interface PotonganTableRowProps {
+  row: DeductionRow;
+  onUpdateField: (supplierId: string, field: "serviceCharge" | "kukuluban" | "tabungan", value: string) => void;
+  handleTableKeyDown: (e: React.KeyboardEvent<HTMLInputElement>, field: string) => void;
+}
+
+const MemoizedRow = memo(
+  function PotonganTableRow({ row, onUpdateField, handleTableKeyDown }: PotonganTableRowProps) {
+    const netMitra = row.baseProfit80 - (row.serviceCharge + row.kukuluban + row.tabungan);
+    return (
+      <TableRow className="border-white/5 hover:bg-white/[0.03] transition-all group">
+        <TableCell className="py-6 px-8">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-black text-white uppercase tracking-tight group-hover:text-rose-400 transition-colors">{row.supplierName}</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {row.noteNumbers.map((n) => (
+                <span key={n} className="text-[9px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">{n}</span>
+              ))}
+            </div>
+          </div>
+        </TableCell>
+        <TableCell className="text-right font-bold text-slate-400">{new Intl.NumberFormat("id-ID").format(row.totalCost)}</TableCell>
+        <TableCell className="text-right">
+          <Input
+            type="text"
+            value={row.serviceCharge === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.serviceCharge)}
+            placeholder="0"
+            onChange={(e) => onUpdateField(row.supplierId, "serviceCharge", e.target.value)}
+            onKeyDown={(e) => handleTableKeyDown(e, "serviceCharge")}
+            className="bg-slate-950/30 border-white/5 text-right font-black text-rose-400 focus:bg-rose-500/10 focus:border-rose-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+          />
+        </TableCell>
+        <TableCell className="text-right">
+          <Input
+            type="text"
+            value={row.kukuluban === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.kukuluban)}
+            placeholder="0"
+            onChange={(e) => onUpdateField(row.supplierId, "kukuluban", e.target.value)}
+            onKeyDown={(e) => handleTableKeyDown(e, "kukuluban")}
+            className="bg-slate-950/30 border-white/5 text-right font-black text-orange-400 focus:bg-orange-500/10 focus:border-orange-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+          />
+        </TableCell>
+        <TableCell className="text-right">
+          <Input
+            type="text"
+            value={row.tabungan === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.tabungan)}
+            placeholder="0"
+            onChange={(e) => onUpdateField(row.supplierId, "tabungan", e.target.value)}
+            onKeyDown={(e) => handleTableKeyDown(e, "tabungan")}
+            className="bg-slate-950/30 border-white/5 text-right font-black text-purple-400 focus:bg-purple-500/10 focus:border-purple-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+          />
+        </TableCell>
+        <TableCell className="py-6 px-8 text-right font-black text-emerald-400 text-lg">{new Intl.NumberFormat("id-ID").format(netMitra)}</TableCell>
+      </TableRow>
+    );
+  },
+  (prevProps, nextProps) => prevProps.row === nextProps.row
+);
 
 export function PotonganTable({ loading, rows, onUpdateField }: PotonganTableProps) {
   const handleTableKeyDown = useCallback(
@@ -80,55 +139,14 @@ export function PotonganTable({ loading, rows, onUpdateField }: PotonganTablePro
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => {
-              const netMitra = row.baseProfit80 - (row.serviceCharge + row.kukuluban + row.tabungan);
-              return (
-                <TableRow key={row.supplierId} className="border-white/5 hover:bg-white/[0.03] transition-all group">
-                  <TableCell className="py-6 px-8">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-black text-white uppercase tracking-tight group-hover:text-rose-400 transition-colors">{row.supplierName}</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {row.noteNumbers.map((n) => (
-                          <span key={n} className="text-[9px] font-bold text-slate-500 bg-white/5 px-1.5 py-0.5 rounded uppercase tracking-tighter">{n}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-bold text-slate-400">{new Intl.NumberFormat("id-ID").format(row.totalCost)}</TableCell>
-                  <TableCell className="text-right">
-                    <Input
-                      type="text"
-                      value={row.serviceCharge === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.serviceCharge)}
-                      placeholder="0"
-                      onChange={(e) => onUpdateField(row.supplierId, "serviceCharge", e.target.value)}
-                      onKeyDown={(e) => handleTableKeyDown(e, "serviceCharge")}
-                      className="bg-slate-950/30 border-white/5 text-right font-black text-rose-400 focus:bg-rose-500/10 focus:border-rose-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Input
-                      type="text"
-                      value={row.kukuluban === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.kukuluban)}
-                      placeholder="0"
-                      onChange={(e) => onUpdateField(row.supplierId, "kukuluban", e.target.value)}
-                      onKeyDown={(e) => handleTableKeyDown(e, "kukuluban")}
-                      className="bg-slate-950/30 border-white/5 text-right font-black text-orange-400 focus:bg-orange-500/10 focus:border-orange-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Input
-                      type="text"
-                      value={row.tabungan === 0 ? "" : new Intl.NumberFormat("id-ID").format(row.tabungan)}
-                      placeholder="0"
-                      onChange={(e) => onUpdateField(row.supplierId, "tabungan", e.target.value)}
-                      onKeyDown={(e) => handleTableKeyDown(e, "tabungan")}
-                      className="bg-slate-950/30 border-white/5 text-right font-black text-purple-400 focus:bg-purple-500/10 focus:border-purple-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
-                    />
-                  </TableCell>
-                  <TableCell className="py-6 px-8 text-right font-black text-emerald-400 text-lg">{new Intl.NumberFormat("id-ID").format(netMitra)}</TableCell>
-                </TableRow>
-              );
-            })
+            rows.map((row) => (
+              <MemoizedRow
+                key={row.supplierId}
+                row={row}
+                onUpdateField={onUpdateField}
+                handleTableKeyDown={handleTableKeyDown}
+              />
+            ))
           )}
         </TableBody>
       </Table>

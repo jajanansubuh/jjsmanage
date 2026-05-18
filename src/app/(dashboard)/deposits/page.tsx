@@ -12,7 +12,6 @@ import { DepositsSupplierSummary } from "@/components/deposits/DepositsSupplierS
 import { DepositsFilters } from "@/components/deposits/DepositsFilters";
 import { DepositsTable } from "@/components/deposits/DepositsTable";
 import { ConfirmValidateDialog } from "@/components/deposits/ConfirmValidateDialog";
-import { PayoutHistoryModal } from "@/components/payout-history-modal";
 
 // Utils
 import { handlePrintDeposits } from "@/components/deposits/DepositsPrintPreview";
@@ -29,7 +28,6 @@ export default function DepositsPage() {
   
   // Modals state
   const [selectedSupplier, setSelectedSupplier] = useState<{ id: string, name: string } | null>(null);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isConfirmAllOpen, setIsConfirmAllOpen] = useState(false);
   const [unvalidatedIds, setUnvalidatedIds] = useState<string[]>([]);
   const [isValidatingAll, setIsValidatingAll] = useState(false);
@@ -153,12 +151,6 @@ export default function DepositsPage() {
     } catch (e) { alert("Kesalahan sistem."); }
   };
 
-  const handleViewDetails = (item: any) => {
-    const s = item.supplier || item;
-    setSelectedSupplier({ id: s.id, name: s.name });
-    setIsHistoryModalOpen(true);
-  };
-
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-0 md:px-0">
       
@@ -169,13 +161,6 @@ export default function DepositsPage() {
         isValidatingAll={isValidatingAll}
         unvalidatedIdsCount={unvalidatedIds.length}
         onConfirm={executeValidateAll}
-      />
-
-      <PayoutHistoryModal
-        isOpen={isHistoryModalOpen}
-        onOpenChange={setIsHistoryModalOpen}
-        supplierId={selectedSupplier?.id}
-        supplierName={selectedSupplier?.name}
       />
 
       {/* Header */}
@@ -216,7 +201,6 @@ export default function DepositsPage() {
         role={role}
         sortConfig={sortConfig}
         onSort={handleSort}
-        onViewDetails={handleViewDetails}
         onValidate={handleValidateSingle}
       />
     </div>

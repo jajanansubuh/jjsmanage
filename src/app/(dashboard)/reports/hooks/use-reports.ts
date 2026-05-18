@@ -9,6 +9,7 @@ export function useReports() {
   const [reports, setReports] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [savings, setSavings] = useState<any[]>([]);
+  const [rawDeductions, setRawDeductions] = useState<any[]>([]);
   
   const [searchTerm, setSearchTerm] = useState("");
   const [payoutSearch, setPayoutSearch] = useState("");
@@ -22,21 +23,24 @@ export function useReports() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [reportsRes, statsRes, payoutsRes, savingsRes] = await Promise.all([
-        fetch("/api/reports?limit=2000"),
+      const [reportsRes, statsRes, payoutsRes, savingsRes, deductionsRes] = await Promise.all([
+        fetch("/api/reports?limit=5000"),
         fetch("/api/stats"),
         fetch("/api/payouts"),
-        fetch("/api/savings")
+        fetch("/api/savings"),
+        fetch("/api/deductions")
       ]);
 
       const reportsData = await reportsRes.json();
       const statsData = await statsRes.json();
       const payoutsData = await payoutsRes.json();
       const savingsData = await savingsRes.json();
+      const deductionsData = await deductionsRes.json();
 
       setReports(Array.isArray(reportsData) ? reportsData : (reportsData.reports || []));
       setUserRole(statsData.role);
       setPayouts(Array.isArray(payoutsData) ? payoutsData : []);
+      setRawDeductions(Array.isArray(deductionsData) ? deductionsData : (deductionsData.reports || []));
 
       if (statsData.role === "SUPPLIER") {
         setSavings(savingsData?.history || []);
@@ -245,7 +249,7 @@ export function useReports() {
   const filteredDeductions = useMemo(() => {
     const groups: Record<string, any> = {};
 
-    reports.forEach(r => {
+    rawDeductions.forEach(r => {
       const hasDeduction = (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0 || (r.tabungan || 0) > 0;
       if (!hasDeduction) return;
 
@@ -297,7 +301,7 @@ export function useReports() {
       }
       return matchSearch && matchDate;
     }).sort((a: any, b: any) => new Date(b.deductionDate || b.date).getTime() - new Date(a.deductionDate || a.date).getTime());
-  }, [reports, deductionSearch, startDate, endDate]);
+  }, [rawDeductions, deductionSearch, startDate, endDate]);
 
   const groupedProductsByNote = useMemo(() => {
     const groups: Record<string, any> = {};

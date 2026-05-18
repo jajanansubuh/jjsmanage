@@ -22,8 +22,12 @@ export function handlePrintDeposits(
   );
 
   const totalPayout = dataToPrint.reduce((sum, item) => sum + item.dailyProfit, 0);
+  const totalMines = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
 
-  const tableRows = dataToPrint.map((item, i) => `
+  const tableRows = dataToPrint.map((item, i) => {
+    const isMinus = item.dailyProfit < 0;
+    const colorStyle = isMinus ? 'color: red;' : '';
+    return `
     <tr>
       <td class="col-no">${i + 1}</td>
       <td class="col-umkm">${item.name}</td>
@@ -31,13 +35,13 @@ export function handlePrintDeposits(
       <td class="col-bank">${item.bankName || '-'}</td>
       <td class="col-rek">${item.accountNumber || '-'}</td>
       <td class="col-total">
-        <div style="display: flex; justify-content: space-between;">
+        <div style="display: flex; justify-content: space-between; ${colorStyle}">
           <span>Rp</span>
           <span>${new Intl.NumberFormat('id-ID').format(item.dailyProfit)}</span>
         </div>
       </td>
     </tr>
-  `).join('');
+  `}).join('');
 
   printWindow.document.write(`
     <html>
@@ -93,9 +97,16 @@ export function handlePrintDeposits(
           </tbody>
         </table>
         <div class="total">
+          <div class="total-container" style="margin-bottom: 10px;">
+            <div class="total-label">Total Mines</div>
+            <div class="total-value" style="color: red;">
+              <span>Rp</span>
+              <span>${new Intl.NumberFormat('id-ID').format(totalMines)}</span>
+            </div>
+          </div>
           <div class="total-container">
             <div class="total-label">Total Seluruhnya</div>
-            <div class="total-value">
+            <div class="total-value" style="${totalPayout < 0 ? 'color: red;' : ''}">
               <span>Rp</span>
               <span>${new Intl.NumberFormat('id-ID').format(totalPayout)}</span>
             </div>

@@ -29,7 +29,7 @@ export function usePayoutsData() {
       setLoading(true);
       try {
         const [res, statsRes] = await Promise.all([
-          fetch(`/api/reports?limit=2000`),
+          fetch(`/api/reports?limit=5000`),
           fetch("/api/stats")
         ]);
         
