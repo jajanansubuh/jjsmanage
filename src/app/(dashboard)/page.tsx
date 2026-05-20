@@ -213,6 +213,22 @@ function DashboardContent() {
     }
   ];
 
+  const getPeriodLabel = () => {
+    if (startDate || endDate) return "vs periode sebelumnya";
+    switch (selectedPeriod) {
+      case "D":
+        return "vs kemarin";
+      case "W":
+        return "vs minggu lalu";
+      case "M":
+        return "vs bulan lalu";
+      case "Y":
+        return "vs tahun lalu";
+      default:
+        return "vs bulan lalu";
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-700 ease-out relative pb-10 overflow-x-hidden">
       {/* Payout History Modal */}
@@ -323,7 +339,9 @@ function DashboardContent() {
                   )}
                   {card.trend}
                 </div>
-                <span className="text-slate-500">vs bulan lalu</span>
+                {card.trend.includes("%") && (
+                  <span className="text-slate-500">{getPeriodLabel()}</span>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -16,24 +16,50 @@ export async function GET(request: Request) {
     const isSupplier = session?.user?.role === "SUPPLIER";
     const supplierId = session?.user?.supplierId;
 
+    let referenceDate = new Date();
+    const latestReport = await prisma.consignmentReport.findFirst({
+      where: isSupplier && supplierId ? { supplierId } : {},
+      orderBy: { date: "desc" },
+      select: { date: true }
+    });
+    if (latestReport && latestReport.date) {
+      referenceDate = new Date(latestReport.date);
+    }
+
     let startDate: Date;
-    let endDate = new Date();
+    let endDate = new Date(referenceDate);
+    if (period !== "custom") {
+      endDate.setHours(23, 59, 59, 999);
+    }
 
     if (period === "day") {
-      startDate = subDays(new Date(), 6);
+      startDate = subDays(referenceDate, 6);
       startDate.setHours(0, 0, 0, 0);
     } else if (period === "week") {
-      startDate = subWeeks(new Date(), 3);
+      startDate = subWeeks(referenceDate, 3);
       startDate = startOfWeek(startDate, { weekStartsOn: 1 });
     } else if (period === "year") {
-      startDate = startOfYear(new Date());
+      startDate = startOfYear(referenceDate);
     } else if (period === "custom" && startParam && endParam) {
       startDate = new Date(startParam);
       startDate.setHours(0, 0, 0, 0);
       endDate = new Date(endParam);
       endDate.setHours(23, 59, 59, 999);
     } else {
-      startDate = startOfYear(new Date()); // fallback
+      startDate = startOfYear(referenceDate); // fallback
+    }
+
+    let cardStartDate = startDate;
+    let cardEndDate = endDate;
+
+    if (period === "day") {
+      const targetDayStart = new Date(referenceDate);
+      targetDayStart.setHours(0, 0, 0, 0);
+      const targetDayEnd = new Date(referenceDate);
+      targetDayEnd.setHours(23, 59, 59, 999);
+
+      cardStartDate = targetDayStart;
+      cardEndDate = targetDayEnd;
     }
 
     const dateFilter = {
@@ -46,9 +72,17 @@ export async function GET(request: Request) {
       baseWhere.supplierId = supplierId;
     }
 
+    const cardWhere: any = {
+      ...baseWhere,
+      date: {
+        gte: cardStartDate,
+        lte: cardEndDate
+      }
+    };
+
     // 1. Agregasi Total Revenue & Profit
     const totals = await prisma.consignmentReport.aggregate({
-      where: baseWhere,
+      where: cardWhere,
       _sum: {
         revenue: true,
         profit20: true,
@@ -72,7 +106,7 @@ export async function GET(request: Request) {
       totalCashiers = await prisma.cashier.count();
     } else {
       const reports = await prisma.consignmentReport.findMany({
-        where: baseWhere,
+        where: cardWhere,
         select: { id: true, noteNumber: true }
       });
       const uniqueNotes = new Set(reports.map(r => r.noteNumber || r.id));
@@ -191,15 +225,24 @@ export async function GET(request: Request) {
     }
 
     // 5. Calculate Previous Period for Comparison
-    const duration = endDate.getTime() - startDate.getTime();
-    const prevEndDate = new Date(startDate.getTime() - 1);
-    const prevStartDate = new Date(prevEndDate.getTime() - duration);
+    let prevCardStartDate: Date;
+    let prevCardEndDate: Date;
+
+    if (period === "day") {
+      prevCardStartDate = subDays(cardStartDate, 1);
+      prevCardEndDate = new Date(prevCardStartDate);
+      prevCardEndDate.setHours(23, 59, 59, 999);
+    } else {
+      const duration = endDate.getTime() - startDate.getTime();
+      prevCardEndDate = new Date(startDate.getTime() - 1);
+      prevCardStartDate = new Date(prevCardEndDate.getTime() - duration);
+    }
 
     const prevWhere = {
       ...baseWhere,
       date: {
-        gte: prevStartDate,
-        lte: prevEndDate,
+        gte: prevCardStartDate,
+        lte: prevCardEndDate,
       }
     };
 

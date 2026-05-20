@@ -186,29 +186,45 @@ export function Sidebar({
           </nav>
 
           {/* Footer Profile - Fixed at bottom */}
-          <div className="p-4 mt-auto border-t border-white/5 bg-slate-900/40 backdrop-blur-md">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+          <div className="p-3 mt-auto border-t border-white/5 bg-slate-900/40 backdrop-blur-md">
+            <div className="p-3 rounded-2xl bg-white/5 border border-white/5 space-y-2.5">
               <Link
                 href={role === "SUPPLIER" ? "/" : "/settings"}
-                className="flex items-center gap-3 group"
+                className="flex items-center gap-2.5 group"
               >
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-500 to-purple-500 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-blue-500/20" />
-                  <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-slate-900 rounded-full" />
+                  <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-blue-500 to-purple-500 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-blue-500/20" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border border-slate-900 rounded-full" />
                 </div>
                 <div className="text-left flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">{name}</p>
-                  <p className="text-[10px] uppercase tracking-wider font-black text-blue-400/70">{role === "SUPPLIER" ? "Supplier" : "Master Admin"}</p>
+                  <p className="text-xs font-bold text-white truncate">{name}</p>
+                  <p className="text-[9px] uppercase tracking-wider font-black text-blue-400/70">{role === "SUPPLIER" ? "Supplier" : "Master Admin"}</p>
                 </div>
               </Link>
 
               <button
                 onClick={() => setIsLogoutDialogOpen(true)}
-                className="flex items-center justify-center w-full gap-2 px-4 py-2.5 text-xs font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
+                className="flex items-center justify-center w-full gap-2 px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
               >
-                <LogOut className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                <LogOut className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                 Keluar
               </button>
+
+              {/* Version and Copyright Info */}
+              <div className="!mt-2 pt-2 border-t border-white/5 text-center text-[8.5px] text-slate-500/50 space-y-0.5 whitespace-nowrap">
+                <p>Versi 0.1.0</p>
+                <p>
+                  &copy; 2026 jjsmanage &bull; Powered by{" "}
+                  <a
+                    href="https://www.instagram.com/chikalarc?igsh=c3NmcWkyc3p3a2lw"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400 hover:from-blue-300 hover:to-purple-300 transition-all duration-300 underline decoration-purple-400/20"
+                  >
+                    ndhvbase
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </div>

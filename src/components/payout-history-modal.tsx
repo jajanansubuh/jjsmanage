@@ -16,10 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+
 import { 
   History, Clock, FileText, TrendingUp, 
   ChevronDown, ChevronUp, Scissors, Barcode, 
-  PiggyBank, Wrench 
+  Wrench 
 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
@@ -325,7 +326,7 @@ export function PayoutHistoryModal({
                                   
                                   {/* Extra context */}
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-500/10 text-slate-400">
-                                    HPP: {formatCurrency(t.cost)}
+                                    COST: {formatCurrency(t.cost)}
                                   </span>
                                 </div>
                                 {t.notes && (

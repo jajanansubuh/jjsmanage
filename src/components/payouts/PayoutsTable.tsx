@@ -1,3 +1,4 @@
+
 import { Fragment, useState } from "react";
 import { 
   ArrowUpDown, 
@@ -7,7 +8,7 @@ import {
   Scissors, 
   Barcode, 
   Wrench, 
-  PiggyBank, 
+  Coins, 
   FileText 
 } from "lucide-react";
 import { format } from "date-fns";
@@ -115,7 +116,7 @@ export function PayoutsTable({
                         <DeductionBadge icon={Barcode} label="Barcode" value={t.barcode} colorClass="bg-rose-500/10 border-rose-500/20 text-rose-400" />
                         <DeductionBadge icon={Wrench} label="S. Charge" value={t.serviceCharge || 0} colorClass="bg-orange-500/10 border-orange-500/20 text-orange-400" />
                         <DeductionBadge icon={Scissors} label="Kukuluban" value={t.kukuluban || 0} colorClass="bg-purple-500/10 border-purple-500/20 text-purple-400" />
-                        <DeductionBadge icon={PiggyBank} label="Tabungan" value={t.tabungan || 0} colorClass="bg-sky-500/10 border-sky-500/20 text-sky-400" />
+                        <DeductionBadge icon={Coins} label="Tabungan" value={t.tabungan || 0} colorClass="bg-sky-500/10 border-sky-500/20 text-sky-400" />
                       </div>
                     </div>
                   )}
@@ -252,10 +253,10 @@ function PayoutsTableRow({ t, userRole, isExpanded, onToggle, hasDeductions }: {
                 <DeductionBadge icon={Barcode} label="Barcode" value={t.barcode} colorClass="bg-rose-500/10 border-rose-500/20 text-rose-400" />
                 <DeductionBadge icon={Wrench} label="Service Charge" value={t.serviceCharge || 0} colorClass="bg-orange-500/10 border-orange-500/20 text-orange-400" />
                 <DeductionBadge icon={Scissors} label="Kukuluban" value={t.kukuluban || 0} colorClass="bg-purple-500/10 border-purple-500/20 text-purple-400" />
-                <DeductionBadge icon={PiggyBank} label="Tabungan" value={t.tabungan || 0} colorClass="bg-sky-500/10 border-sky-500/20 text-sky-400" />
+                <DeductionBadge icon={Coins} label="Tabungan" value={t.tabungan || 0} colorClass="bg-sky-500/10 border-sky-500/20 text-sky-400" />
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl border bg-slate-500/10 border-slate-500/20 text-slate-400">
                   <FileText className="w-3.5 h-3.5 shrink-0" />
-                  <div className="flex flex-col"><span className="text-[9px] font-black uppercase tracking-widest opacity-60">HPP</span><span className="text-sm font-black tracking-tight">{formatCurrency(t.cost)}</span></div>
+                  <div className="flex flex-col"><span className="text-[9px] font-black uppercase tracking-widest opacity-60">COST</span><span className="text-sm font-black tracking-tight">{formatCurrency(t.cost)}</span></div>
                 </div>
               </div>
             </div>
