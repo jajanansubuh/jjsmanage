@@ -128,6 +128,11 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
+    const session = await getSession();
+    if (!session || session.user?.role?.toUpperCase() !== "ADMIN") {
+      return NextResponse.json({ error: "Akses ditolak: Hanya Admin yang dapat mengedit produk" }, { status: 403 });
+    }
+
     const { id, name, code, supplierId } = await req.json();
     if (!id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
 

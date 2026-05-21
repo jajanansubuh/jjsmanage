@@ -42,7 +42,9 @@ export function CetakProductSearch({
                 >
                   <div>
                     <p className="font-bold text-white">{product.name}</p>
-                    <p className="text-xs text-slate-500 font-mono">{product.code || "Tanpa Kode"}</p>
+                    <p className="text-xs text-slate-500 font-mono">
+                      {product.code || "Tanpa Kode"} • {product.supplierName || "Tanpa Suplier"}
+                    </p>
                   </div>
                   <Package className="w-4 h-4 text-blue-400" />
                 </button>

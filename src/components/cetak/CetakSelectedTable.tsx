@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,6 +10,58 @@ interface CetakSelectedTableProps {
   onUpdateQty: (id: string, qty: number) => void;
   onRemoveItem: (id: string) => void;
   userRole: string | null;
+}
+
+function SelectedQtyInput({
+  value,
+  onChange,
+  className
+}: {
+  value: number;
+  onChange: (qty: number) => void;
+  className?: string;
+}) {
+  const [inputValue, setInputValue] = useState<string>(value.toString());
+
+  useEffect(() => {
+    setInputValue(value.toString());
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    const parsed = parseInt(val);
+    if (!isNaN(parsed) && parsed > 0) {
+      onChange(parsed);
+    }
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(inputValue);
+    if (isNaN(parsed) || parsed < 1) {
+      setInputValue("1");
+      onChange(1);
+    } else {
+      setInputValue(parsed.toString());
+      onChange(parsed);
+    }
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+  };
+
+  return (
+    <Input
+      type="number"
+      min="1"
+      value={inputValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      className={className}
+    />
+  );
 }
 
 export function CetakSelectedTable({
@@ -52,11 +105,9 @@ export function CetakSelectedTable({
                     </TableCell>
                     <TableCell className="py-5 px-8">
                       <div className="flex justify-center">
-                        <Input
-                          type="number"
-                          min="1"
+                        <SelectedQtyInput
                           value={item.qty}
-                          onChange={(e) => onUpdateQty(item.id, parseInt(e.target.value) || 1)}
+                          onChange={(qty) => onUpdateQty(item.id, qty)}
                           className="w-20 h-10 bg-slate-950/50 border-white/10 rounded-xl text-center font-bold text-white focus:ring-blue-500/20"
                         />
                       </div>

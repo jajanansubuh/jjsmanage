@@ -39,7 +39,7 @@ export function useCetakData() {
         const data = await res.json();
         const map: Record<string, string> = {};
         data.forEach((p: any) => {
-          map[normalizeName(p.name)] = p.code || "";
+          map[`${normalizeName(p.name)}_${p.supplierId || 'null'}`] = p.code || "";
         });
         setCodeLookupMap(map);
         return map;
@@ -66,16 +66,17 @@ export function useCetakData() {
           const normalizedName = normalizeName(p.name);
           if (!normalizedName) return;
 
-          const rawCode = p.code || lookup[normalizedName] || "";
+          const lookupKey = `${normalizedName}_${p.supplierId || 'null'}`;
+          const rawCode = p.code || lookup[lookupKey] || "";
           const code = String(rawCode).trim();
           
-          // Use ONLY normalized name as key to ensure no duplicates in search
-          const key = normalizedName;
+          // Use normalized name AND supplierId as key to ensure separate products per supplier
+          const key = lookupKey;
           
           if (!finalProductsMap.has(key)) {
             finalProductsMap.set(key, {
               id: p.id,
-              name: normalizedName,
+              name: p.name,
               code: code || null,
               supplierId: p.supplierId || null,
               supplierName: p.supplier?.name || "Tanpa Suplier"
@@ -112,10 +113,13 @@ export function useCetakData() {
       if (res.ok) {
         const data = await res.json();
         const lookup = lookupOverride || codeLookupMap;
-        const enriched = data.map((item: any) => ({
-          ...item,
-          code: item.code || lookup[normalizeName(item.name)] || null,
-        }));
+        const enriched = data.map((item: any) => {
+          const lookupKey = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
+          return {
+            ...item,
+            code: item.code || lookup[lookupKey] || null,
+          };
+        });
         enriched.sort((a: any, b: any) => {
           const sA = (a.supplier?.name || "").toUpperCase();
           const sB = (b.supplier?.name || "").toUpperCase();

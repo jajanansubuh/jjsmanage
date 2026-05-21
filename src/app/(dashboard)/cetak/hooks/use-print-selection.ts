@@ -47,7 +47,8 @@ export function usePrintSelection(initialRole: string | null) {
         toast.info("Barang sudah ada di daftar cetak");
         return prev;
       }
-      const code = item.code || codeLookupMap[normalizeName(item.name)] || null;
+      const lookupKey = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
+      const code = item.code || codeLookupMap[lookupKey] || null;
       return [...prev, { 
         id: item.id, 
         name: item.name, 

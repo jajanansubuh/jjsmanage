@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Clock, History, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,59 @@ interface CetakQueueListProps {
   onAddFromQueue: (item: any) => void;
   onMarkAsDone: (id: string) => void;
   onUpdateQty?: (id: string, qty: number) => void;
+}
+
+function QueueQtyInput({
+  value,
+  onChange,
+  className
+}: {
+  value: number;
+  onChange: (qty: number) => void;
+  className?: string;
+}) {
+  const [inputValue, setInputValue] = useState<string>(value.toString());
+
+  useEffect(() => {
+    setInputValue(value.toString());
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setInputValue(val);
+    const parsed = parseInt(val);
+    if (!isNaN(parsed) && parsed > 0) {
+      onChange(parsed);
+    }
+  };
+
+  const handleBlur = () => {
+    const parsed = parseInt(inputValue);
+    if (isNaN(parsed) || parsed < 1) {
+      setInputValue("1");
+      onChange(1);
+    } else {
+      setInputValue(parsed.toString());
+      onChange(parsed);
+    }
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
+  };
+
+  return (
+    <input
+      type="number"
+      min="1"
+      value={inputValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      onClick={(e) => e.stopPropagation()}
+      className={className}
+    />
+  );
 }
 
 export function CetakQueueList({
@@ -65,13 +119,10 @@ export function CetakQueueList({
                 </div>
                 <div className="flex flex-col items-end gap-2">
                   {onUpdateQty ? (
-                    <input
-                      type="number"
-                      min="1"
-                      className="w-16 h-8 bg-white/5 border border-white/10 rounded-lg text-center font-black text-white text-xs focus:outline-none focus:border-purple-500/50"
+                    <QueueQtyInput
                       value={item.qty}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={(e) => onUpdateQty(item.id, parseInt(e.target.value) || 1)}
+                      onChange={(qty) => onUpdateQty(item.id, qty)}
+                      className="w-16 h-8 bg-white/5 border border-white/10 rounded-lg text-center font-black text-white text-xs focus:outline-none focus:border-purple-500/50"
                     />
                   ) : (
                     <div className="bg-white/5 px-2 py-1 rounded-lg font-black text-white text-xs">x{item.qty}</div>

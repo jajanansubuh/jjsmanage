@@ -62,7 +62,7 @@ export default function CetakLabelPage() {
     // Final fallback deduplication to ensure no double products in UI
     const seen = new Set<string>();
     return filtered.filter(p => {
-      const key = normalizeName(p.name);
+      const key = `${normalizeName(p.name)}_${p.supplierId || 'null'}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -79,7 +79,8 @@ export default function CetakLabelPage() {
         body: JSON.stringify(selectedItems.map(item => ({
           name: item.name,
           code: item.code,
-          qty: item.qty
+          qty: item.qty,
+          supplierId: item.supplierId
         })))
       });
       if (res.ok) {
@@ -102,8 +103,9 @@ export default function CetakLabelPage() {
     try {
       const dataToExport: any[] = [];
       queueItems.forEach(item => {
+        const lookupKey = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
         const row = {
-          "Kode Barang": item.code || codeLookupMap[normalizeName(item.name)] || "",
+          "Kode Barang": item.code || codeLookupMap[lookupKey] || "",
           "Nama Barang": item.name,
           "Suplier": item.supplier?.name || "Tanpa Suplier",
           "Qty": 1,

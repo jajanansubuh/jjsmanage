@@ -1,15 +1,21 @@
-import { ArrowUpDown, History } from "lucide-react";
+import { useState } from "react";
+import { ArrowUpDown, History, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AggregatedProduct } from "@/app/(dashboard)/produk/hooks/use-products-data";
 import { cn } from "@/lib/utils";
+import { EditProductCodeDialog } from "./EditProductCodeDialog";
 
 interface ProductTableProps {
   products: AggregatedProduct[];
   onSort: (key: keyof AggregatedProduct) => void;
+  isAdmin?: boolean;
+  suppliers?: { id: string; name: string }[];
+  onSuccess?: () => void;
 }
 
-export function ProductTable({ products, onSort }: ProductTableProps) {
+export function ProductTable({ products, onSort, isAdmin, suppliers, onSuccess }: ProductTableProps) {
+  const [editingProduct, setEditingProduct] = useState<AggregatedProduct | null>(null);
   return (
     <div className="space-y-4 px-4 md:px-0">
       <div className="flex items-center gap-3">
@@ -44,18 +50,25 @@ export function ProductTable({ products, onSort }: ProductTableProps) {
               </TableHead>
               <TableHead className="text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Reture</TableHead>
               <TableHead className="text-right px-8 py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Rasio</TableHead>
+              {isAdmin && <TableHead className="text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-64 text-center">
+                <TableCell colSpan={isAdmin ? 9 : 8} className="h-64 text-center">
                   <p className="text-slate-500 font-medium italic">Belum ada data produk dalam periode ini.</p>
                 </TableCell>
               </TableRow>
             ) : (
               products.map((product, idx) => (
-                <ProductTableRow key={idx} product={product} index={idx} />
+                <ProductTableRow 
+                  key={idx} 
+                  product={product} 
+                  index={idx} 
+                  isAdmin={isAdmin}
+                  onEdit={setEditingProduct}
+                />
               ))
             )}
           </TableBody>
@@ -75,7 +88,17 @@ export function ProductTable({ products, onSort }: ProductTableProps) {
               <div key={idx} className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-5 border border-white/5 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{product.code || "TANPA KODE"}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{product.code || "TANPA KODE"}</p>
+                      {isAdmin && (
+                        <button
+                          onClick={() => setEditingProduct(product)}
+                          className="p-1 rounded-md bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
                     <h4 className="font-bold text-white leading-tight">{product.name}</h4>
                     <p className="text-xs text-slate-500 font-medium uppercase tracking-tighter">{product.supplierName}</p>
                   </div>
@@ -103,11 +126,29 @@ export function ProductTable({ products, onSort }: ProductTableProps) {
           })
         )}
       </div>
+
+      <EditProductCodeDialog
+        isOpen={!!editingProduct}
+        onOpenChange={(open) => !open && setEditingProduct(null)}
+        product={editingProduct}
+        suppliers={suppliers || []}
+        onSuccess={() => onSuccess?.()}
+      />
     </div>
   );
 }
 
-function ProductTableRow({ product, index }: { product: AggregatedProduct; index: number }) {
+function ProductTableRow({
+  product,
+  index,
+  isAdmin,
+  onEdit
+}: {
+  product: AggregatedProduct;
+  index: number;
+  isAdmin?: boolean;
+  onEdit?: (product: AggregatedProduct) => void;
+}) {
   const sellRate = product.totalBeli > 0 ? ((product.totalJual / product.totalBeli) * 100).toFixed(1) : "0";
   
   return (
@@ -133,6 +174,18 @@ function ProductTableRow({ product, index }: { product: AggregatedProduct; index
           </div>
         </div>
       </TableCell>
+      {isAdmin && (
+        <TableCell className="text-center py-5">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onEdit?.(product)}
+            className="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 hover:text-blue-300 transition-all"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+          </Button>
+        </TableCell>
+      )}
     </TableRow>
   );
 }

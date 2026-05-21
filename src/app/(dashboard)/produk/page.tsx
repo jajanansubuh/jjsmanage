@@ -153,6 +153,9 @@ export default function ProductsPage() {
       <ProductTable 
         products={filteredProducts}
         onSort={handleSort}
+        isAdmin={role?.toUpperCase() === "ADMIN"}
+        suppliers={suppliers}
+        onSuccess={refresh}
       />
 
       <AddProductDialog 

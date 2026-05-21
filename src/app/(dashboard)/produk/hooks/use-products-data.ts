@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 
 export interface AggregatedProduct {
+  id?: string;
   name: string;
   code?: string;
   supplierId?: string;
@@ -74,11 +75,12 @@ export function useProductsData(dateRange: DateRange | undefined) {
       const reports = reportsData.reports || [];
       const masterData = masterRes.ok ? await masterRes.json() : [];
 
-      const masterMap: Record<string, { name: string; code: string; supplierName: string; supplierId: string }> = {};
+      const masterMap: Record<string, { id: string; name: string; code: string; supplierName: string; supplierId: string }> = {};
       masterData.forEach((p: any) => {
         // Gunakan kunci kombinasi Nama + SupplierId agar tidak tertukar
         const key = `${normalizeName(p.name)}_${p.supplierId || 'null'}`;
         masterMap[key] = {
+          id: p.id,
           name: p.name,
           code: p.code || "",
           supplierName: p.supplier?.name || "Tanpa Suplier",
@@ -90,6 +92,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       reports.forEach((report: any) => {
         const items = report.items || [];
         const reportSupplierName = report.supplier?.name || "Tanpa Suplier";
+        const reportSupplierId = report.supplierId;
         if (Array.isArray(items)) {
           items.forEach((item: any) => {
             const rawName = (item.name || '').trim();
@@ -97,8 +100,10 @@ export function useProductsData(dateRange: DateRange | undefined) {
             const name = normalizeName(rawName);
             if (!name) return;
 
-            if (productMap.has(name)) {
-              const existing = productMap.get(name)!;
+            const productKey = `${name}_${reportSupplierId || 'null'}`;
+
+            if (productMap.has(productKey)) {
+              const existing = productMap.get(productKey)!;
               existing.totalBeli += Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0);
               existing.totalJual += Number(item.qtyJual ?? item.jual ?? 0);
               existing.totalRetureJual += Number(item.retureJual ?? item.retur ?? 0);
@@ -107,8 +112,9 @@ export function useProductsData(dateRange: DateRange | undefined) {
                 existing.supplierName = reportSupplierName;
               }
             } else {
-              productMap.set(name, {
+              productMap.set(productKey, {
                 name,
+                supplierId: reportSupplierId || undefined,
                 supplierName: reportSupplierName,
                 totalBeli: Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0),
                 totalJual: Number(item.qtyJual ?? item.jual ?? 0),
@@ -128,9 +134,10 @@ export function useProductsData(dateRange: DateRange | undefined) {
         
         return {
           ...p,
+          id: master?.id || "",
           code: master?.code || "",
           supplierName: master?.supplierName && master.supplierName !== "Tanpa Suplier" ? master.supplierName : p.supplierName,
-          supplierId: master?.supplierId || ""
+          supplierId: master?.supplierId || p.supplierId || ""
         };
       });
 
