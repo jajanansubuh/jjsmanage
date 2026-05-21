@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     // Product codes are catalog identifiers, not sensitive financial data
     if (forLookup) {
       const products = await prisma.product.findMany({
-        select: { name: true, code: true, supplierId: true, supplier: { select: { id: true, name: true } } },
+        select: { id: true, name: true, code: true, supplierId: true, supplier: { select: { id: true, name: true } } },
         orderBy: { name: "asc" },
       });
       return NextResponse.json(products);
@@ -154,6 +154,11 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
+    const session = await getSession();
+    if (!session || session.user?.role?.toUpperCase() !== "ADMIN") {
+      return NextResponse.json({ error: "Akses ditolak: Hanya Admin yang dapat menghapus produk" }, { status: 403 });
+    }
+
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
 

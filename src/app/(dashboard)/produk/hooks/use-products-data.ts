@@ -30,6 +30,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
   const [allMasterProducts, setAllMasterProducts] = useState<any[]>([]);
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
   const [role, setRole] = useState<string | null>(null);
+  const [userSupplierId, setUserSupplierId] = useState<string | null>(null);
 
   const fetchRole = async () => {
     try {
@@ -37,6 +38,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       if (res.ok) {
         const data = await res.json();
         setRole(data.role);
+        setUserSupplierId(data.supplierId);
       }
     } catch (err) {}
   };
@@ -75,10 +77,25 @@ export function useProductsData(dateRange: DateRange | undefined) {
       const reports = reportsData.reports || [];
       const masterData = masterRes.ok ? await masterRes.json() : [];
 
+      let currentRole = role;
+      let currentSupplierId = userSupplierId;
+      if (!currentRole) {
+        try {
+          const res = await fetch("/api/auth/role");
+          if (res.ok) {
+            const data = await res.json();
+            currentRole = data.role;
+            currentSupplierId = data.supplierId;
+            setRole(data.role);
+            setUserSupplierId(data.supplierId);
+          }
+        } catch (err) {}
+      }
+
       const masterMap: Record<string, { id: string; name: string; code: string; supplierName: string; supplierId: string }> = {};
       masterData.forEach((p: any) => {
-        // Gunakan kunci kombinasi Nama + SupplierId agar tidak tertukar
-        const key = `${normalizeName(p.name)}_${p.supplierId || 'null'}`;
+        // Gunakan hanya nama produk sebagai kunci utama
+        const key = normalizeName(p.name);
         masterMap[key] = {
           id: p.id,
           name: p.name,
@@ -100,7 +117,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
             const name = normalizeName(rawName);
             if (!name) return;
 
-            const productKey = `${name}_${reportSupplierId || 'null'}`;
+            const productKey = name;
 
             if (productMap.has(productKey)) {
               const existing = productMap.get(productKey)!;
@@ -108,8 +125,9 @@ export function useProductsData(dateRange: DateRange | undefined) {
               existing.totalJual += Number(item.qtyJual ?? item.jual ?? 0);
               existing.totalRetureJual += Number(item.retureJual ?? item.retur ?? 0);
               existing.transactions += 1;
-              if (existing.supplierName === "Tanpa Suplier") {
+              if (existing.supplierName === "Tanpa Suplier" && reportSupplierName !== "Tanpa Suplier") {
                 existing.supplierName = reportSupplierName;
+                existing.supplierId = reportSupplierId;
               }
             } else {
               productMap.set(productKey, {
@@ -126,20 +144,48 @@ export function useProductsData(dateRange: DateRange | undefined) {
         }
       });
 
-      const productsList = Array.from(productMap.values()).map(p => {
+      // Tambahkan produk dari master data yang belum ter-record di transaksi/reports
+      masterData.forEach((p: any) => {
+        const normName = normalizeName(p.name);
+        const key = normName;
+
+        // Saring agar supplier hanya melihat produk suplier itu sendiri
+        if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId && p.supplierId !== currentSupplierId) {
+          return;
+        }
+
+        if (!productMap.has(key)) {
+          productMap.set(key, {
+            id: p.id,
+            name: normName,
+            code: p.code || "",
+            supplierId: p.supplierId || undefined,
+            supplierName: p.supplier?.name || "Tanpa Suplier",
+            totalBeli: 0,
+            totalJual: 0,
+            totalRetureJual: 0,
+            transactions: 0
+          });
+        }
+      });
+
+      let productsList = Array.from(productMap.values()).map(p => {
         const normalizedName = normalizeName(p.name);
-        // Cari dengan kunci kombinasi
-        const key = `${normalizedName}_${p.supplierId || 'null'}`;
-        const master = masterMap[key] || Object.values(masterMap).find(m => normalizeName(m.supplierName) === normalizeName(p.supplierName) && normalizeName(m.name) === normalizedName);
+        const key = normalizedName;
+        const master = masterMap[key];
         
         return {
           ...p,
-          id: master?.id || "",
-          code: master?.code || "",
+          id: master?.id || p.id || "",
+          code: master?.code || p.code || "",
           supplierName: master?.supplierName && master.supplierName !== "Tanpa Suplier" ? master.supplierName : p.supplierName,
           supplierId: master?.supplierId || p.supplierId || ""
         };
       });
+
+      if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId) {
+        productsList = productsList.filter(p => p.supplierId === currentSupplierId);
+      }
 
       setProducts(productsList);
       setAllMasterProducts(masterData);

@@ -66,6 +66,9 @@ export function useCetakData() {
           const normalizedName = normalizeName(p.name);
           if (!normalizedName) return;
 
+          // Hapus produk yang tidak memiliki suplier
+          if (!p.supplierId || p.supplierId.trim() === "") return;
+
           const lookupKey = `${normalizedName}_${p.supplierId || 'null'}`;
           const rawCode = p.code || lookup[lookupKey] || "";
           const code = String(rawCode).trim();
@@ -113,13 +116,17 @@ export function useCetakData() {
       if (res.ok) {
         const data = await res.json();
         const lookup = lookupOverride || codeLookupMap;
-        const enriched = data.map((item: any) => {
+        let enriched = data.map((item: any) => {
           const lookupKey = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
           return {
             ...item,
             code: item.code || lookup[lookupKey] || null,
           };
         });
+        
+        // Hapus item antrian yang tidak memiliki suplier
+        enriched = enriched.filter((item: any) => item.supplierId && item.supplierId.trim() !== "");
+
         enriched.sort((a: any, b: any) => {
           const sA = (a.supplier?.name || "").toUpperCase();
           const sB = (b.supplier?.name || "").toUpperCase();
