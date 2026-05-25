@@ -97,11 +97,6 @@ export default function UserManagement() {
     permissions: [] as string[]
   });
 
-  useEffect(() => {
-    fetchUsers();
-    fetchSuppliers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       const res = await fetch("/api/users");
@@ -127,6 +122,11 @@ export default function UserManagement() {
       console.error("Failed to fetch suppliers");
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchSuppliers();
+  }, []);
 
   const handleOpenAdd = () => {
     setEditingUser(null);

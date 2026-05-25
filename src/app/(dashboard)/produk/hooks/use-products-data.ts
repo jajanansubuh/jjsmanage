@@ -94,8 +94,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
 
       const masterMap: Record<string, { id: string; name: string; code: string; supplierName: string; supplierId: string }> = {};
       masterData.forEach((p: any) => {
-        // Gunakan hanya nama produk sebagai kunci utama
-        const key = normalizeName(p.name);
+        const key = `${normalizeName(p.name)}_${p.supplierId || "null"}`;
         masterMap[key] = {
           id: p.id,
           name: p.name,
@@ -117,7 +116,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
             const name = normalizeName(rawName);
             if (!name) return;
 
-            const productKey = name;
+            const productKey = `${name}_${reportSupplierId || "null"}`;
 
             if (productMap.has(productKey)) {
               const existing = productMap.get(productKey)!;
@@ -125,10 +124,6 @@ export function useProductsData(dateRange: DateRange | undefined) {
               existing.totalJual += Number(item.qtyJual ?? item.jual ?? 0);
               existing.totalRetureJual += Number(item.retureJual ?? item.retur ?? 0);
               existing.transactions += 1;
-              if (existing.supplierName === "Tanpa Suplier" && reportSupplierName !== "Tanpa Suplier") {
-                existing.supplierName = reportSupplierName;
-                existing.supplierId = reportSupplierId;
-              }
             } else {
               productMap.set(productKey, {
                 name,
@@ -147,7 +142,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       // Tambahkan produk dari master data yang belum ter-record di transaksi/reports
       masterData.forEach((p: any) => {
         const normName = normalizeName(p.name);
-        const key = normName;
+        const key = `${normName}_${p.supplierId || "null"}`;
 
         // Saring agar supplier hanya melihat produk suplier itu sendiri
         if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId && p.supplierId !== currentSupplierId) {
@@ -171,17 +166,31 @@ export function useProductsData(dateRange: DateRange | undefined) {
 
       let productsList = Array.from(productMap.values()).map(p => {
         const normalizedName = normalizeName(p.name);
-        const key = normalizedName;
+        const key = `${normalizedName}_${p.supplierId || "null"}`;
         const master = masterMap[key];
         
         return {
           ...p,
           id: master?.id || p.id || "",
           code: master?.code || p.code || "",
-          supplierName: master?.supplierName && master.supplierName !== "Tanpa Suplier" ? master.supplierName : p.supplierName,
+          supplierName: master?.supplierName && master?.supplierName !== "Tanpa Suplier" ? master.supplierName : p.supplierName,
           supplierId: master?.supplierId || p.supplierId || ""
         };
       });
+
+      const isCjrSalad = (p: AggregatedProduct) => {
+        const supplierLabel = String(p.supplierName || "").trim().toUpperCase();
+        return supplierLabel === "CJR" && normalizeName(p.name).includes("SALAD");
+      };
+
+      productsList = productsList.filter(p => !isCjrSalad(p));
+
+      const supplierProductNames = new Set(
+        productsList
+          .filter(p => p.supplierId)
+          .map(p => normalizeName(p.name))
+      );
+      productsList = productsList.filter(p => p.supplierId || !supplierProductNames.has(normalizeName(p.name)));
 
       if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId) {
         productsList = productsList.filter(p => p.supplierId === currentSupplierId);

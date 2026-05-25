@@ -37,7 +37,7 @@ export default function DepositsPage() {
 
   // Filtering and Sorting
   const filteredAndSortedData = useMemo(() => {
-    let result = [...data].filter((s) => {
+    const result = [...data].filter((s) => {
       const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (s.ownerName && s.ownerName.toLowerCase().includes(searchTerm.toLowerCase()));
 

@@ -1,10 +1,11 @@
-import { Download, Upload, PlusCircle } from "lucide-react";
+import { Download, Upload, PlusCircle, GitMerge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProductHeaderProps {
   onExport: () => void;
   onImport: () => void;
   onAdd: () => void;
+  onMerge?: () => void;
   isExporting: boolean;
   userRole?: string | null;
 }
@@ -13,6 +14,7 @@ export function ProductHeader({
   onExport,
   onImport,
   onAdd,
+  onMerge,
   isExporting,
   userRole
 }: ProductHeaderProps) {
@@ -44,6 +46,16 @@ export function ProductHeader({
             <Upload className="w-4 h-4 text-purple-400" />
             <span>Import</span>
           </Button>
+          {onMerge && (
+            <Button
+              variant="outline"
+              className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
+              onClick={onMerge}
+            >
+              <GitMerge className="w-4 h-4 text-amber-400" />
+              <span>Gabung Produk</span>
+            </Button>
+          )}
           <Button
             className="h-11 md:h-12 px-4 md:px-6 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white gap-2 transition-all w-full md:w-auto text-xs md:text-sm font-black"
             onClick={onAdd}

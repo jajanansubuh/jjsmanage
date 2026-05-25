@@ -294,7 +294,7 @@ function TransactionsPageContent() {
         };
 
         data.forEach(row => {
-          let rawName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Nama UMKM", "UMKM", "Penjual", "Nama") || "").toString().trim();
+          const rawName = (findValue(row, "Nama Supl", "Suplier", "Supplier", "Nama UMKM", "UMKM", "Penjual", "Nama") || "").toString().trim();
           if (!rawName) return;
 
           const normalizedImportName = normalize(rawName);

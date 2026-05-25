@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 interface ImportProductDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  products: any[];
   suppliers: { id: string; name: string }[];
   onSuccess: () => void;
 }
@@ -17,7 +16,6 @@ interface ImportProductDialogProps {
 export function ImportProductDialog({
   isOpen,
   onOpenChange,
-  products,
   suppliers,
   onSuccess
 }: ImportProductDialogProps) {
@@ -42,8 +40,6 @@ export function ImportProductDialog({
           const code = row["Kode Barang"] || row["code"] || row["Kode"];
           const supplierName = row["Suplier"] || row["Supplier"] || row["suplier"] || row["supplier"];
           
-          const normalizedInputName = normalizeName(name?.toString());
-          
           // 1. Try to find supplierId from "Suplier" column
           let targetSupplierId = null;
           if (supplierName) {
@@ -54,12 +50,6 @@ export function ImportProductDialog({
             }
           }
 
-          // 2. Fallback to existing product's supplier if not found via column
-          if (!targetSupplierId) {
-            const existingProduct = products.find(p => normalizeName(p.name) === normalizedInputName);
-            targetSupplierId = existingProduct?.supplierId || null;
-          }
-          
           return {
             name: name?.toString().toUpperCase(),
             code: code?.toString() || "",

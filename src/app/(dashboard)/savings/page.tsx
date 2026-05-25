@@ -13,6 +13,7 @@ import {
   ArrowUpDown,
   TrendingUp,
   Search,
+  ChevronLeft,
   ChevronRight,
   Wallet,
   User as UserIcon,
@@ -45,6 +46,8 @@ export default function SavingsPage() {
   const [supplierData, setSupplierData] = useState<{ total: number; history: SavingsDetail[] } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [historyPage, setHistoryPage] = useState(1);
+  const historyPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,7 +95,7 @@ export default function SavingsPage() {
   const filteredAdminData = useMemo(() => {
     if (!Array.isArray(adminData)) return [];
 
-    let result = [...adminData].filter(
+    const result = [...adminData].filter(
       (s) =>
         s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.ownerName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -110,6 +113,18 @@ export default function SavingsPage() {
 
     return result;
   }, [adminData, searchTerm, sortConfig]);
+
+  // Paginated supplier history
+  const paginatedHistory = useMemo(() => {
+    if (!supplierData?.history) return [];
+    const start = (historyPage - 1) * historyPerPage;
+    return supplierData.history.slice(start, start + historyPerPage);
+  }, [supplierData, historyPage]);
+
+  const historyTotalPages = useMemo(() => {
+    if (!supplierData?.history) return 1;
+    return Math.max(1, Math.ceil(supplierData.history.length / historyPerPage));
+  }, [supplierData]);
 
   if (loading) {
     return (
@@ -205,7 +220,8 @@ export default function SavingsPage() {
                   <p className="text-slate-500 font-medium italic">Belum ada riwayat tabungan.</p>
                 </div>
               ) : (
-                supplierData.history.map((item) => (
+                <>
+                {paginatedHistory.map((item) => (
                   <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
                     <CardContent className="p-5">
                       <div className="flex justify-between items-start mb-4">
@@ -242,7 +258,21 @@ export default function SavingsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ))
+                ))}
+                {supplierData.history.length > historyPerPage && (
+                  <div className="flex items-center justify-between px-2 py-2">
+                    <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
 
@@ -276,7 +306,7 @@ export default function SavingsPage() {
                             </TableCell>
                           </TableRow>
                         ) : (
-                          supplierData.history.map((item) => (
+                          paginatedHistory.map((item) => (
                             <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
                               <TableCell className="py-6 px-8">
                                 <div className="flex items-center gap-3">
@@ -316,6 +346,19 @@ export default function SavingsPage() {
                       </TableBody>
                     </Table>
                   </div>
+                  {supplierData.history && supplierData.history.length > historyPerPage && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-900/40">
+                      <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>

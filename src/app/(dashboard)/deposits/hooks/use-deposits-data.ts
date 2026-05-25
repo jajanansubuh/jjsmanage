@@ -24,7 +24,7 @@ export function useDepositsData(dateRange: DateRange | undefined) {
     const params = new URLSearchParams();
     if (dateRange?.from) params.append("startDate", format(dateRange.from, "yyyy-MM-dd"));
     if (dateRange?.to) params.append("endDate", format(dateRange.to, "yyyy-MM-dd"));
-    params.append("limit", "2000");
+    params.append("limit", "100000");
 
     Promise.all([
       fetch('/api/auth/role').then(res => res.json()),

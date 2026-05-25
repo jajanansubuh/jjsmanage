@@ -32,11 +32,13 @@ export function EditProductCodeDialog({
 
   useEffect(() => {
     if (product) {
+       
       setForm({
         name: product.name || "",
         code: product.code || "",
         supplierId: product.supplierId || "",
       });
+       
       setConfirmDelete(false);
     }
   }, [product]);

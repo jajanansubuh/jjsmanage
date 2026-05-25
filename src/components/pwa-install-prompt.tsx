@@ -15,15 +15,14 @@ export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+  });
 
   useEffect(() => {
-    // Check if already installed (standalone mode)
-    const standalone = window.matchMedia("(display-mode: standalone)").matches
-      || (window.navigator as any).standalone === true;
-    setIsStandalone(standalone);
-
-    if (standalone) return;
+    // If already installed (standalone mode) skip listeners
+    if (isStandalone) return;
 
     // Detect iOS
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;

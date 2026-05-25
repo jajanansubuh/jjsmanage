@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import * as XLSX from "xlsx";
 import { format } from "date-fns";
 
 // Hooks
-import { useProductsData, AggregatedProduct } from "./hooks/use-products-data";
+import { useProductsData, normalizeName, AggregatedProduct } from "./hooks/use-products-data";
 
 // Components
 import { ProductHeader } from "@/components/produk/ProductHeader";
@@ -19,6 +19,10 @@ import { ProductTable } from "@/components/produk/ProductTable";
 // Dialogs
 import { AddProductDialog } from "@/components/produk/AddProductDialog";
 import { ImportProductDialog } from "@/components/produk/ImportProductDialog";
+import { MergeProductDialog } from "@/components/produk/MergeProductDialog";
+
+// Server actions
+import { syncProductsFromReportsAction } from "@/lib/actions/products";
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -30,9 +34,22 @@ export default function ProductsPage() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const { loading, error, products, allMasterProducts, suppliers, role, refresh } = useProductsData(dateRange);
+  // Auto-sync products from reports on page load
+  useEffect(() => {
+    const syncOnLoad = async () => {
+      try {
+        await syncProductsFromReportsAction();
+      } catch {
+        // Silently fail - don't disrupt page load
+      }
+    };
+    syncOnLoad();
+  }, []);
+
+  const { loading, error, products, suppliers, role, refresh } = useProductsData(dateRange);
 
   const handleSort = (key: keyof AggregatedProduct) => {
     let direction: "asc" | "desc" = "asc";
@@ -43,9 +60,14 @@ export default function ProductsPage() {
   };
 
   const filteredProducts = useMemo(() => {
-    let result = products.filter((p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const isCjrSalad = (p: AggregatedProduct) => {
+      const supplierLabel = String(p.supplierName || "").trim().toUpperCase();
+      return supplierLabel === "CJR" && normalizeName(p.name).includes("SALAD");
+    };
+
+    const result = products
+      .filter((p) => !isCjrSalad(p))
+      .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
     if (sortConfig) {
       result.sort((a, b) => {
@@ -135,6 +157,7 @@ export default function ProductsPage() {
         onExport={handleExport}
         onImport={() => setIsImportOpen(true)}
         onAdd={() => setIsAddOpen(true)}
+        onMerge={() => setIsMergeOpen(true)}
         isExporting={isExporting}
         userRole={role}
       />
@@ -168,9 +191,15 @@ export default function ProductsPage() {
       <ImportProductDialog 
         isOpen={isImportOpen}
         onOpenChange={setIsImportOpen}
-        products={allMasterProducts}
         suppliers={suppliers}
         onSuccess={() => window.location.reload()}
+      />
+
+      <MergeProductDialog
+        isOpen={isMergeOpen}
+        onOpenChange={setIsMergeOpen}
+        suppliers={suppliers}
+        onSuccess={refresh}
       />
     </div>
   );

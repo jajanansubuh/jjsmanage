@@ -3,6 +3,11 @@ import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { getSession } from "@/lib/auth-utils";
 
+interface ProfileUpdateBody {
+  username?: string | null;
+  password?: string | null;
+}
+
 export async function PUT(req: Request) {
   try {
     const session = await getSession();
@@ -10,7 +15,8 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { username, password } = await req.json();
+    const body = (await req.json()) as ProfileUpdateBody;
+    const { username, password } = body ?? {};
     const userId = session.user.id;
     
     console.log(`[Profile Update] Attempting update for user ID: ${userId}, new username: ${username}`);
@@ -23,7 +29,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Tidak ada data yang diubah" }, { status: 400 });
     }
 
-    const updateData: any = {};
+    const updateData: Partial<{ username: string; password: string; isCredentialsChanged: boolean }> = {};
 
     if (username) {
       // Check if username already exists for other users
@@ -71,18 +77,20 @@ export async function PUT(req: Request) {
           isCredentialsChanged: updatedUser.isCredentialsChanged
         }
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("[Profile Update] Database update failed:", dbError);
+      const message = dbError instanceof Error ? dbError.message : String(dbError);
       return NextResponse.json({ 
         error: "Gagal memperbarui database", 
-        details: dbError.message || String(dbError)
+        details: message
       }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Profile Update Overall Error:", error);
+    const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json({ 
       error: "Gagal memperbarui profil",
-      details: error instanceof Error ? error.message : String(error)
+      details: message
     }, { status: 500 });
   }
 }

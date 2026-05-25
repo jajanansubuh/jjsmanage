@@ -33,7 +33,10 @@ export function SupplierCombobox({
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    if (!value) setSearch("");
+    if (!value) {
+       
+      setSearch("");
+    }
   }, [value]);
 
   const filtered = search

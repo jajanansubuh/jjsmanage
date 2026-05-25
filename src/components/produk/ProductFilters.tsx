@@ -16,6 +16,8 @@ interface ProductFiltersProps {
   setIsCalendarOpen: (open: boolean) => void;
 }
 
+import { useState, useEffect } from "react";
+
 export function ProductFilters({
   searchTerm,
   setSearchTerm,
@@ -24,6 +26,13 @@ export function ProductFilters({
   isCalendarOpen,
   setIsCalendarOpen
 }: ProductFiltersProps) {
+  const [localDateRange, setLocalDateRange] = useState<DateRange | undefined>(dateRange);
+
+  useEffect(() => {
+    if (isCalendarOpen) {
+      setLocalDateRange(dateRange);
+    }
+  }, [isCalendarOpen, dateRange]);
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 md:px-0">
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
@@ -46,82 +55,27 @@ export function ProductFilters({
                     <span>Pilih Tanggal</span>
                   )}
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
-                  <div className="flex flex-col md:flex-row">
-                    <div className="p-2 border-r border-white/5 flex flex-col gap-1 bg-white/[0.02]">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
-                        onClick={() => {
-                          setDateRange({ from: new Date(), to: new Date() });
-                          setIsCalendarOpen(false);
-                        }}
-                      >
-                        Hari Ini
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
-                        onClick={() => {
-                          const end = new Date();
-                          const start = new Date();
-                          start.setDate(start.getDate() - 7);
-                          setDateRange({ from: start, to: end });
-                          setIsCalendarOpen(false);
-                        }}
-                      >
-                        7 Hari Terakhir
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
-                        onClick={() => {
-                          const now = new Date();
-                          setDateRange({
-                            from: new Date(now.getFullYear(), now.getMonth(), 1),
-                            to: now
-                          });
-                          setIsCalendarOpen(false);
-                        }}
-                      >
-                        Bulan Ini
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="justify-start font-bold text-[10px] uppercase tracking-wider hover:bg-blue-500/10 hover:text-blue-400"
-                        onClick={() => {
-                          const now = new Date();
-                          const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-                          const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-                          setDateRange({ from: lastMonth, to: endOfLastMonth });
-                          setIsCalendarOpen(false);
-                        }}
-                      >
-                        Bulan Lalu
-                      </Button>
-                    </div>
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={(range, selectedDay) => {
-                        if (dateRange?.from && dateRange?.to) {
-                          setDateRange({ from: selectedDay, to: undefined });
-                        } else {
-                          setDateRange(range);
-                        }
-                        if (range?.from && range?.to) {
-                          setIsCalendarOpen(false);
-                        }
+                <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={localDateRange?.from || dateRange?.from}
+                    selected={localDateRange}
+                    onSelect={setLocalDateRange}
+                    numberOfMonths={1}
+                    className="text-white"
+                  />
+                  <div className="p-3 border-t border-white/10 flex justify-end bg-slate-950/50">
+                    <Button 
+                      size="sm" 
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6"
+                      onClick={() => {
+                        setDateRange(localDateRange);
+                        setIsCalendarOpen(false);
                       }}
-                      numberOfMonths={1}
-                      className="p-4 text-white"
-                    />
+                    >
+                      OK
+                    </Button>
                   </div>
                 </PopoverContent>
               </Popover>

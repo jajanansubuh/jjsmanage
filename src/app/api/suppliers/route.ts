@@ -22,7 +22,7 @@ export async function GET() {
     }));
     
     return NextResponse.json(formattedSuppliers);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET /api/suppliers error:", error);
     // Jika gagal dengan include, coba ambil data dasar saja
     try {
@@ -36,6 +36,7 @@ export async function GET() {
       }));
       return NextResponse.json(formattedBasicSuppliers);
     } catch (innerError) {
+      console.error("GET /api/suppliers inner error:", innerError);
       return NextResponse.json([], { status: 500 });
     }
   }
@@ -43,7 +44,8 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const { name, ownerName, bankName, accountNumber } = await req.json();
+    const body = (await req.json()) as { name?: string; ownerName?: string; bankName?: string; accountNumber?: string };
+    const { name, ownerName, bankName, accountNumber } = body ?? {};
     if (!name) return NextResponse.json({ error: "Nama UMKM is required" }, { status: 400 });
 
     const supplier = await prisma.supplier.create({
@@ -57,8 +59,9 @@ export async function POST(req: Request) {
       },
     });
     return NextResponse.json(supplier);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error(error);
-    return NextResponse.json({ error: "Failed to create supplier" }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "Failed to create supplier", details: message }, { status: 500 });
   }
 }

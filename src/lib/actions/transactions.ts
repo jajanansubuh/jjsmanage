@@ -4,6 +4,52 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { saveTransactionSchema, SaveTransactionData } from "@/lib/validations/transaction";
 
+// Helper: Normalize product name
+const normalizeProductName = (val: string | null | undefined) =>
+  String(val || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[.,\s]+$/, "")
+    .replace(/\s+/g, " ");
+
+// Helper: Auto-sync products from report items to Product master
+async function syncProductsFromReportItems(
+  tx: any,
+  supplierId: string,
+  items: any[]
+) {
+  if (!Array.isArray(items) || items.length === 0) return;
+
+  const productNames = new Set<string>();
+  items.forEach((item: any) => {
+    const name = String(item.name || "").trim();
+    if (name) {
+      productNames.add(normalizeProductName(name));
+    }
+  });
+
+  // For each product name, ensure it exists in Product master
+  for (const name of productNames) {
+    if (!name) continue;
+
+    const existing = await tx.product.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        supplierId,
+      },
+    });
+
+    if (!existing) {
+      await tx.product.create({
+        data: {
+          name,
+          supplierId,
+        },
+      });
+    }
+  }
+}
+
 export async function saveTransactionAction(rawData: any) {
   try {
     // 1. Zod Validation
@@ -72,6 +118,9 @@ export async function saveTransactionAction(rawData: any) {
 
         // 2. Insert new records
         for (const r of validRows) {
+          // Sync products from report items to Product master
+          await syncProductsFromReportItems(tx, r.supplierId, r.items || []);
+
           await tx.consignmentReport.create({
             data: {
               supplierId: r.supplierId,

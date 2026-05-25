@@ -4,6 +4,51 @@ import prisma from "@/lib/prisma";
 import * as XLSX from "xlsx";
 import { revalidatePath } from "next/cache";
 
+// Helper: Normalize product name
+const normalizeProductName = (val: string | null | undefined) =>
+  String(val || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[.,\s]+$/, "")
+    .replace(/\s+/g, " ");
+
+// Helper: Auto-sync products from report items to Product master
+async function syncProductsFromReportItems(
+  supplierId: string,
+  items: any[]
+) {
+  if (!Array.isArray(items) || items.length === 0) return;
+
+  const productNames = new Set<string>();
+  items.forEach((item: any) => {
+    const name = String(item.name || "").trim();
+    if (name) {
+      productNames.add(normalizeProductName(name));
+    }
+  });
+
+  // For each product name, ensure it exists in Product master
+  for (const name of productNames) {
+    if (!name) continue;
+
+    const existing = await prisma.product.findFirst({
+      where: {
+        name: { equals: name, mode: "insensitive" },
+        supplierId,
+      },
+    });
+
+    if (!existing) {
+      await prisma.product.create({
+        data: {
+          name,
+          supplierId,
+        },
+      });
+    }
+  }
+}
+
 export async function importDatabaseAction(formData: FormData) {
   try {
     const file = formData.get("file") as File;
@@ -91,6 +136,11 @@ export async function importDatabaseAction(formData: FormData) {
           }
         }
 
+        const items = data['__raw_items'] ? JSON.parse(data['__raw_items']) : [];
+
+        // Sync products from items to Product master
+        await syncProductsFromReportItems(supplier.id, items);
+
         const reportData = {
           date: date,
           noteNumber: noteNumber,
@@ -104,7 +154,7 @@ export async function importDatabaseAction(formData: FormData) {
           profit80: parseFloat(data['Mitra JJS (80%)']) || 0,
           profit20: parseFloat(data['Toko (20%)']) || 0,
           notes: data['Catatan'] || '',
-          items: data['__raw_items'] ? JSON.parse(data['__raw_items']) : []
+          items: items
         };
 
         if (existingReport) {

@@ -31,11 +31,6 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({ username: "", password: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    fetchProfile();
-    fetchSystemStats();
-  }, []);
-
   const fetchSystemStats = async () => {
     try {
       const res = await fetch("/api/system/stats");
@@ -44,7 +39,7 @@ export default function SettingsPage() {
         setSystemStats(data);
       }
     } catch (error) {
-      console.error("Failed to fetch system stats");
+      console.error("Failed to fetch system stats", error);
     }
   };
 
@@ -71,13 +66,18 @@ export default function SettingsPage() {
           const roleData = await roleRes.json();
           setUser({ id: "", username: roleData.username || "", role: roleData.role || "ADMIN", isCredentialsChanged: false });
         }
-      } catch {
+      } catch (err) {
         toast.error("Gagal memuat profil");
       }
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProfile();
+    fetchSystemStats();
+  }, []);
 
   const handleSave = async () => {
     if (!formData.username) {

@@ -24,6 +24,7 @@ function SelectedQtyInput({
   const [inputValue, setInputValue] = useState<string>(value.toString());
 
   useEffect(() => {
+     
     setInputValue(value.toString());
   }, [value]);
 

@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth-utils";
+
+const normalizeProductName = (val: string | null | undefined) =>
+  String(val || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[.,\s]+$/, "")
+    .replace(/\s+/g, " ");
 
 export async function GET(req: Request) {
   try {
@@ -12,8 +20,6 @@ export async function GET(req: Request) {
     // Check session for Role Based Access
     const session = await getSession();
     
-    // Code lookup mode: return all products with name+code only (no supplier filter)
-    // Product codes are catalog identifiers, not sensitive financial data
     if (forLookup) {
       const products = await prisma.product.findMany({
         select: { id: true, name: true, code: true, supplierId: true, supplier: { select: { id: true, name: true } } },
@@ -50,60 +56,71 @@ export async function GET(req: Request) {
   }
 }
 
+type ProductImportItem = {
+  name?: string;
+  code?: string | null;
+  supplierId?: string | null;
+};
+
+type ProductCreateBody = {
+  name?: string;
+  code?: string | null;
+  supplierId?: string | null;
+};
+
 export async function POST(req: Request) {
   try {
-    const data = await req.json();
+    const payload = await req.json();
 
     // Import logic: array of { name, code, supplierId? }
-    if (Array.isArray(data)) {
-      const results = [];
+    if (Array.isArray(payload)) {
+      const results: Array<Awaited<ReturnType<typeof prisma.product.create>> | Awaited<ReturnType<typeof prisma.product.update>>> = [];
       const normalize = (val: string | null | undefined) => String(val || "").trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
-      
+
       try {
-        for (const item of data) {
+        for (const item of payload as ProductImportItem[]) {
           if (!item.name) continue;
 
           const name = normalize(item.name);
           const supplierId = item.supplierId || null;
 
-          // Try to find existing product by name and supplierId
-          // Using case-insensitive match for robustness
           const existing = await prisma.product.findFirst({
-            where: { 
+            where: {
               name: { equals: name, mode: "insensitive" },
-              supplierId: supplierId || null
-            }
+              supplierId,
+            },
           });
 
           if (existing) {
             const product = await prisma.product.update({
               where: { id: existing.id },
-              data: { code: (item.code !== undefined && item.code !== null) ? String(item.code) : undefined }
+              data: { code: item.code != null ? String(item.code) : undefined },
             });
             results.push(product);
           } else {
-        const product = await prisma.product.create({
-          data: {
-            name,
-            code: (item.code !== undefined && item.code !== null) ? String(item.code) : undefined,
-            supplierId
-          }
-        });
+            const product = await prisma.product.create({
+              data: {
+                name,
+                code: item.code != null ? String(item.code) : undefined,
+                supplierId,
+              },
+            });
             results.push(product);
           }
         }
+
         return NextResponse.json({ message: "Import successful", count: results.length });
-      } catch (loopError: any) {
+      } catch (loopError: unknown) {
         console.error("Import loop error:", loopError);
-        return NextResponse.json({ 
-          error: "Gagal memproses baris data: " + loopError.message,
-          details: loopError 
+        const message = loopError instanceof Error ? loopError.message : String(loopError);
+        return NextResponse.json({
+          error: "Gagal memproses baris data: " + message,
+          details: message,
         }, { status: 500 });
       }
     }
 
-    // Single create
-    const { name, code, supplierId } = data;
+    const { name, code, supplierId } = payload as ProductCreateBody;
     if (!name) return NextResponse.json({ error: "Nama barang wajib diisi" }, { status: 400 });
 
     const normalizedName = name.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
@@ -111,16 +128,16 @@ export async function POST(req: Request) {
     const product = await prisma.product.create({
       data: {
         name: normalizedName,
-        code: (code !== undefined && code !== null) ? String(code) : undefined,
+        code: code != null ? String(code) : undefined,
         supplierId: supplierId || null,
       },
       include: { supplier: { select: { id: true, name: true } } },
     });
     return NextResponse.json(product);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST /api/products error:", error);
-    if (error?.code === "P2002") {
-      return NextResponse.json({ error: "Produk dengan nama dan suplier yang sama sudah ada" }, { status: 409 });
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ error: "Produk dengan nama dan supplier yang sama sudah ada" }, { status: 409 });
     }
     return NextResponse.json({ error: "Gagal menyimpan produk" }, { status: 500 });
   }
@@ -136,18 +153,79 @@ export async function PUT(req: Request) {
     const { id, name, code, supplierId } = await req.json();
     if (!id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
 
+    const existingProduct = await prisma.product.findUnique({
+      where: { id },
+      select: { name: true, supplierId: true }
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json({ error: "Produk tidak ditemukan" }, { status: 404 });
+    }
+
+    const normalizedOldName = normalizeProductName(existingProduct.name);
+    const normalizedName = name ? normalizeProductName(name) : undefined;
+
+    // Prevent duplicate (name + supplierId) — check for existing product with same name and supplier
+    if (normalizedName) {
+      const conflict = await prisma.product.findFirst({
+        where: {
+          name: { equals: normalizedName, mode: "insensitive" },
+          supplierId: supplierId || null,
+          id: { not: id },
+        }
+      });
+
+      if (conflict) {
+        return NextResponse.json({ error: "Produk dengan nama dan supplier yang sama sudah ada" }, { status: 409 });
+      }
+    }
+
+    // If product name changes, also update report items for the same supplier
+    if (normalizedName && normalizedName !== normalizedOldName) {
+      const reportSupplierId = existingProduct.supplierId;
+      const reports = await prisma.consignmentReport.findMany({
+        where: reportSupplierId ? { supplierId: reportSupplierId } : {},
+        select: { id: true, items: true }
+      });
+
+      await Promise.all(reports.map(async (report) => {
+        const items = Array.isArray(report.items) ? report.items : [];
+        let updated = false;
+
+        const normalizedItems = items.map((item: any) => {
+          const itemName = String(item.name || "");
+          if (normalizeProductName(itemName) === normalizedOldName) {
+            updated = true;
+            return { ...item, name: normalizedName };
+          }
+          return item;
+        });
+
+        if (updated) {
+          await prisma.consignmentReport.update({
+            where: { id: report.id },
+            data: { items: normalizedItems }
+          });
+        }
+      }));
+    }
+
     const product = await prisma.product.update({
       where: { id },
       data: {
-        name: name ? name.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ") : undefined,
+        name: normalizedName,
         code: (code !== undefined && code !== null) ? String(code) : undefined,
         supplierId: supplierId || null,
       },
       include: { supplier: { select: { id: true, name: true } } },
     });
+
     return NextResponse.json(product);
   } catch (error: unknown) {
     console.error("PUT /api/products error:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return NextResponse.json({ error: "Produk dengan nama dan supplier yang sama sudah ada" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Gagal memperbarui produk" }, { status: 500 });
   }
 }

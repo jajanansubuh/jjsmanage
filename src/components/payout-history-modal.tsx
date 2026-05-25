@@ -67,14 +67,6 @@ export function PayoutHistoryModal({
   const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (isOpen) {
-      fetchTransactions();
-      setExpandedRows(new Set());
-    }
-  }, [isOpen, supplierId]);
-
   async function fetchTransactions() {
     setLoading(true);
     try {
@@ -95,6 +87,14 @@ export function PayoutHistoryModal({
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTransactions();
+       
+      setExpandedRows(new Set());
+    }
+  }, [isOpen, supplierId]);
 
   const toggleRow = (id: string) => {
     setExpandedRows((prev) => {

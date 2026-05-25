@@ -1,5 +1,6 @@
 import { format } from "date-fns";
-import { ArrowUpDown, CheckCircle2, Eye } from "lucide-react";
+import { ArrowUpDown, CheckCircle2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -23,11 +24,51 @@ export function DepositsTable({
   onSort,
   onValidate
 }: DepositsTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedData.length / itemsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  
+  const paginatedData = filteredAndSortedData.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
 
   const getSortIcon = (key: keyof DepositItem) => {
     if (!sortConfig || sortConfig.key !== key) return <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-emerald-400 transition-colors" />;
     return sortConfig.direction === "asc" ? <ArrowUpDown className="w-3 h-3 text-emerald-400" /> : <ArrowUpDown className="w-3 h-3 text-emerald-400 rotate-180" />;
   };
+
+  const PaginationUI = () => (
+    filteredAndSortedData.length > itemsPerPage ? (
+      <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-900/40">
+        <span className="text-xs text-slate-400 font-medium">
+          Halaman {safeCurrentPage} dari {totalPages}
+        </span>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={safeCurrentPage === 1}
+            className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={safeCurrentPage === totalPages}
+            className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    ) : null
+  );
 
   return (
     <>
@@ -43,7 +84,8 @@ export function DepositsTable({
             <p className="text-slate-500 font-medium italic">Tidak ada transaksi pada tanggal ini.</p>
           </div>
         ) : (
-          filteredAndSortedData.map((item) => (
+          <>
+            {paginatedData.map((item) => (
             <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
               <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-4">
@@ -110,7 +152,9 @@ export function DepositsTable({
                 )}
               </CardContent>
             </Card>
-          ))
+          ))}
+          <PaginationUI />
+        </>
         )}
       </div>
 
@@ -172,7 +216,7 @@ export function DepositsTable({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredAndSortedData.map((item) => (
+                  paginatedData.map((item) => (
                     <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.03] transition-all duration-500 group relative">
                       <TableCell className="py-6 px-8 relative overflow-hidden">
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-emerald-500 group-hover:h-1/2 transition-all duration-500 rounded-r-full" />
@@ -235,6 +279,7 @@ export function DepositsTable({
             </Table>
           </div>
         </CardContent>
+        <PaginationUI />
       </Card>
     </>
   );
