@@ -10,6 +10,7 @@ interface CetakQueueListProps {
   onClear: () => void;
   onAddFromQueue: (item: any) => void;
   onMarkAsDone: (id: string) => void;
+  onMarkAllDone: () => void;
   onUpdateQty?: (id: string, qty: number) => void;
 }
 
@@ -74,6 +75,7 @@ export function CetakQueueList({
   onClear,
   onAddFromQueue,
   onMarkAsDone,
+  onMarkAllDone,
   onUpdateQty
 }: CetakQueueListProps) {
   return (
@@ -90,11 +92,16 @@ export function CetakQueueList({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isQueueLoading} className="text-slate-400 hover:text-white">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={onRefresh} disabled={isQueueLoading} className="text-slate-400 hover:text-white h-9 px-3">
             <History className="w-4 h-4 mr-2" /> Refresh
           </Button>
-          <Button variant="ghost" size="sm" onClick={onClear} className="text-slate-500 hover:text-red-400">
+          {queueItems.length > 0 && onUpdateQty && (
+            <Button variant="ghost" size="sm" onClick={onMarkAllDone} className="text-slate-400 hover:text-emerald-400 h-9 px-3">
+              Selesaikan Semua
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={onClear} className="text-slate-500 hover:text-red-400 h-9 px-3">
             Bersihkan
           </Button>
         </div>

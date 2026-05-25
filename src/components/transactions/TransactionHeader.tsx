@@ -1,4 +1,5 @@
-import { Download, Upload, Trash2, ChevronDown, Check, Calendar as CalendarIcon } from "lucide-react";
+import { Download, Upload, Trash2, ChevronDown, Check, Calendar as CalendarIcon, Scissors } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -48,10 +49,10 @@ export function TransactionHeader({
         </p>
       </div>
 
-      <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 sm:gap-3 w-full lg:w-auto lg:justify-end">
+      <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:justify-end overflow-x-auto pb-2 -mb-2">
         <Popover>
           <PopoverTrigger render={
-            <Button variant="outline" className={cn("h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all", !selectedDate && "text-muted-foreground")}>
+            <Button variant="outline" className={cn("h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all shrink-0 whitespace-nowrap", !selectedDate && "text-muted-foreground")}>
               <CalendarIcon className="mr-2 h-4 w-4 text-blue-400" />
               {selectedDate ? format(new Date(selectedDate), "dd MMMM yyyy") : "Pilih Tanggal"}
             </Button>
@@ -63,7 +64,7 @@ export function TransactionHeader({
 
         <DropdownMenu>
           <DropdownMenuTrigger render={
-            <Button variant="outline" className="h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all">
+            <Button variant="outline" className="h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all shrink-0 whitespace-nowrap">
               Kasir ({selectedCashiers.length}) <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
             </Button>
           } />
@@ -90,19 +91,28 @@ export function TransactionHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" onClick={onClearAll} disabled={!hasRows} className="h-12 px-5 rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all">
+        <Button variant="ghost" onClick={onClearAll} disabled={!hasRows} className="h-12 px-5 rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0 whitespace-nowrap">
           <Trash2 className="w-4 h-4 mr-2" /> Reset
         </Button>
 
-        <div className="h-12 w-[1px] bg-white/10 mx-2 hidden sm:block" />
+        <div className="h-12 w-[1px] bg-white/10 mx-2 hidden sm:block shrink-0" />
 
-        <Button onClick={onExport} variant="outline" className="h-12 px-5 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all active:scale-95 shadow-xl">
+        <Button onClick={onExport} variant="outline" className="h-12 px-5 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
           <Download className="w-4 h-4 mr-2 text-blue-400" /> Excel
         </Button>
 
-        <Button onClick={onImportClick} variant="outline" className="h-12 px-5 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all active:scale-95 shadow-xl">
+        <Button onClick={onImportClick} variant="outline" className="h-12 px-5 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
           <Upload className="w-4 h-4 mr-2 text-emerald-400" /> Import
         </Button>
+
+        <div className="h-12 w-[1px] bg-white/10 mx-2 hidden sm:block shrink-0" />
+
+        <Link href="/potongan/input" className="shrink-0">
+          <Button className="h-12 px-6 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2 whitespace-nowrap">
+            <Scissors size={18} className="shrink-0" />
+            Input Potongan
+          </Button>
+        </Link>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
-import { Search, Calendar as CalendarIcon } from "lucide-react";
+import { Search, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,7 +32,14 @@ export function PotonganHeader({
 }: PotonganHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-      <div className="space-y-1">
+      <div className="space-y-2">
+        <Link 
+          href="/transactions" 
+          className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Kembali ke Input Transaksi
+        </Link>
         <h2 className="text-4xl font-black tracking-tight text-white">
           Input{" "}
           <span className="text-transparent bg-clip-text bg-linear-to-r from-rose-400 to-orange-400">

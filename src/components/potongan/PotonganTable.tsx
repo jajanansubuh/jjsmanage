@@ -1,7 +1,7 @@
 import { Loader2, AlertCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { DeductionRow } from "@/app/(dashboard)/potongan/hooks/use-potongan-data";
+import { DeductionRow } from "@/app/(dashboard)/potongan/input/hooks/use-potongan-data";
 import { useCallback, memo } from "react";
 
 interface PotonganTableProps {

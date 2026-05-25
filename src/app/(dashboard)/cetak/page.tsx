@@ -15,9 +15,11 @@ import { CetakQueueList } from "@/components/cetak/CetakQueueList";
 import { CetakProductSearch } from "@/components/cetak/CetakProductSearch";
 import { CetakSelectedTable } from "@/components/cetak/CetakSelectedTable";
 import { CetakPrintView } from "@/components/cetak/CetakPrintView";
+import { SupplierPrintHistory } from "@/components/cetak/SupplierPrintHistory";
 
 // Dialogs
 import { ClearQueueDialog } from "@/components/cetak/ClearQueueDialog";
+import { ConfirmDoneDialog } from "@/components/cetak/ConfirmDoneDialog";
 import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
 
 export default function CetakLabelPage() {
@@ -45,6 +47,13 @@ export default function CetakLabelPage() {
   const [isSavingQueue, setIsSavingQueue] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isClearQueueDialogOpen, setIsClearQueueDialogOpen] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
+  const [isConfirmDoneOpen, setIsConfirmDoneOpen] = useState(false);
+  const [confirmDoneConfig, setConfirmDoneConfig] = useState({
+    title: "",
+    description: "",
+    confirmText: ""
+  });
 
   // Auto-populate for suppliers
   useEffect(() => {
@@ -87,6 +96,7 @@ export default function CetakLabelPage() {
         toast.success("Permintaan cetak berhasil dikirim ke Admin");
         setSelectedItems([]);
         fetchQueue();
+        setHistoryKey(prev => prev + 1);
       } else {
         toast.error("Gagal mengirim permintaan");
       }
@@ -121,10 +131,51 @@ export default function CetakLabelPage() {
       XLSX.utils.book_append_sheet(wb, ws, "Label Cetak");
       XLSX.writeFile(wb, `Label_Cetak_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
       toast.success("Data berhasil diekspor");
+      
+      // Auto prompt to mark all as completed
+      setTimeout(() => {
+        setConfirmDoneConfig({
+          title: "Ekspor Berhasil!",
+          description: "Apakah Anda ingin menandai semua barang yang diekspor sebagai 'Selesai' (DONE) agar masuk ke riwayat cetak suplier?",
+          confirmText: "YA, SELESAI"
+        });
+        setIsConfirmDoneOpen(true);
+      }, 500);
     } catch (err) {
       toast.error("Gagal mengekspor data");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  const handleMarkAllAsDone = async (skipConfirm = false) => {
+    if (skipConfirm) {
+      executeMarkAllAsDone();
+    } else {
+      setConfirmDoneConfig({
+        title: "Selesaikan Antrean?",
+        description: "Apakah Anda yakin ingin menandai SEMUA antrean dari supplier sebagai 'Selesai'?",
+        confirmText: "YA, SELESAI"
+      });
+      setIsConfirmDoneOpen(true);
+    }
+  };
+
+  const executeMarkAllAsDone = async () => {
+    try {
+      const res = await fetch("/api/print-queue", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true, status: "DONE" })
+      });
+      if (res.ok) {
+        toast.success("Semua antrean berhasil ditandai selesai");
+        fetchQueue();
+      } else {
+        toast.error("Gagal memperbarui status antrean");
+      }
+    } catch (err) {
+      toast.error("Terjadi kesalahan jaringan");
     }
   };
 
@@ -223,6 +274,7 @@ export default function CetakLabelPage() {
           onClear={() => setIsClearQueueDialogOpen(true)}
           onAddFromQueue={(item) => addFromQueue(item, codeLookupMap)}
           onMarkAsDone={handleMarkAsDone}
+          onMarkAllDone={() => handleMarkAllAsDone(false)}
           onUpdateQty={handleUpdateQueueQty}
         />
       )}
@@ -236,12 +288,25 @@ export default function CetakLabelPage() {
         />
       )}
 
+      {userRole === "SUPPLIER" && (
+        <SupplierPrintHistory key={historyKey} />
+      )}
+
       {userRole === "SUPPLIER" && <CetakPrintView items={sortedSelectedItems} />}
 
       <ClearQueueDialog 
         isOpen={isClearQueueDialogOpen}
         onOpenChange={setIsClearQueueDialogOpen}
         onConfirm={handleClearQueue}
+      />
+
+      <ConfirmDoneDialog 
+        isOpen={isConfirmDoneOpen}
+        onOpenChange={setIsConfirmDoneOpen}
+        onConfirm={executeMarkAllAsDone}
+        title={confirmDoneConfig.title}
+        description={confirmDoneConfig.description}
+        confirmText={confirmDoneConfig.confirmText}
       />
     </div>
   );

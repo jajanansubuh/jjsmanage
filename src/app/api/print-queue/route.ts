@@ -7,10 +7,27 @@ export async function GET(req: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    // Auto-cleanup: silently delete completed items (DONE) older than today
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    try {
+      await prisma.labelPrint.deleteMany({
+        where: {
+          status: "DONE",
+          createdAt: { lt: startOfToday }
+        }
+      });
+    } catch (cleanupErr) {
+      console.error("Auto-cleanup labelPrint error:", cleanupErr);
+    }
+
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "PENDING";
     
-    const where: { status: string; supplierId?: string } = { status };
+    const where: { status?: string; supplierId?: string } = {};
+    if (status !== "ALL") {
+      where.status = status;
+    }
     
     if (session.user.role === "SUPPLIER") {
       where.supplierId = session.user.supplierId || "INVALID";
@@ -77,7 +94,19 @@ export async function PUT(req: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { id, status, qty } = await req.json();
+    const { id, status, qty, all } = await req.json();
+    
+    if (all) {
+      const where: { status: string; supplierId?: string } = { status: "PENDING" };
+      if (session.user.role === "SUPPLIER") {
+        where.supplierId = session.user.supplierId || "INVALID";
+      }
+      const updated = await prisma.labelPrint.updateMany({
+        where,
+        data: { status: "DONE" }
+      });
+      return NextResponse.json({ message: "All items marked as done", count: updated.count });
+    }
     
     const updated = await prisma.labelPrint.update({
       where: { id },

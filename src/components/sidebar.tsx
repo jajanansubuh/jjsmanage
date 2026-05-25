@@ -48,19 +48,19 @@ const navigation = [
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ];
 
-export function Sidebar({ 
-  role = "ADMIN", 
+export function Sidebar({
+  role = "ADMIN",
   name = "Administrator",
-  permissions = [] 
-}: { 
-  role?: string, 
+  permissions = []
+}: {
+  role?: string,
   name?: string,
-  permissions?: string[] 
+  permissions?: string[]
 }) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
-  
+
   // Ensure permissions is an array
   const userPermissions = Array.isArray(permissions) ? permissions : [];
 
@@ -85,12 +85,12 @@ export function Sidebar({
 
     // Otherwise fallback to legacy role-based logic
     const userRole = (role || "").toUpperCase();
-    
+
     if (userRole === "SUPPLIER") {
-      const allowedPaths = ["/payouts", "/deposits", "/savings", "/produk", "/cetak", "/settings"];
+      const allowedPaths = ["/payouts", "/deposits", "/savings", "/potongan", "/produk", "/cetak", "/settings"];
       return allowedPaths.includes(item.href);
     }
-    
+
     if (userRole === "CASHIER") {
       const forbiddenPaths = ["/master", "/payouts", "/settings"];
       return !forbiddenPaths.includes(item.href);
@@ -212,7 +212,7 @@ export function Sidebar({
 
               {/* Version and Copyright Info */}
               <div className="!mt-2 pt-2 border-t border-white/5 text-center text-[8.5px] text-slate-500/50 space-y-0.5 whitespace-nowrap">
-                <p>Versi 0.1.0</p>
+                <p>Versi 2.1.0</p>
                 <p>
                   &copy; 2026 jjsmanage &bull; Powered by{" "}
                   <a
