@@ -26,9 +26,13 @@ import { syncProductsFromReportsAction } from "@/lib/actions/products";
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<any>({
-    from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    to: new Date()
+  const [dateRange, setDateRange] = useState<any>(() => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return {
+      from: yesterday,
+      to: yesterday
+    };
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof AggregatedProduct; direction: "asc" | "desc" } | null>({ key: "totalJual", direction: "desc" });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);

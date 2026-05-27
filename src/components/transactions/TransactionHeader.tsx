@@ -14,33 +14,25 @@ import { format } from "date-fns";
 interface TransactionHeaderProps {
   isEditMode: boolean;
   editNoteNumber: string | null;
-  selectedDate: string;
-  onDateChange: (date: string) => void;
   selectedCashiers: string[];
   setSelectedCashiers: (ids: string[]) => void;
   cashiers: any[];
   onExport: () => void;
   onImportClick: () => void;
-  onClearAll: () => void;
-  hasRows: boolean;
 }
 
 export function TransactionHeader({
   isEditMode,
   editNoteNumber,
-  selectedDate,
-  onDateChange,
   selectedCashiers,
   setSelectedCashiers,
   cashiers,
   onExport,
-  onImportClick,
-  onClearAll,
-  hasRows
+  onImportClick
 }: TransactionHeaderProps) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-      <div className="space-y-1">
+      <div className="space-y-1 shrink-0">
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white flex items-center gap-3">
           {isEditMode ? "Edit" : "Input"} <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-400">Transaksi</span>
         </h2>
@@ -49,18 +41,8 @@ export function TransactionHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto lg:justify-end overflow-x-auto pb-2 -mb-2">
-        <Popover>
-          <PopoverTrigger render={
-            <Button variant="outline" className={cn("h-12 px-6 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all shrink-0 whitespace-nowrap", !selectedDate && "text-muted-foreground")}>
-              <CalendarIcon className="mr-2 h-4 w-4 text-blue-400" />
-              {selectedDate ? format(new Date(selectedDate), "dd MMMM yyyy") : "Pilih Tanggal"}
-            </Button>
-          } />
-          <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="end">
-            <Calendar mode="single" selected={new Date(selectedDate)} onSelect={(d) => d && onDateChange(format(d, "yyyy-MM-dd"))} className="text-white" />
-          </PopoverContent>
-        </Popover>
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+
 
         <DropdownMenu>
           <DropdownMenuTrigger render={
@@ -91,11 +73,6 @@ export function TransactionHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" onClick={onClearAll} disabled={!hasRows} className="h-12 px-5 rounded-2xl text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition-all shrink-0 whitespace-nowrap">
-          <Trash2 className="w-4 h-4 mr-2" /> Reset
-        </Button>
-
-        <div className="h-12 w-[1px] bg-white/10 mx-2 hidden sm:block shrink-0" />
 
         <Button onClick={onExport} variant="outline" className="h-12 px-5 rounded-2xl bg-white/5 border-white/10 text-white font-bold hover:bg-white/10 transition-all active:scale-95 shadow-xl shrink-0 whitespace-nowrap">
           <Download className="w-4 h-4 mr-2 text-blue-400" /> Excel
@@ -117,3 +94,4 @@ export function TransactionHeader({
     </div>
   );
 }
+

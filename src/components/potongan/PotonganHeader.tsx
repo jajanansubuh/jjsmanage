@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface PotonganHeaderProps {
   deductionNoteNumber: string;
@@ -81,31 +82,15 @@ export function PotonganHeader({
 
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Periode Transaksi</span>
-          <div className="flex items-center gap-1 p-1 bg-slate-900/50 rounded-2xl border border-white/5 h-12 shadow-inner">
-            <div className="flex items-center gap-2 px-3 hover:bg-white/5 rounded-xl transition-all group">
-              <span className="text-[9px] font-black uppercase text-slate-600">Dari</span>
-              <Popover>
-                <PopoverTrigger className="text-sm font-bold text-white focus:outline-none">
-                  {format(new Date(startDate), "dd/MM/yy")}
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="start">
-                  <Calendar mode="single" selected={new Date(startDate)} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} initialFocus className="text-white" />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="w-px h-6 bg-white/10 mx-1" />
-            <div className="flex items-center gap-2 px-3 hover:bg-white/5 rounded-xl transition-all group">
-              <span className="text-[9px] font-black uppercase text-slate-600">Hingga</span>
-              <Popover>
-                <PopoverTrigger className="text-sm font-bold text-white focus:outline-none">
-                  {format(new Date(endDate), "dd/MM/yy")}
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
-                  <Calendar mode="single" selected={new Date(endDate)} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} initialFocus className="text-white" />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(s, e) => {
+              setStartDate(s);
+              setEndDate(e);
+            }}
+            className="h-12 !bg-slate-900/50"
+          />
         </div>
 
         <div className="relative group w-full md:w-56 mt-auto">

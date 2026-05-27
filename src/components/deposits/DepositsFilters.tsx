@@ -1,14 +1,13 @@
 import { format, startOfDay, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { CalendarIcon, Filter, Search, CheckCircle2, Printer } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 import { DepositItem } from "@/app/(dashboard)/deposits/hooks/use-deposits-data";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface DepositsFiltersProps {
   role: string | null;
@@ -23,7 +22,7 @@ interface DepositsFiltersProps {
   onPrintClick: () => void;
 }
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export function DepositsFilters({
   role,
@@ -37,91 +36,20 @@ export function DepositsFilters({
   onValidateAllClick,
   onPrintClick
 }: DepositsFiltersProps) {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [localDateRange, setLocalDateRange] = useState<DateRange | undefined>(dateRange);
-
-  useEffect(() => {
-    if (isCalendarOpen) {
-      setLocalDateRange(dateRange);
-    }
-  }, [isCalendarOpen, dateRange]);
-
   if (role === "SUPPLIER") return null;
 
   return (
     <div className="flex flex-col gap-4 bg-slate-900/50 p-3 rounded-2xl md:rounded-[2rem] border border-white/5 backdrop-blur-md lg:grid lg:grid-cols-12 lg:items-center">
       {/* Date Filter */}
-      <div className={cn(
-        "flex items-center gap-3 px-4 py-2 bg-slate-950/40 rounded-2xl border border-white/5 hover:bg-white/5 transition-all group cursor-pointer h-14",
-        role === "SUPPLIER" ? "lg:col-span-12" : "lg:col-span-3"
-      )}>
-        <div className="p-2 bg-emerald-500/10 rounded-lg group-hover:bg-emerald-500/20 transition-colors">
-          <CalendarIcon className="w-5 h-5 text-emerald-400" />
-        </div>
-        <div className="flex flex-col flex-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Rentang Tanggal</span>
-          <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-            <PopoverTrigger className="flex items-center gap-2 text-sm font-bold text-white focus:outline-none p-0 h-auto bg-transparent border-none w-full text-left">
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <span className="truncate">
-                    {format(dateRange.from, "dd MMM", { locale: localeId })} - {format(dateRange.to, "dd MMM yyyy", { locale: localeId })}
-                  </span>
-                ) : (
-                  format(dateRange.from, "dd MMM yyyy", { locale: localeId })
-                )
-              ) : (
-                <span>Pilih Tanggal</span>
-              )}
-            </PopoverTrigger>
-            <PopoverContent className="w-[calc(100vw-2rem)] md:w-auto p-0 bg-slate-900 border-white/10 shadow-2xl" align="start">
-              <div className="flex flex-col md:flex-row">
-                {/* Preset Shortcuts */}
-                <div className="flex md:flex-col gap-1 p-3 border-b md:border-b-0 md:border-r border-white/10 overflow-x-auto md:overflow-x-visible flex-shrink-0">
-                  {[
-                    { label: "Hari Ini", getRange: () => ({ from: startOfDay(new Date()), to: new Date() }) },
-                    { label: "7 Hari Terakhir", getRange: () => ({ from: subDays(new Date(), 6), to: new Date() }) },
-                    { label: "Bulan Ini", getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
-                    { label: "Bulan Lalu", getRange: () => { const prev = subMonths(new Date(), 1); return { from: startOfMonth(prev), to: endOfMonth(prev) }; } },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      onClick={() => setLocalDateRange(preset.getRange())}
-                      className="whitespace-nowrap text-left text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 px-3 py-2 rounded-lg transition-colors"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-                {/* Calendar */}
-                <div>
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={localDateRange?.from || dateRange?.from}
-                    selected={localDateRange}
-                    onSelect={setLocalDateRange}
-                    numberOfMonths={1}
-                    className="text-white"
-                  />
-                  <div className="p-3 border-t border-white/10 flex justify-end bg-slate-950/50">
-                    <Button 
-                      size="sm" 
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6"
-                      onClick={() => {
-                        setDateRange(localDateRange);
-                        setIsCalendarOpen(false);
-                      }}
-                    >
-                      OK
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+      <DateRangePicker
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        className={cn(
+          "w-full border-white/5",
+          role === "SUPPLIER" ? "lg:col-span-12" : "lg:col-span-3"
+        )}
+      />
+
 
       {role !== "SUPPLIER" && (
         <>

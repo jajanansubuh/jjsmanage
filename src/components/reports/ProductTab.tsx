@@ -4,8 +4,7 @@ import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface ProductTabProps {
   groupedProductsByNote: any[];
@@ -38,22 +37,16 @@ export function ProductTab({
           <CardDescription className="text-slate-400 font-medium mt-1">Akumulasi stok dan penjualan produk berdasarkan riwayat transaksi.</CardDescription>
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 p-1 bg-slate-950/50 rounded-2xl border border-white/5 h-12">
-            <div className="flex items-center gap-2 px-3">
-              <span className="text-[10px] font-black uppercase text-slate-500">Filter:</span>
-              <Popover>
-                <PopoverTrigger className="text-xs font-bold text-white">
-                  {startDate ? format(new Date(startDate), "dd/MM/yy") : "Mulai"} - {endDate ? format(new Date(endDate), "dd/MM/yy") : "Akhir"}
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="end">
-                  <div className="p-4 flex gap-4">
-                    <Calendar mode="single" selected={startDate ? new Date(startDate) : undefined} onSelect={(d) => d && setStartDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                    <Calendar mode="single" selected={endDate ? new Date(endDate) : undefined} onSelect={(d) => d && setEndDate(format(d, "yyyy-MM-dd"))} className="text-white" />
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            className="h-12 bg-slate-950/50 border-white/5 rounded-2xl"
+          />
+
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <Input placeholder="Cari produk..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-emerald-500/20 text-white" value={produkSearch} onChange={(e) => setProdukSearch(e.target.value)} />

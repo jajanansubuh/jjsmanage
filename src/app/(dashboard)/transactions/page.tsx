@@ -420,18 +420,13 @@ function TransactionsPageContent() {
       <TransactionHeader 
         isEditMode={isEditMode}
         editNoteNumber={editNoteNumber}
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
         selectedCashiers={selectedCashiers}
         setSelectedCashiers={setSelectedCashiers}
         cashiers={cashiers}
         onExport={handleExport}
         onImportClick={() => setIsImportModalOpen(true)}
-        onClearAll={() => setIsClearAllDialogOpen(true)}
-        hasRows={rows.length > 0}
       />
 
-      <TransactionSummary totals={totals} />
 
       <TransactionsFooter 
         totals={totals}
@@ -443,6 +438,9 @@ function TransactionsPageContent() {
         onSave={handleSave}
         isEditMode={isEditMode}
         hasRows={rows.length > 0}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        onClearAll={() => setIsClearAllDialogOpen(true)}
       />
 
       <AddTransactionForm 

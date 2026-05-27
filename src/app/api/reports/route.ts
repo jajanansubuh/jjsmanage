@@ -68,8 +68,6 @@ export async function GET(req: Request) {
     if (session?.user?.role?.toUpperCase() === "SUPPLIER") {
       supplierId = session.user.supplierId || "INVALID_SUPPLIER_ID"; // Force their own supplierId
       date = null;
-      startDate = null;
-      endDate = null;
     }
 
     const whereClause: Prisma.ConsignmentReportWhereInput = {};

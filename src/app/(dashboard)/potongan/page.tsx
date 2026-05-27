@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Plus
 } from "lucide-react";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface DeductionDetail {
   id: string;
@@ -60,6 +61,9 @@ export default function PotonganSummaryPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const historyPerPage = 10;
 
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -71,7 +75,12 @@ export default function PotonganSummaryPage() {
         const normalizedRole = roleData.role?.toUpperCase();
         setRole(normalizedRole);
 
-        const deductionsRes = await fetch('/api/deductions/summary');
+        const queryParams = new URLSearchParams();
+        if (startDate) queryParams.append("startDate", startDate);
+        if (endDate) queryParams.append("endDate", endDate);
+        const url = `/api/deductions/summary${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+
+        const deductionsRes = await fetch(url);
         if (!deductionsRes.ok) {
           const errData = await deductionsRes.json();
           throw new Error(errData.error || "Gagal mengambil data potongan");
@@ -92,7 +101,7 @@ export default function PotonganSummaryPage() {
     };
 
     fetchData();
-  }, []);
+  }, [startDate, endDate]);
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";
@@ -170,9 +179,19 @@ export default function PotonganSummaryPage() {
           <p className="text-slate-400 text-sm md:text-base font-medium">Akumulasi potongan (Barcode, S.Charge, Kukuluban) dari transaksi.</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onChange={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+            className="w-full sm:w-72 h-12 bg-slate-950/40"
+          />
+
           {role !== "SUPPLIER" && (
-            <div className="relative group w-full md:w-80">
+            <div className="relative group w-full sm:w-80">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
               <Input
                 placeholder="Cari Mitra / Pemilik..."

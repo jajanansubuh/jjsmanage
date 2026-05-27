@@ -7,6 +7,22 @@ export async function GET(req: Request) {
     const session = await getSession();
     const userRole = session?.user?.role?.toUpperCase();
 
+    const { searchParams } = new URL(req.url);
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    let dateFilter: any = undefined;
+    if (startDateParam && endDateParam) {
+      const start = new Date(startDateParam);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDateParam);
+      end.setHours(23, 59, 59, 999);
+      dateFilter = {
+        gte: start,
+        lte: end
+      };
+    }
+
     if (userRole === "SUPPLIER") {
       const supplierId = session.user.supplierId;
       if (!supplierId) {
@@ -14,7 +30,10 @@ export async function GET(req: Request) {
       }
 
       const aggregate = await prisma.consignmentReport.aggregate({
-        where: { supplierId },
+        where: { 
+          supplierId,
+          ...(dateFilter ? { date: dateFilter } : {})
+        },
         _sum: {
           barcode: true,
           serviceCharge: true,
@@ -25,6 +44,7 @@ export async function GET(req: Request) {
       const history = await prisma.consignmentReport.findMany({
         where: {
           supplierId,
+          ...(dateFilter ? { date: dateFilter } : {}),
           OR: [
             { barcode: { gt: 0 } },
             { serviceCharge: { gt: 0 } },
@@ -71,6 +91,7 @@ export async function GET(req: Request) {
           kukuluban: true
         },
         where: {
+          ...(dateFilter ? { date: dateFilter } : {}),
           OR: [
             { barcode: { gt: 0 } },
             { serviceCharge: { gt: 0 } },
