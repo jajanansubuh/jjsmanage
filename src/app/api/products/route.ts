@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth-utils";
+import { requireAdmin } from "@/lib/api-auth";
 
 const normalizeProductName = (val: string | null | undefined) =>
   String(val || "")
@@ -19,9 +20,14 @@ export async function GET(req: Request) {
 
     // Check session for Role Based Access
     const session = await getSession();
+    const isSupplier = session?.user?.role?.toUpperCase() === "SUPPLIER";
     
     if (forLookup) {
+      const where = isSupplier
+        ? { supplierId: session.user.supplierId || "INVALID_SUPPLIER_ID" }
+        : {};
       const products = await prisma.product.findMany({
+        where,
         select: { id: true, name: true, code: true, supplierId: true, supplier: { select: { id: true, name: true } } },
         orderBy: { name: "asc" },
       });
@@ -32,13 +38,16 @@ export async function GET(req: Request) {
     if (targetName) {
       const normalized = targetName.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
       const product = await prisma.product.findFirst({
-        where: { name: { equals: normalized, mode: "insensitive" } },
+        where: {
+          name: { equals: normalized, mode: "insensitive" },
+          ...(isSupplier ? { supplierId: session.user.supplierId || "INVALID_SUPPLIER_ID" } : {}),
+        },
         select: { id: true, name: true, code: true }
       });
       return NextResponse.json(product ? [product] : []);
     }
 
-    if (session?.user?.role?.toUpperCase() === "SUPPLIER") {
+    if (isSupplier) {
       targetSupplierId = session.user.supplierId || "INVALID_SUPPLIER_ID";
     }
 
@@ -70,6 +79,9 @@ type ProductCreateBody = {
 
 export async function POST(req: Request) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const payload = await req.json();
 
     // Import logic: array of { name, code, supplierId? }
@@ -145,10 +157,8 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const session = await getSession();
-    if (!session || session.user?.role?.toUpperCase() !== "ADMIN") {
-      return NextResponse.json({ error: "Akses ditolak: Hanya Admin yang dapat mengedit produk" }, { status: 403 });
-    }
+    const { response } = await requireAdmin();
+    if (response) return response;
 
     const { id, name, code, supplierId } = await req.json();
     if (!id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
@@ -232,10 +242,8 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getSession();
-    if (!session || session.user?.role?.toUpperCase() !== "ADMIN") {
-      return NextResponse.json({ error: "Akses ditolak: Hanya Admin yang dapat menghapus produk" }, { status: 403 });
-    }
+    const { response } = await requireAdmin();
+    if (response) return response;
 
     const { id } = await req.json();
     if (!id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });

@@ -1,8 +1,10 @@
-import { History, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { History, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 interface DeductionTabProps {
@@ -26,6 +28,19 @@ export function DeductionTab({
   setEndDate,
   onSelectDeduction
 }: DeductionTabProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deductionSearch, startDate, endDate]);
+
+  const totalPages = Math.ceil(filteredDeductions.length / itemsPerPage);
+  const paginatedDeductions = filteredDeductions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <Card className="border border-white/5 border-t-4 border-t-rose-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-rose-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -65,10 +80,10 @@ export function DeductionTab({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDeductions.length === 0 ? (
+            {paginatedDeductions.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-20 text-slate-500 italic">Tidak ada riwayat potongan dalam periode ini.</TableCell></TableRow>
             ) : (
-              filteredDeductions.map((d) => {
+              paginatedDeductions.map((d) => {
                 const totalDeduction = (d.serviceCharge || 0) + (d.kukuluban || 0) + (d.tabungan || 0);
                 return (
                   <TableRow
@@ -92,6 +107,34 @@ export function DeductionTab({
             )}
           </TableBody>
         </Table>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/[0.01]">
+            <p className="text-xs text-slate-400 font-medium">
+              Halaman {currentPage} dari {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

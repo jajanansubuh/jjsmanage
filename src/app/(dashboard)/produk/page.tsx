@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 // Hooks
 import { useProductsData, normalizeName, AggregatedProduct } from "./hooks/use-products-data";
@@ -26,7 +27,7 @@ import { syncProductsFromReportsAction } from "@/lib/actions/products";
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateRange, setDateRange] = useState<any>(() => {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     return {
@@ -35,7 +36,6 @@ export default function ProductsPage() {
     };
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof AggregatedProduct; direction: "asc" | "desc" } | null>({ key: "totalJual", direction: "desc" });
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isMergeOpen, setIsMergeOpen] = useState(false);
@@ -124,7 +124,7 @@ export default function ProductsPage() {
       XLSX.utils.book_append_sheet(wb, ws, "Produk");
       XLSX.writeFile(wb, `Katalog_Produk_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
       toast.success("Data berhasil diekspor");
-    } catch (err) {
+    } catch {
       toast.error("Gagal mengekspor data");
     } finally {
       setIsExporting(false);
@@ -160,7 +160,6 @@ export default function ProductsPage() {
       <ProductHeader 
         onExport={handleExport}
         onImport={() => setIsImportOpen(true)}
-        onAdd={() => setIsAddOpen(true)}
         onMerge={() => setIsMergeOpen(true)}
         isExporting={isExporting}
         userRole={role}
@@ -173,8 +172,8 @@ export default function ProductsPage() {
         setSearchTerm={setSearchTerm}
         dateRange={dateRange}
         setDateRange={setDateRange}
-        isCalendarOpen={isCalendarOpen}
-        setIsCalendarOpen={setIsCalendarOpen}
+        onAdd={() => setIsAddOpen(true)}
+        userRole={role}
       />
 
       <ProductTable 

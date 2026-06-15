@@ -9,7 +9,7 @@ const normalizeProductName = (val: string | null | undefined) =>
     .replace(/[.,\s]+$/, "")
     .replace(/\s+/g, " ");
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     const session = await getSession();
     if (!session || session.user?.role?.toUpperCase() !== "ADMIN") {

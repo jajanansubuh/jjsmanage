@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,10 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
-  Wallet,
   User as UserIcon,
   Calendar,
   AlertCircle
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface SavingsDetail {
   id: string;
@@ -48,6 +46,13 @@ export default function SavingsPage() {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
   const [historyPage, setHistoryPage] = useState(1);
   const historyPerPage = 10;
+  const [adminPage, setAdminPage] = useState(1);
+  const adminPerPage = 10;
+
+  useEffect(() => {
+    setHistoryPage(1);
+    setAdminPage(1);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -113,6 +118,15 @@ export default function SavingsPage() {
 
     return result;
   }, [adminData, searchTerm, sortConfig]);
+
+  const paginatedAdminData = useMemo(() => {
+    const start = (adminPage - 1) * adminPerPage;
+    return filteredAdminData.slice(start, start + adminPerPage);
+  }, [filteredAdminData, adminPage]);
+
+  const adminTotalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredAdminData.length / adminPerPage));
+  }, [filteredAdminData]);
 
   // Paginated supplier history
   const paginatedHistory = useMemo(() => {
@@ -263,11 +277,23 @@ export default function SavingsPage() {
                   <div className="flex items-center justify-between px-2 py-2">
                     <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
-                        <ChevronLeft className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                        disabled={historyPage === 1}
+                        className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
-                        <ChevronRight className="w-4 h-4" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
+                        disabled={historyPage === historyTotalPages}
+                        className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                      >
+                        <ChevronRight className="w-5 h-5" />
                       </Button>
                     </div>
                   </div>
@@ -350,11 +376,23 @@ export default function SavingsPage() {
                     <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-900/40">
                       <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.max(1, p - 1))} disabled={historyPage === 1} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
-                          <ChevronLeft className="w-4 h-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                          disabled={historyPage === 1}
+                          className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))} disabled={historyPage === historyTotalPages} className="bg-transparent border-white/10 text-white hover:bg-white/5 h-8 w-8 p-0">
-                          <ChevronRight className="w-4 h-4" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
+                          disabled={historyPage === historyTotalPages}
+                          className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                        >
+                          <ChevronRight className="w-5 h-5" />
                         </Button>
                       </div>
                     </div>
@@ -371,7 +409,7 @@ export default function SavingsPage() {
         )
       ) : (
         /* Admin View */
-        <div className="px-4 md:px-0">
+        <div className="px-4 md:px-0 space-y-4">
           <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -396,14 +434,14 @@ export default function SavingsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAdminData.length === 0 ? (
+                    {paginatedAdminData.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={3} className="text-center py-24 text-slate-500 font-medium italic">
                           Tidak ada data tabungan mitra.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredAdminData.map((item) => (
+                      paginatedAdminData.map((item) => (
                         <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
                           <TableCell className="py-6 px-8">
                             <div className="flex items-center gap-4">
@@ -442,6 +480,34 @@ export default function SavingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {adminTotalPages > 1 && (
+            <div className="flex items-center justify-between p-6 border border-white/5 rounded-[2rem] bg-slate-900/40">
+              <p className="text-xs text-slate-400 font-medium">
+                Halaman {adminPage} dari {adminTotalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setAdminPage(prev => Math.max(prev - 1, 1))}
+                  disabled={adminPage === 1}
+                  className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setAdminPage(prev => Math.min(prev + 1, adminTotalPages))}
+                  disabled={adminPage === adminTotalPages}
+                  className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

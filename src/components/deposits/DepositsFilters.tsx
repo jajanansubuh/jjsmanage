@@ -1,6 +1,4 @@
-import { format, startOfDay, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
-import { id as localeId } from "date-fns/locale";
-import { CalendarIcon, Filter, Search, CheckCircle2, Printer } from "lucide-react";
+import { Filter, Search, CheckCircle2, Printer, FileSpreadsheet } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,9 +18,8 @@ interface DepositsFiltersProps {
   filteredAndSortedData: DepositItem[];
   onValidateAllClick: () => void;
   onPrintClick: () => void;
+  onExportExcelClick: () => void;
 }
-
-import { useState } from "react";
 
 export function DepositsFilters({
   role,
@@ -34,7 +31,8 @@ export function DepositsFilters({
   setSearchTerm,
   filteredAndSortedData,
   onValidateAllClick,
-  onPrintClick
+  onPrintClick,
+  onExportExcelClick
 }: DepositsFiltersProps) {
   if (role === "SUPPLIER") return null;
 
@@ -89,16 +87,25 @@ export function DepositsFilters({
             <Button
               onClick={onValidateAllClick}
               disabled={filteredAndSortedData.filter(i => !i.isValidated).length === 0}
-              className="flex-1 h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-wider shadow-lg shadow-indigo-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2 text-xs md:text-sm"
+              className="flex-1 h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-wider shadow-lg shadow-indigo-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2 text-xs md:text-sm px-2"
             >
-              <CheckCircle2 className="w-5 h-5 shrink-0" /> <span className="truncate">Validasi Semua</span>
+              <CheckCircle2 className="w-4 h-4 shrink-0 md:w-5 md:h-5" /> <span className="truncate hidden md:inline">Validasi</span>
             </Button>
+            
+            <Button
+              onClick={onExportExcelClick}
+              disabled={filteredAndSortedData.length === 0}
+              className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2 text-xs md:text-sm px-2"
+            >
+              <FileSpreadsheet className="w-4 h-4 shrink-0 md:w-5 md:h-5" /> <span className="truncate">Export</span>
+            </Button>
+
             <Button
               onClick={onPrintClick}
               disabled={filteredAndSortedData.length === 0}
-              className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2 text-xs md:text-sm"
+              className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider shadow-lg shadow-emerald-900/20 transition-all active:scale-95 disabled:opacity-50 gap-2 text-xs md:text-sm px-2"
             >
-              <Printer className="w-5 h-5 shrink-0" /> <span className="truncate">Cetak</span>
+              <Printer className="w-4 h-4 shrink-0 md:w-5 md:h-5" /> <span className="truncate">Cetak</span>
             </Button>
           </div>
         </>

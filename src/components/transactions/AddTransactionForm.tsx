@@ -1,4 +1,4 @@
-import { Plus, Calculator } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,8 +23,6 @@ export function AddTransactionForm({
   onSupplierChange,
   onAdd,
   suppliers,
-  previewProfit80,
-  previewProfit20,
   onKeyDown
 }: AddTransactionFormProps) {
   const revenueRef = useRef<HTMLInputElement>(null);

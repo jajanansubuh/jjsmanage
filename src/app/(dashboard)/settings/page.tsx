@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { User, Database, Download, Upload, Loader2, FileSpreadsheet, KeyRound, CheckCircle2, AlertCircle, ShieldCheck, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { importDatabaseAction } from "@/lib/actions/import";
 import UserManagement from "@/components/settings/UserManagement";
@@ -17,6 +18,9 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRestoreModalOpen, setIsRestoreModalOpen] = useState(false);
+  const [restoreConfirmWord, setRestoreConfirmWord] = useState("");
   const [systemStats, setSystemStats] = useState<{
     reportCount: number,
     supplierCount: number,
@@ -30,6 +34,7 @@ export default function SettingsPage() {
   
   const [formData, setFormData] = useState({ username: "", password: "" });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
 
   const fetchSystemStats = async () => {
     try {
@@ -137,6 +142,60 @@ export default function SettingsPage() {
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRestoreClick = () => {
+    setRestoreConfirmWord("");
+    setIsRestoreModalOpen(true);
+  };
+
+  const handleRestoreConfirm = () => {
+    if (restoreConfirmWord !== "PULIHKAN") {
+      toast.error("Kata verifikasi salah. Proses dibatalkan.");
+      return;
+    }
+    setIsRestoreModalOpen(false);
+    setRestoreConfirmWord("");
+    // Baru buka file explorer setelah konfirmasi berhasil
+    zipInputRef.current?.click();
+  };
+
+  const handleRestoreZip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith(".zip")) {
+      toast.error("Hanya file .zip hasil backup yang diperbolehkan");
+      if (zipInputRef.current) zipInputRef.current.value = "";
+      return;
+    }
+
+    try {
+      setIsRestoring(true);
+      toast.info("Sedang memulihkan database menyeluruh...");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/backup/restore", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        toast.success(result.message || "Database berhasil dipulihkan sepenuhnya!");
+        fetchSystemStats();
+      } else {
+        toast.error(result.error || "Gagal memulihkan database");
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan saat memulihkan database");
+    } finally {
+      setIsRestoring(false);
+      if (zipInputRef.current) zipInputRef.current.value = "";
     }
   };
 
@@ -351,7 +410,7 @@ export default function SettingsPage() {
 
             <UserManagement />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
                 <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-6">
                   <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
@@ -414,10 +473,106 @@ export default function SettingsPage() {
                   </Button>
                 </CardContent>
               </Card>
+
+              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+                <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-6">
+                  <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
+                    <Database className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-blue-500" /> Restore Database
+                  </CardTitle>
+                  <CardDescription className="text-slate-400 text-xs">Unggah file backup .zip langsung.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex-1 flex flex-col justify-center p-4 sm:pt-6 sm:px-6 sm:pb-6">
+                  <input 
+                    type="file" 
+                    accept=".zip" 
+                    ref={zipInputRef} 
+                    onChange={handleRestoreZip} 
+                    className="hidden" 
+                  />
+                  <Button 
+                    onClick={handleRestoreClick} 
+                    disabled={isRestoring}
+                    className="w-full h-11 sm:h-12 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {isRestoring ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Memulihkan...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Restore ZIP
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         )}
       </div>
+
+      {/* Restore Confirmation Modal */}
+      <Dialog open={isRestoreModalOpen} onOpenChange={setIsRestoreModalOpen}>
+        <DialogContent className="!max-w-md !rounded-3xl !bg-slate-900 !border !border-white/10 !p-0 overflow-hidden" showCloseButton={false}>
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-white tracking-tight">Restore Database</h3>
+                <p className="text-sm text-slate-400 font-medium leading-relaxed">
+                  Tindakan ini akan <span className="text-red-400 font-bold">menghapus seluruh database saat ini</span> dan menggantinya dengan data dari file backup ZIP Anda.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/15 space-y-1.5">
+              <div className="flex items-center gap-2 text-red-400">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <p className="text-xs font-bold uppercase tracking-wider">Peringatan</p>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Semua data yang belum dibackup akan <span className="text-red-400 font-semibold">hilang secara permanen</span> dan tidak dapat dikembalikan.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                Ketik <span className="text-red-400 font-black">PULIHKAN</span> untuk melanjutkan
+              </Label>
+              <Input
+                value={restoreConfirmWord}
+                onChange={(e) => setRestoreConfirmWord(e.target.value)}
+                placeholder="Ketik PULIHKAN di sini..."
+                className="h-12 bg-white/5 border-white/10 text-white font-bold text-center text-lg tracking-widest focus-visible:ring-red-500/50 rounded-2xl transition-all placeholder:text-slate-600 placeholder:font-normal placeholder:text-sm placeholder:tracking-normal"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleRestoreConfirm();
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 p-4 sm:p-6 border-t border-white/5 bg-white/[0.02]">
+            <Button
+              onClick={() => { setIsRestoreModalOpen(false); setRestoreConfirmWord(""); }}
+              className="flex-1 h-11 text-[10px] font-black uppercase tracking-widest bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-2xl transition-all"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleRestoreConfirm}
+              disabled={restoreConfirmWord !== "PULIHKAN"}
+              className="flex-1 h-11 text-[10px] font-black uppercase tracking-widest bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-red-300/30 shadow-lg shadow-red-600/20 rounded-2xl transition-all"
+            >
+              Pulihkan Database
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

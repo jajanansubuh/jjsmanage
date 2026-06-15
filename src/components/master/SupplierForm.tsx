@@ -76,10 +76,18 @@ interface SupplierEditFormProps {
 export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: SupplierEditFormProps) {
   const [data, setData] = useState(supplier);
 
+  const generatePassword = () => {
+    const bytes = new Uint8Array(9);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, 14);
+  };
+
   const handleCreateAccount = async () => {
     try {
       const username = data.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      const password = username + "123";
+      const password = generatePassword();
       
       const res = await fetch("/api/users", {
         method: "POST",

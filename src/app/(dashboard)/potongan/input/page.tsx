@@ -67,10 +67,10 @@ function PotonganPageContent() {
       if (row.supplierId === supplierId) {
         const newRow = { ...row, [field]: numericValue };
         const totalPotongan = newRow.serviceCharge + newRow.kukuluban + newRow.tabungan;
-        
+
         if (totalPotongan > row.totalCost) {
           toast.error(`Total potongan tidak boleh melebihi total cost (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(row.totalCost)})`);
-          
+
           const otherFieldsTotal = totalPotongan - numericValue;
           const maxAllowed = Math.max(0, row.totalCost - otherFieldsTotal);
           newRow[field] = maxAllowed;
@@ -157,7 +157,7 @@ function PotonganPageContent() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-4">
-      <PotonganHeader 
+      <PotonganHeader
         deductionNoteNumber={deductionNoteNumber}
         setDeductionNoteNumber={setDeductionNoteNumber}
         deductionDate={deductionDate}
@@ -170,20 +170,20 @@ function PotonganPageContent() {
         setSearchTerm={setSearchTerm}
       />
 
-      <PotonganTable 
+      <PotonganTable
         loading={loading}
         rows={filteredRows}
         onUpdateField={updateField}
       />
 
-      <PotonganFooter 
+      <PotonganFooter
         totals={totals}
         onSave={handleSave}
         isSaving={isSaving}
         hasRows={rows.length > 0}
       />
 
-      <PotonganSaveSuccessDialog 
+      <PotonganSaveSuccessDialog
         isOpen={isSaveSuccessModalOpen}
         onOpenChange={setIsSaveSuccessModalOpen}
         savedNoteInfo={savedNoteInfo}

@@ -2,8 +2,18 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-const secretKey = process.env.JWT_SECRET || "fallback_secret_for_dev_only";
-const key = new TextEncoder().encode(secretKey);
+const secretKey = process.env.JWT_SECRET;
+
+if (!secretKey) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET must be set in production");
+  }
+
+  console.warn("JWT_SECRET is not set. Using a development-only session secret.");
+}
+
+const resolvedSecretKey = secretKey || "development_session_secret_do_not_use_in_production";
+const key = new TextEncoder().encode(resolvedSecretKey);
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)

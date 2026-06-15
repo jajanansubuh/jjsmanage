@@ -13,6 +13,8 @@ interface ImportProductDialogProps {
   onSuccess: () => void;
 }
 
+type ProductImportRow = Record<string, string | number | null | undefined>;
+
 export function ImportProductDialog({
   isOpen,
   onOpenChange,
@@ -33,7 +35,7 @@ export function ImportProductDialog({
         const workbook = XLSX.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet) as ProductImportRow[];
 
         const formattedData = jsonData.map(row => {
           const name = row["Nama Barang"] || row["name"] || row["Nama"];
@@ -55,9 +57,13 @@ export function ImportProductDialog({
             code: code?.toString() || "",
             supplierId: targetSupplierId
           };
-        }).filter(item => item.name);
+        }).filter((item): item is { name: string; code: string; supplierId: string | null } => !!item.name);
         
-        const uniqueItemsMap = new Map();
+        const uniqueItemsMap = new Map<string, {
+          name: string;
+          code: string;
+          supplierId: string | null;
+        }>();
         formattedData.forEach(item => {
           // Key by name and supplierId to allow same name for different suppliers
           const key = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
@@ -84,8 +90,8 @@ export function ImportProductDialog({
           const errorData = await res.json();
           throw new Error(errorData.error || "Gagal menyimpan data ke server");
         }
-      } catch (err: any) {
-        toast.error(err.message || "Gagal mengimpor data.");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Gagal mengimpor data.");
       } finally {
         setIsImporting(false);
       }

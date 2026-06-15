@@ -1,10 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
-import { Product } from "./use-cetak-data";
+import { PrintQueueItem, Product, SelectedPrintItem } from "@/types/cetak";
 import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
 
-export function usePrintSelection(initialRole: string | null) {
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+export function usePrintSelection() {
+  const [selectedItems, setSelectedItems] = useState<SelectedPrintItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   const sortedSelectedItems = useMemo(() => {
@@ -41,7 +41,7 @@ export function usePrintSelection(initialRole: string | null) {
     setSelectedItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
-  const addFromQueue = useCallback((item: any, codeLookupMap: Record<string, string>) => {
+  const addFromQueue = useCallback((item: PrintQueueItem, codeLookupMap: Record<string, string>) => {
     setSelectedItems(prev => {
       if (prev.find(si => si.name === item.name && si.code === item.code)) {
         toast.info("Barang sudah ada di daftar cetak");

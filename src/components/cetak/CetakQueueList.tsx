@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { Clock, History, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PrintQueueItem } from "@/types/cetak";
 
 interface CetakQueueListProps {
-  queueItems: any[];
+  queueItems: PrintQueueItem[];
   isQueueLoading: boolean;
   onRefresh: () => void;
   onClear: () => void;
-  onAddFromQueue: (item: any) => void;
+  onAddFromQueue: (item: PrintQueueItem) => void;
   onMarkAsDone: (id: string) => void;
   onMarkAllDone: () => void;
   onUpdateQty?: (id: string, qty: number) => void;

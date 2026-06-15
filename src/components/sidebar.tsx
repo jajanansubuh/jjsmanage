@@ -11,7 +11,6 @@ import {
   Menu,
   X,
   LogOut,
-  ShieldCheck,
   Wallet,
   History,
   Coins,
@@ -28,7 +27,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";

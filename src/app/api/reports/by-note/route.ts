@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/api-auth";
 
 // DELETE all reports by noteNumber
 export async function DELETE(req: Request) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const { searchParams } = new URL(req.url);
     const noteNumber = searchParams.get("noteNumber");
 

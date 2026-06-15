@@ -9,7 +9,6 @@ import {
   ArrowUpRight, 
   ArrowDownRight, 
   DollarSign, 
-  Calendar as CalendarIcon,
   History,
   Coins
 } from "lucide-react";
@@ -18,24 +17,8 @@ import { RevenueTrend } from "@/components/revenue-trend";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { id } from "date-fns/locale";
 import Link from "next/link";
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { buttonVariants } from "@/components/ui/button";
 import { PayoutHistoryModal } from "@/components/payout-history-modal";
 
 

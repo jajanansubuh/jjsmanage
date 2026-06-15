@@ -44,7 +44,9 @@ import {
   Store, 
   Loader2, 
   Search,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -87,6 +89,8 @@ export default function UserManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [formData, setFormData] = useState({
     username: "",
@@ -127,6 +131,10 @@ export default function UserManagement() {
     fetchUsers();
     fetchSuppliers();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const handleOpenAdd = () => {
     setEditingUser(null);
@@ -233,6 +241,12 @@ export default function UserManagement() {
     (user.name?.toLowerCase() || "").includes(search.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const getRoleBadge = (role: string) => {
     switch (role) {
       case "ADMIN":
@@ -297,7 +311,7 @@ export default function UserManagement() {
             <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
             <p className="text-slate-400 font-medium animate-pulse">Memuat database user...</p>
           </div>
-        ) : filteredUsers.length === 0 ? (
+        ) : paginatedUsers.length === 0 ? (
           <div className="text-center py-12 sm:py-24 border-2 border-dashed border-white/5 rounded-2xl sm:rounded-[2.5rem] bg-white/[0.01]">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Users className="w-10 h-10 text-slate-600" />
@@ -309,7 +323,7 @@ export default function UserManagement() {
           <>
             {/* Mobile Card Layout */}
             <div className="sm:hidden space-y-3">
-              {filteredUsers.map((user) => (
+              {paginatedUsers.map((user) => (
                 <div key={user.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
@@ -356,7 +370,7 @@ export default function UserManagement() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {paginatedUsers.map((user) => (
                       <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-4">
@@ -396,6 +410,34 @@ export default function UserManagement() {
                 </Table>
               </div>
             </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-6 border border-white/5 rounded-[2rem] bg-white/[0.01]">
+                <p className="text-xs text-slate-400 font-medium">
+                  Halaman {currentPage} dari {totalPages}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </CardContent>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { requireAdmin } from "@/lib/api-auth";
 // Refresh schema context
 
 type ReportWithSupplier = Prisma.ConsignmentReportGetPayload<{ include: { supplier: true } }>;
@@ -57,8 +58,8 @@ export async function GET(req: Request) {
     let date = searchParams.get('date');
     const noteNumber = searchParams.get('noteNumber');
     let supplierId = searchParams.get('supplierId');
-    let startDate = searchParams.get('startDate');
-    let endDate = searchParams.get('endDate');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     const deductionNoteNumber = searchParams.get('deductionNoteNumber');
     
     // Check session for Role Based Access
@@ -135,6 +136,9 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const data = (await req.json()) as unknown;
     
     // Support single or multiple reports

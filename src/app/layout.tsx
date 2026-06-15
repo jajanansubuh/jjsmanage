@@ -9,7 +9,6 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
-import { Sidebar } from "@/components/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { PWAInstallPrompt } from "@/components/pwa-install-prompt";
 import { ServiceWorkerRegister } from "@/components/sw-register";

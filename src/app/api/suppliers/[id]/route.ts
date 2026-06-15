@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/api-auth";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const { id } = await params;
     const supplier = await prisma.supplier.findUnique({
       where: { id },
@@ -17,6 +21,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const { id } = await params;
     const { name, ownerName, bankName, accountNumber } = await req.json();
     if (!name) return NextResponse.json({ error: "Nama UMKM is required" }, { status: 400 });
@@ -34,6 +41,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const { id } = await params;
     const { username, password } = await req.json();
 
@@ -44,6 +54,10 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
 
     if (!user) {
       return NextResponse.json({ error: "Username tidak ditemukan" }, { status: 401 });
+    }
+
+    if (user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Akun tidak memiliki akses admin" }, { status: 403 });
     }
 
     const isPasswordValid = await import("bcryptjs").then(bcrypt => bcrypt.compare(password, user.password));

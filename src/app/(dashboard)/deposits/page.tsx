@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { format, startOfMonth } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
 
 // Hooks
@@ -151,6 +152,70 @@ export default function DepositsPage() {
     } catch (e) { alert("Kesalahan sistem."); }
   };
 
+  const handleExportExcel = async () => {
+    const XLSX = await import("xlsx");
+    const { toast } = await import("sonner");
+
+    const formattedFrom = dateRange?.from ? format(dateRange.from, "dd MMM yyyy", { locale: localeId }) : "";
+    const formattedTo = dateRange?.to ? format(dateRange.to, "dd MMM yyyy", { locale: localeId }) : "";
+    const rangeText = formattedFrom === formattedTo ? formattedFrom : `${formattedFrom} - ${formattedTo}`;
+    
+    const titleText = role === "SUPPLIER" ? "LAPORAN SALDO MITRA JJS" : "LAPORAN PENYETORAN MITRA JJS";
+
+    const dataToPrint = [...filteredAndSortedData].sort((a, b) =>
+      a.name.localeCompare(b.name, 'id', { sensitivity: 'base' })
+    );
+
+    const exportData = dataToPrint.map((d, i) => ({
+      "NO": i + 1,
+      "NAMA UMKM": d.name,
+      "PEMILIK": d.ownerName || "-",
+      "BANK": d.bankName || "-",
+      "NO REKENING": d.accountNumber || "-",
+      "TOTAL SETOR": d.dailyProfit
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet([]);
+
+    // Add Title and Period
+    XLSX.utils.sheet_add_aoa(worksheet, [
+      [titleText],
+      [`Periode: ${rangeText}`],
+      [],
+    ], { origin: "A1" });
+
+    // Add Data
+    XLSX.utils.sheet_add_json(worksheet, exportData, { origin: "A4" });
+
+    const totalPayout = dataToPrint.reduce((sum, item) => sum + item.dailyProfit, 0);
+    const totalMines = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
+    
+    // Add Totals
+    XLSX.utils.sheet_add_json(worksheet, [
+      {
+        "NO": "",
+        "NAMA UMKM": "",
+        "PEMILIK": "",
+        "BANK": "",
+        "NO REKENING": "Total Mines",
+        "TOTAL SETOR": totalMines
+      },
+      {
+        "NO": "",
+        "NAMA UMKM": "",
+        "PEMILIK": "",
+        "BANK": "",
+        "NO REKENING": "Total Seluruhnya",
+        "TOTAL SETOR": totalPayout
+      }
+    ], { origin: -1, skipHeader: true });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan");
+    XLSX.writeFile(workbook, `Laporan_${format(new Date(), "yyyyMMdd")}.xlsx`);
+    toast.success("Data berhasil diexport ke Excel");
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-0 md:px-0">
       
@@ -191,6 +256,7 @@ export default function DepositsPage() {
           filteredAndSortedData={filteredAndSortedData}
           onValidateAllClick={handleValidateAllClick}
           onPrintClick={() => handlePrintDeposits(filteredAndSortedData, dateRange, role, bankFilter)}
+          onExportExcelClick={handleExportExcel}
         />
       </div>
 

@@ -1,5 +1,4 @@
-import { format } from "date-fns";
-import { ArrowUpDown, CheckCircle2, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowUpDown, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -40,7 +39,7 @@ export function DepositsTable({
     return sortConfig.direction === "asc" ? <ArrowUpDown className="w-3 h-3 text-emerald-400" /> : <ArrowUpDown className="w-3 h-3 text-emerald-400 rotate-180" />;
   };
 
-  const PaginationUI = () => (
+  const paginationUi =
     filteredAndSortedData.length > itemsPerPage ? (
       <div className="flex items-center justify-between px-6 py-4 border-t border-white/5 bg-slate-900/40">
         <span className="text-xs text-slate-400 font-medium">
@@ -67,8 +66,7 @@ export function DepositsTable({
           </Button>
         </div>
       </div>
-    ) : null
-  );
+    ) : null;
 
   return (
     <>
@@ -153,7 +151,7 @@ export function DepositsTable({
               </CardContent>
             </Card>
           ))}
-          <PaginationUI />
+          {paginationUi}
         </>
         )}
       </div>
@@ -279,7 +277,7 @@ export function DepositsTable({
             </Table>
           </div>
         </CardContent>
-        <PaginationUI />
+        {paginationUi}
       </Card>
     </>
   );

@@ -1,7 +1,7 @@
 import { Search, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Product } from "@/app/(dashboard)/cetak/hooks/use-cetak-data";
+import { Product } from "@/types/cetak";
 
 interface CetakProductSearchProps {
   searchTerm: string;

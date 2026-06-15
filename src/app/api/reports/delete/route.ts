@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { requireAdmin } from "@/lib/api-auth";
 
 export async function POST(req: Request) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const { noteNumber, username, password } = await req.json();
 
     // 1. Validate credentials against database
@@ -15,6 +19,10 @@ export async function POST(req: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Username tidak ditemukan" }, { status: 401 });
+    }
+
+    if (user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Akun tidak memiliki akses admin" }, { status: 403 });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);

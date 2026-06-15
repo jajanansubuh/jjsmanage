@@ -1,15 +1,12 @@
-import { Download, Upload, Trash2, ChevronDown, Check, Calendar as CalendarIcon, Scissors } from "lucide-react";
+import { Download, Upload, ChevronDown, Check, Scissors } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 
 interface TransactionHeaderProps {
   isEditMode: boolean;
@@ -94,4 +91,3 @@ export function TransactionHeader({
     </div>
   );
 }
-

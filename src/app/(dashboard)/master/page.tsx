@@ -20,7 +20,7 @@ import { CashierAddForm } from "@/components/master/CashierForm";
 
 // Dialogs
 import { SupplierManageDialog } from "@/components/master/SupplierManageDialog";
-import { SupplierHistoryDialog } from "@/components/master/SupplierHistoryDialog";
+import { SupplierProductsDialog } from "@/components/master/SupplierProductsDialog";
 import { DeleteSupplierConfirmDialog } from "@/components/master/DeleteSupplierConfirmDialog";
 
 export default function MasterDataPage() {
@@ -34,16 +34,16 @@ export default function MasterDataPage() {
   const [isSupplierDialogOpen, setIsSupplierDialogOpen] = useState(false);
   const [isCashierDialogOpen, setIsCashierDialogOpen] = useState(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState(false);
-  const [isHistoryDialogOpen, setIsHistoryDialogOpen] = useState(false);
+  const [isProductsDialogOpen, setIsProductsDialogOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   // Selected item state
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<string | null>(null);
   
-  // History state
-  const [supplierHistory, setSupplierHistory] = useState<any[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  // Products state
+  const [supplierProducts, setSupplierProducts] = useState<any[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
 
   // Delete state
   const [deleteCredentials, setDeleteCredentials] = useState({ username: "", password: "" });
@@ -54,26 +54,25 @@ export default function MasterDataPage() {
   const [supplierSortConfig, setSupplierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   const [cashierSortConfig, setCashierSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
 
-  // History fetch
+  // Products fetch
   useEffect(() => {
-    if (isHistoryDialogOpen && selectedSupplier?.id) {
-      const fetchSupplierHistory = async (supplierId: string) => {
-        setHistoryLoading(true);
-        setSupplierHistory([]);
+    if (isProductsDialogOpen && selectedSupplier?.id) {
+      const fetchSupplierProducts = async (supplierId: string) => {
+        setProductsLoading(true);
+        setSupplierProducts([]);
         try {
-          const res = await fetch(`/api/reports?supplierId=${supplierId}&limit=100`);
+          const res = await fetch(`/api/products?supplierId=${supplierId}`);
           const data = await res.json();
-          const reportsData = Array.isArray(data) ? data : (data.reports || []);
-          setSupplierHistory(reportsData);
+          setSupplierProducts(Array.isArray(data) ? data : []);
         } catch (error) {
-          toast.error("Gagal mengambil riwayat transaksi");
+          toast.error("Gagal mengambil daftar produk");
         } finally {
-          setHistoryLoading(false);
+          setProductsLoading(false);
         }
       };
-      fetchSupplierHistory(selectedSupplier.id);
+      fetchSupplierProducts(selectedSupplier.id);
     }
-  }, [isHistoryDialogOpen, selectedSupplier?.id]);
+  }, [isProductsDialogOpen, selectedSupplier?.id]);
 
   // Sorting & Filtering (Suppliers)
   const filteredSuppliers = useMemo(() => {
@@ -291,7 +290,7 @@ export default function MasterDataPage() {
                 requestSupplierSort={requestSupplierSort}
                 onSupplierClick={(s) => {
                   setSelectedSupplier(s);
-                  setIsHistoryDialogOpen(true);
+                  setIsProductsDialogOpen(true);
                 }}
                 onManageClick={(s) => {
                   setSelectedSupplier(s);
@@ -362,12 +361,12 @@ export default function MasterDataPage() {
         }}
       />
 
-      <SupplierHistoryDialog 
-        isOpen={isHistoryDialogOpen}
-        onOpenChange={setIsHistoryDialogOpen}
+      <SupplierProductsDialog 
+        isOpen={isProductsDialogOpen}
+        onOpenChange={setIsProductsDialogOpen}
         selectedSupplier={selectedSupplier}
-        historyLoading={historyLoading}
-        supplierHistory={supplierHistory}
+        productsLoading={productsLoading}
+        supplierProducts={supplierProducts}
       />
 
       <DeleteSupplierConfirmDialog 

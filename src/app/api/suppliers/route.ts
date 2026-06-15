@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const suppliers = await prisma.supplier.findMany({
       include: {
         users: {
@@ -44,6 +48,9 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    const { response } = await requireAdmin();
+    if (response) return response;
+
     const body = (await req.json()) as { name?: string; ownerName?: string; bankName?: string; accountNumber?: string };
     const { name, ownerName, bankName, accountNumber } = body ?? {};
     if (!name) return NextResponse.json({ error: "Nama UMKM is required" }, { status: 400 });

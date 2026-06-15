@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
 
@@ -14,7 +14,56 @@ export interface AggregatedProduct {
   transactions: number;
 }
 
-export const normalizeName = (name: any) => {
+export interface SupplierOption {
+  id: string;
+  name: string;
+}
+
+interface RoleResponse {
+  role?: string | null;
+  supplierId?: string | null;
+}
+
+interface MasterProduct {
+  id: string;
+  name: string;
+  code: string | null;
+  supplierId: string | null;
+  supplier?: SupplierOption | null;
+}
+
+interface ReportItem {
+  name?: string | null;
+  qty?: number | string | null;
+  qtyBeli?: number | string | null;
+  qtyJual?: number | string | null;
+  beli?: number | string | null;
+  jual?: number | string | null;
+  retureJual?: number | string | null;
+  retur?: number | string | null;
+}
+
+interface ProductReport {
+  supplierId?: string | null;
+  supplier?: SupplierOption | null;
+  items?: unknown;
+}
+
+interface ReportsResponse {
+  reports?: ProductReport[];
+}
+
+type MasterProductMap = Record<string, {
+  id: string;
+  name: string;
+  code: string;
+  supplierName: string;
+  supplierId: string;
+}>;
+
+const toNumber = (value: number | string | null | undefined) => Number(value ?? 0);
+
+export const normalizeName = (name: unknown) => {
   return String(name || "")
     .trim()
     .toUpperCase()
@@ -27,35 +76,39 @@ export function useProductsData(dateRange: DateRange | undefined) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [products, setProducts] = useState<AggregatedProduct[]>([]);
-  const [allMasterProducts, setAllMasterProducts] = useState<any[]>([]);
-  const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>([]);
+  const [allMasterProducts, setAllMasterProducts] = useState<MasterProduct[]>([]);
+  const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
   const [role, setRole] = useState<string | null>(null);
   const [userSupplierId, setUserSupplierId] = useState<string | null>(null);
 
-  const fetchRole = async () => {
+  const fetchRole = useCallback(async () => {
     try {
       const res = await fetch("/api/auth/role");
       if (res.ok) {
-        const data = await res.json();
-        setRole(data.role);
-        setUserSupplierId(data.supplierId);
+        const data = await res.json() as RoleResponse;
+        setRole(data.role || null);
+        setUserSupplierId(data.supplierId || null);
       }
-    } catch (err) {}
-  };
+    } catch {}
+  }, []);
 
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     try {
       const res = await fetch("/api/suppliers");
       if (res.ok) {
-        const data = await res.json();
-        setSuppliers(data.map((s: any) => ({ id: s.id, name: s.name })).sort((a: any, b: any) => a.name.localeCompare(b.name)));
+        const data = await res.json() as SupplierOption[];
+        setSuppliers(
+          data
+            .map((supplier) => ({ id: supplier.id, name: supplier.name }))
+            .sort((first, second) => first.name.localeCompare(second.name))
+        );
       }
     } catch (err) {
       console.error("Failed to fetch suppliers:", err);
     }
-  };
+  }, []);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -73,9 +126,9 @@ export function useProductsData(dateRange: DateRange | undefined) {
 
       if (!reportsRes.ok) throw new Error("Gagal mengambil data laporan produk");
       
-      const reportsData = await reportsRes.json();
+      const reportsData = await reportsRes.json() as ReportsResponse;
       const reports = reportsData.reports || [];
-      const masterData = masterRes.ok ? await masterRes.json() : [];
+      const masterData = masterRes.ok ? await masterRes.json() as MasterProduct[] : [];
 
       let currentRole = role;
       let currentSupplierId = userSupplierId;
@@ -83,17 +136,17 @@ export function useProductsData(dateRange: DateRange | undefined) {
         try {
           const res = await fetch("/api/auth/role");
           if (res.ok) {
-            const data = await res.json();
-            currentRole = data.role;
-            currentSupplierId = data.supplierId;
-            setRole(data.role);
-            setUserSupplierId(data.supplierId);
+            const data = await res.json() as RoleResponse;
+            currentRole = data.role || null;
+            currentSupplierId = data.supplierId || null;
+            setRole(currentRole);
+            setUserSupplierId(currentSupplierId);
           }
-        } catch (err) {}
+        } catch {}
       }
 
-      const masterMap: Record<string, { id: string; name: string; code: string; supplierName: string; supplierId: string }> = {};
-      masterData.forEach((p: any) => {
+      const masterMap: MasterProductMap = {};
+      masterData.forEach((p) => {
         const key = `${normalizeName(p.name)}_${p.supplierId || "null"}`;
         masterMap[key] = {
           id: p.id,
@@ -105,12 +158,12 @@ export function useProductsData(dateRange: DateRange | undefined) {
       });
 
       const productMap = new Map<string, AggregatedProduct>();
-      reports.forEach((report: any) => {
-        const items = report.items || [];
+      reports.forEach((report) => {
+        const items = Array.isArray(report.items) ? report.items as ReportItem[] : [];
         const reportSupplierName = report.supplier?.name || "Tanpa Suplier";
         const reportSupplierId = report.supplierId;
-        if (Array.isArray(items)) {
-          items.forEach((item: any) => {
+        if (items.length > 0) {
+          items.forEach((item) => {
             const rawName = (item.name || '').trim();
             if (!rawName) return;
             const name = normalizeName(rawName);
@@ -120,18 +173,18 @@ export function useProductsData(dateRange: DateRange | undefined) {
 
             if (productMap.has(productKey)) {
               const existing = productMap.get(productKey)!;
-              existing.totalBeli += Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0);
-              existing.totalJual += Number(item.qtyJual ?? item.jual ?? 0);
-              existing.totalRetureJual += Number(item.retureJual ?? item.retur ?? 0);
+              existing.totalBeli += toNumber(item.qtyBeli ?? item.qty ?? item.beli);
+              existing.totalJual += toNumber(item.qtyJual ?? item.jual);
+              existing.totalRetureJual += toNumber(item.retureJual ?? item.retur);
               existing.transactions += 1;
             } else {
               productMap.set(productKey, {
                 name,
                 supplierId: reportSupplierId || undefined,
                 supplierName: reportSupplierName,
-                totalBeli: Number(item.qtyBeli ?? item.qty ?? item.beli ?? 0),
-                totalJual: Number(item.qtyJual ?? item.jual ?? 0),
-                totalRetureJual: Number(item.retureJual ?? item.retur ?? 0),
+                totalBeli: toNumber(item.qtyBeli ?? item.qty ?? item.beli),
+                totalJual: toNumber(item.qtyJual ?? item.jual),
+                totalRetureJual: toNumber(item.retureJual ?? item.retur),
                 transactions: 1
               });
             }
@@ -140,7 +193,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       });
 
       // Tambahkan produk dari master data yang belum ter-record di transaksi/reports
-      masterData.forEach((p: any) => {
+      masterData.forEach((p) => {
         const normName = normalizeName(p.name);
         const key = `${normName}_${p.supplierId || "null"}`;
 
@@ -203,13 +256,13 @@ export function useProductsData(dateRange: DateRange | undefined) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange, role, userSupplierId]);
 
   useEffect(() => {
     fetchData();
     fetchSuppliers();
     fetchRole();
-  }, [dateRange]);
+  }, [fetchData, fetchRole, fetchSuppliers]);
 
   return { loading, error, products, allMasterProducts, suppliers, role, refresh: fetchData };
 }

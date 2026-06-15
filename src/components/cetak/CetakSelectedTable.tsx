@@ -4,9 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SelectedPrintItem } from "@/types/cetak";
 
 interface CetakSelectedTableProps {
-  items: any[];
+  items: SelectedPrintItem[];
   onUpdateQty: (id: string, qty: number) => void;
   onRemoveItem: (id: string) => void;
   userRole: string | null;

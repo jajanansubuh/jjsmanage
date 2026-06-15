@@ -1,4 +1,5 @@
-import { FileText, Search, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,6 +35,19 @@ export function TransactionTab({
   onSelectNote,
   onDeleteNote
 }: TransactionTabProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, startDate, endDate]);
+
+  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+  const paginatedReports = filteredReports.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <Card className="border border-white/5 border-t-4 border-t-blue-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -75,10 +89,10 @@ export function TransactionTab({
           <TableBody>
             {loading ? (
               <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500">Memuat...</TableCell></TableRow>
-            ) : filteredReports.length === 0 ? (
+            ) : paginatedReports.length === 0 ? (
               <TableRow><TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="text-center py-20 text-slate-500 italic">Tidak ada data.</TableCell></TableRow>
             ) : (
-              filteredReports.map((r) => (
+              paginatedReports.map((r) => (
                 <TableRow key={r.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group cursor-pointer" onClick={() => onSelectNote(r.noteNumber)}>
                   <TableCell className="py-5 px-8 font-bold text-white">{format(new Date(r.date), "dd MMM yyyy", { locale: id })}</TableCell>
                   <TableCell className="font-black text-blue-400">{r.noteNumber || "-"}</TableCell>
@@ -95,6 +109,34 @@ export function TransactionTab({
             )}
           </TableBody>
         </Table>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/[0.01]">
+            <p className="text-xs text-slate-400 font-medium">
+              Halaman {currentPage} dari {totalPages}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

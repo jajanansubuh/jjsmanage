@@ -1,15 +1,16 @@
-import { Search } from "lucide-react";
+import { Search, PlusCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Button } from "@/components/ui/button";
 
 interface ProductFiltersProps {
   searchTerm: string;
   setSearchTerm: (val: string) => void;
   dateRange: DateRange | undefined;
   setDateRange: (range: DateRange | undefined) => void;
-  isCalendarOpen: boolean;
-  setIsCalendarOpen: (open: boolean) => void;
+  onAdd?: () => void;
+  userRole?: string | null;
 }
 
 export function ProductFilters({
@@ -17,8 +18,8 @@ export function ProductFilters({
   setSearchTerm,
   dateRange,
   setDateRange,
-  isCalendarOpen,
-  setIsCalendarOpen
+  onAdd,
+  userRole
 }: ProductFiltersProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4 md:px-0">
@@ -29,7 +30,6 @@ export function ProductFilters({
           className="bg-slate-950/50 border-white/5 rounded-2xl w-full lg:w-auto h-14 no-print"
         />
 
-
         <div className="relative group w-full lg:w-80">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
           <Input
@@ -39,6 +39,16 @@ export function ProductFilters({
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+
+        {userRole !== "SUPPLIER" && onAdd && (
+          <Button
+            className="h-14 lg:h-12 px-6 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] border border-emerald-500/20 shadow-lg shadow-emerald-950/20 rounded-2xl text-white gap-2 transition-all w-full sm:w-auto text-sm font-bold cursor-pointer shrink-0"
+            onClick={onAdd}
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span>Tambah Produk</span>
+          </Button>
+        )}
       </div>
     </div>
   );

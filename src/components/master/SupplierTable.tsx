@@ -1,4 +1,4 @@
-import { ArrowUpDown, ArrowUp, ArrowDown, History } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Package } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 
@@ -65,7 +65,7 @@ export function SupplierTable({
                 >
                   <div className="flex items-center gap-2">
                     {s.name}
-                    <History className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Package className="w-3.5 h-3.5 text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </TableCell>
                 <TableCell className="text-slate-400 font-medium">{s.ownerName || "-"}</TableCell>

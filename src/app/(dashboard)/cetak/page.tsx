@@ -21,6 +21,7 @@ import { SupplierPrintHistory } from "@/components/cetak/SupplierPrintHistory";
 import { ClearQueueDialog } from "@/components/cetak/ClearQueueDialog";
 import { ConfirmDoneDialog } from "@/components/cetak/ConfirmDoneDialog";
 import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
+import { Product } from "@/types/cetak";
 
 export default function CetakLabelPage() {
   const { 
@@ -42,7 +43,7 @@ export default function CetakLabelPage() {
     updateQty,
     removeItem,
     addFromQueue
-  } = usePrintSelection(userRole);
+  } = usePrintSelection();
 
   const [isSavingQueue, setIsSavingQueue] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -58,9 +59,13 @@ export default function CetakLabelPage() {
   // Auto-populate for suppliers
   useEffect(() => {
     if (userRole === "SUPPLIER" && products.length > 0 && selectedItems.length === 0) {
-      setSelectedItems(products.map(p => ({ ...p, qty: 1 })));
+      setSelectedItems(products.map(p => ({
+        ...p,
+        qty: 1,
+        supplierName: p.supplierName || p.supplier?.name || "Tanpa Suplier"
+      })));
     }
-  }, [userRole, products]);
+  }, [userRole, products, selectedItems.length, setSelectedItems]);
 
   const filteredProducts = useMemo(() => {
     const filtered = products.filter(p => 
@@ -100,7 +105,7 @@ export default function CetakLabelPage() {
       } else {
         toast.error("Gagal mengirim permintaan");
       }
-    } catch (err) {
+    } catch {
       toast.error("Terjadi kesalahan jaringan");
     } finally {
       setIsSavingQueue(false);
@@ -111,7 +116,7 @@ export default function CetakLabelPage() {
     if (queueItems.length === 0) return;
     setIsExporting(true);
     try {
-      const dataToExport: any[] = [];
+      const dataToExport: Array<Record<string, string | number>> = [];
       queueItems.forEach(item => {
         const lookupKey = `${normalizeName(item.name)}_${item.supplierId || 'null'}`;
         const row = {
@@ -141,7 +146,7 @@ export default function CetakLabelPage() {
         });
         setIsConfirmDoneOpen(true);
       }, 500);
-    } catch (err) {
+    } catch {
       toast.error("Gagal mengekspor data");
     } finally {
       setIsExporting(false);
@@ -174,7 +179,7 @@ export default function CetakLabelPage() {
       } else {
         toast.error("Gagal memperbarui status antrean");
       }
-    } catch (err) {
+    } catch {
       toast.error("Terjadi kesalahan jaringan");
     }
   };
@@ -187,12 +192,12 @@ export default function CetakLabelPage() {
         body: JSON.stringify({ id, qty })
       });
       fetchQueue();
-    } catch (err) {
+    } catch {
       toast.error("Gagal memperbarui jumlah");
     }
   };
 
-  const handleAdminAddItem = async (product: any) => {
+  const handleAdminAddItem = async (product: Product) => {
     try {
       const res = await fetch("/api/print-queue", {
         method: "POST",
@@ -212,7 +217,7 @@ export default function CetakLabelPage() {
         const data = await res.json();
         toast.error(data.error || "Gagal menambahkan");
       }
-    } catch (err) {
+    } catch {
       toast.error("Terjadi kesalahan jaringan");
     }
   };
@@ -225,7 +230,7 @@ export default function CetakLabelPage() {
         body: JSON.stringify({ id, status: "DONE" })
       });
       fetchQueue();
-    } catch (err) {
+    } catch {
       toast.error("Gagal memperbarui status");
     }
   };
@@ -240,7 +245,7 @@ export default function CetakLabelPage() {
       fetchQueue();
       toast.success("Antrean dibersihkan");
       setIsClearQueueDialogOpen(false);
-    } catch (err) {
+    } catch {
       toast.error("Gagal membersihkan antrean");
     }
   };

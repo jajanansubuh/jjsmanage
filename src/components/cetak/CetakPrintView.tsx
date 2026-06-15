@@ -1,5 +1,7 @@
+import { SelectedPrintItem } from "@/types/cetak";
+
 interface CetakPrintViewProps {
-  items: any[];
+  items: SelectedPrintItem[];
 }
 
 export function CetakPrintView({ items }: CetakPrintViewProps) {

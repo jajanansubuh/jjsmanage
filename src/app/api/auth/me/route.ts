@@ -13,7 +13,7 @@ export async function GET() {
       role: session.user.role,
       supplierId: session.user.supplierId,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
   }
 }

@@ -1,10 +1,9 @@
-import { Download, Upload, PlusCircle, GitMerge } from "lucide-react";
+import { Download, Upload, GitMerge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProductHeaderProps {
   onExport: () => void;
   onImport: () => void;
-  onAdd: () => void;
   onMerge?: () => void;
   isExporting: boolean;
   userRole?: string | null;
@@ -13,7 +12,6 @@ interface ProductHeaderProps {
 export function ProductHeader({
   onExport,
   onImport,
-  onAdd,
   onMerge,
   isExporting,
   userRole
@@ -32,15 +30,13 @@ export function ProductHeader({
           <Button
             onClick={onExport}
             disabled={isExporting}
-            variant="outline"
-            className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
+            className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
           >
             <Download className="w-4 h-4 text-blue-400" />
             <span>{isExporting ? "..." : "Export"}</span>
           </Button>
           <Button
-            variant="outline"
-            className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
+            className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
             onClick={onImport}
           >
             <Upload className="w-4 h-4 text-purple-400" />
@@ -48,21 +44,13 @@ export function ProductHeader({
           </Button>
           {onMerge && (
             <Button
-              variant="outline"
-              className="h-11 md:h-12 px-4 md:px-6 bg-slate-950/50 border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all flex-1 md:flex-none text-xs md:text-sm font-bold"
+              className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
               onClick={onMerge}
             >
               <GitMerge className="w-4 h-4 text-amber-400" />
               <span>Gabung Produk</span>
             </Button>
           )}
-          <Button
-            className="h-11 md:h-12 px-4 md:px-6 bg-emerald-600 hover:bg-emerald-700 rounded-2xl text-white gap-2 transition-all w-full md:w-auto text-xs md:text-sm font-black"
-            onClick={onAdd}
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Tambah Produk</span>
-          </Button>
         </div>
       )}
     </div>
