@@ -193,31 +193,48 @@ export async function PUT(req: Request) {
     // If product name changes, also update report items for the same supplier
     if (normalizedName && normalizedName !== normalizedOldName) {
       const reportSupplierId = existingProduct.supplierId;
-      const reports = await prisma.consignmentReport.findMany({
-        where: reportSupplierId ? { supplierId: reportSupplierId } : {},
-        select: { id: true, items: true }
-      });
+      if (reportSupplierId) {
+        // Pre-filter reports that contain the product name (case-insensitive text search)
+        const nameSearchPattern = `%${normalizedOldName.toLowerCase()}%`;
+        const reports = await prisma.$queryRaw<any[]>`
+          SELECT id, items 
+          FROM "ConsignmentReport"
+          WHERE "supplierId" = ${reportSupplierId}
+            AND LOWER("items"::text) LIKE ${nameSearchPattern}
+        `;
 
-      await Promise.all(reports.map(async (report) => {
-        const items = Array.isArray(report.items) ? report.items : [];
-        let updated = false;
+        if (reports.length > 0) {
+          const updates: Prisma.Prisma__ConsignmentReportClient<any, any>[] = [];
+          
+          for (const report of reports) {
+            const items = Array.isArray(report.items) ? report.items : [];
+            let updated = false;
 
-        const normalizedItems = items.map((item: any) => {
-          const itemName = String(item.name || "");
-          if (normalizeProductName(itemName) === normalizedOldName) {
-            updated = true;
-            return { ...item, name: normalizedName };
+            const normalizedItems = items.map((item: any) => {
+              const itemName = String(item.name || "");
+              if (normalizeProductName(itemName) === normalizedOldName) {
+                updated = true;
+                return { ...item, name: normalizedName };
+              }
+              return item;
+            });
+
+            if (updated) {
+              updates.push(
+                prisma.consignmentReport.update({
+                  where: { id: report.id },
+                  data: { items: normalizedItems }
+                })
+              );
+            }
           }
-          return item;
-        });
 
-        if (updated) {
-          await prisma.consignmentReport.update({
-            where: { id: report.id },
-            data: { items: normalizedItems }
-          });
+          if (updates.length > 0) {
+            // Execute all updates in a single database transaction
+            await prisma.$transaction(updates);
+          }
         }
-      }));
+      }
     }
 
     const product = await prisma.product.update({

@@ -44,7 +44,8 @@ export default async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|.*\\.png$|manifest\\.webmanifest|sw\\.js|sw\\.js\\.map|workbox-.*\\.js).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|json|webmanifest|js|css|map)).*)",
+  ],
 };

@@ -1,6 +1,5 @@
 const CACHE_NAME = 'jjs-manage-cache-v1';
 const ASSETS_TO_CACHE = [
-  '/',
   '/login',
   '/icon-192.png',
   '/icon-512.png',
@@ -44,6 +43,12 @@ self.addEventListener('activate', (event) => {
           }
         })
       );
+    }).then(() => {
+      // Explicitly delete cached '/' response to immediately fix installed PWAs
+      // that are showing "Site cannot be reached" due to a cached redirect response.
+      return caches.open(CACHE_NAME).then((cache) => {
+        return cache.delete('/');
+      });
     })
   );
   self.clients.claim();
@@ -70,7 +75,7 @@ self.addEventListener('fetch', (event) => {
         // Stale-While-Revalidate: serve cached version, fetch and cache the new version in the background
         fetch(event.request)
           .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
+            if (networkResponse && networkResponse.status === 200 && !networkResponse.redirected) {
               caches.open(CACHE_NAME).then((cache) => {
                 cache.put(event.request, networkResponse);
               });
@@ -90,7 +95,7 @@ self.addEventListener('fetch', (event) => {
             url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|css|js|woff2?)$/) ||
             url.pathname.startsWith('/_next/static/');
 
-          if (response && response.status === 200 && isStaticAsset) {
+          if (response && response.status === 200 && isStaticAsset && !response.redirected) {
             const responseToCache = response.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseToCache);
@@ -99,9 +104,11 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch((err) => {
-          // If network fetch fails (e.g. offline) and not in cache, fallback to login/home if it's a navigation request
+          // If network fetch fails (e.g. offline) and not in cache, fallback to login if it's a navigation request
           if (event.request.mode === 'navigate') {
-            return caches.match('/login') || caches.match('/');
+            return caches.match('/login').then((loginResponse) => {
+              return loginResponse || Response.error();
+            });
           }
           return Response.error();
         });

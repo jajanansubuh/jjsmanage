@@ -131,17 +131,28 @@ export async function GET(request: Request) {
         select: { id: true, name: true }
       });
 
-      // Get unique note counts for each top supplier
-      const uniqueNoteCounts = await Promise.all(topSupplierIds.map(async (sid) => {
-        const notes = await prisma.consignmentReport.findMany({
-          where: { 
-            supplierId: sid,
-            date: dateFilter 
-          },
-          select: { id: true, noteNumber: true }
-        });
-        const uniqueNotes = new Set(notes.map(n => n.noteNumber || n.id));
-        return { supplierId: sid, count: uniqueNotes.size };
+      // Get unique note counts in a single batch query instead of N+1
+      const notes = await prisma.consignmentReport.findMany({
+        where: { 
+          supplierId: { in: topSupplierIds },
+          date: dateFilter 
+        },
+        select: { id: true, noteNumber: true, supplierId: true }
+      });
+      
+      const supplierNotesMap = new Map<string, Set<string>>();
+      topSupplierIds.forEach(sid => supplierNotesMap.set(sid, new Set()));
+      
+      notes.forEach(n => {
+        const set = supplierNotesMap.get(n.supplierId);
+        if (set) {
+          set.add(n.noteNumber || n.id);
+        }
+      });
+      
+      const uniqueNoteCounts = topSupplierIds.map(sid => ({
+        supplierId: sid,
+        count: supplierNotesMap.get(sid)?.size || 0
       }));
 
       topSuppliers = topSupplierGroups.map(g => {
@@ -156,17 +167,23 @@ export async function GET(request: Request) {
       });
     }
 
-    // 4. Trend Data - Optimization: Only fetch what's needed
-    const trendRecords = await prisma.consignmentReport.findMany({
-      where: baseWhere,
-      select: { date: true, revenue: true, profit80: true },
-      orderBy: { date: "asc" }
-    });
-
+    // 4. Trend Data - Optimization: Query aggregated buckets directly from DB
+    const sqlSupplierId = isSupplier && supplierId ? supplierId : null;
     let revenueTrend: any[] = [];
 
     if (period === "day" || (period === "custom" && differenceInDays(endDate, startDate) <= 31)) {
-      // Group by day using YYYY-MM-DD for reliable matching
+      const trendData = await prisma.$queryRaw<any[]>`
+        SELECT 
+          DATE_TRUNC('day', date) AS bucket,
+          SUM(revenue)::double precision AS revenue,
+          SUM(profit80)::double precision AS profit80
+        FROM "ConsignmentReport"
+        WHERE date >= ${startDate} AND date <= ${endDate}
+          AND (${sqlSupplierId}::text IS NULL OR "supplierId" = ${sqlSupplierId})
+        GROUP BY bucket
+        ORDER BY bucket ASC
+      `;
+      
       const dataMap = new Map();
       let curr = new Date(startDate);
       while (curr <= endDate) {
@@ -174,11 +191,11 @@ export async function GET(request: Request) {
         curr = new Date(curr.getTime() + 24 * 60 * 60 * 1000);
       }
       
-      trendRecords.forEach(r => {
-        const key = format(new Date(r.date), "yyyy-MM-dd");
+      trendData.forEach(row => {
+        const key = format(new Date(row.bucket), "yyyy-MM-dd");
+        const val = isSupplier ? Number(row.profit80 || 0) : Number(row.revenue || 0);
         if (dataMap.has(key)) {
-          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
-          dataMap.set(key, dataMap.get(key) + val);
+          dataMap.set(key, val);
         }
       });
       
@@ -188,7 +205,18 @@ export async function GET(request: Request) {
       }));
     } 
     else if (period === "week") {
-      // Group by week
+      const trendData = await prisma.$queryRaw<any[]>`
+        SELECT 
+          DATE_TRUNC('week', date) AS bucket,
+          SUM(revenue)::double precision AS revenue,
+          SUM(profit80)::double precision AS profit80
+        FROM "ConsignmentReport"
+        WHERE date >= ${startDate} AND date <= ${endDate}
+          AND (${sqlSupplierId}::text IS NULL OR "supplierId" = ${sqlSupplierId})
+        GROUP BY bucket
+        ORDER BY bucket ASC
+      `;
+      
       const weeksMap = new Map();
       let currentWeek = new Date(startDate);
       while (currentWeek <= endDate) {
@@ -196,17 +224,30 @@ export async function GET(request: Request) {
         weeksMap.set(weekKey, 0);
         currentWeek = new Date(currentWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
       }
-      trendRecords.forEach(r => {
-        const key = `Mg ${format(new Date(r.date), "w", { locale: id })}`;
+      
+      trendData.forEach(row => {
+        const key = `Mg ${format(new Date(row.bucket), "w", { locale: id })}`;
+        const val = isSupplier ? Number(row.profit80 || 0) : Number(row.revenue || 0);
         if (weeksMap.has(key)) {
-          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
-          weeksMap.set(key, weeksMap.get(key) + val);
+          weeksMap.set(key, val);
         }
       });
+      
       revenueTrend = Array.from(weeksMap.entries()).map(([name, total]) => ({ name, total }));
     }
     else {
-      // Group by month
+      const trendData = await prisma.$queryRaw<any[]>`
+        SELECT 
+          DATE_TRUNC('month', date) AS bucket,
+          SUM(revenue)::double precision AS revenue,
+          SUM(profit80)::double precision AS profit80
+        FROM "ConsignmentReport"
+        WHERE date >= ${startDate} AND date <= ${endDate}
+          AND (${sqlSupplierId}::text IS NULL OR "supplierId" = ${sqlSupplierId})
+        GROUP BY bucket
+        ORDER BY bucket ASC
+      `;
+      
       const monthsMap = new Map();
       let currentMonthDate = new Date(startDate);
       while (currentMonthDate <= endDate) {
@@ -214,13 +255,15 @@ export async function GET(request: Request) {
         monthsMap.set(monthKey, 0);
         currentMonthDate = new Date(currentMonthDate.setMonth(currentMonthDate.getMonth() + 1));
       }
-      trendRecords.forEach(r => {
-        const key = format(new Date(r.date), "MMM", { locale: id });
+      
+      trendData.forEach(row => {
+        const key = format(new Date(row.bucket), "MMM", { locale: id });
+        const val = isSupplier ? Number(row.profit80 || 0) : Number(row.revenue || 0);
         if (monthsMap.has(key)) {
-          const val = isSupplier ? Number(r.profit80 || 0) : Number(r.revenue || 0);
-          monthsMap.set(key, monthsMap.get(key) + val);
+          monthsMap.set(key, val);
         }
       });
+      
       revenueTrend = Array.from(monthsMap.entries()).map(([name, total]) => ({ name, total }));
     }
 

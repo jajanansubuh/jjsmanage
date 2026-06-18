@@ -36,6 +36,7 @@ model LabelPrintHistory {
 
   @@index([supplierId])
   @@index([completedAt])
+  @@index([supplierId, completedAt])
 }
 
 model LabelPrint {
@@ -98,6 +99,9 @@ model ConsignmentReport {
 
   @@index([supplierId])
   @@index([date])
+  @@index([supplierId, date])
+  @@index([supplierId, tabungan])
+  @@index([supplierId, isValidated])
 }
 
 model User {

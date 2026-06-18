@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/components/providers/session-provider";
 import {
   Coins,
   History,
@@ -37,7 +38,8 @@ interface SupplierSavings {
 }
 
 export default function SavingsPage() {
-  const [role, setRole] = useState<string | null>(null);
+  const { user } = useSession();
+  const role = user?.role?.toUpperCase() || null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [adminData, setAdminData] = useState<SupplierSavings[]>([]);
@@ -59,12 +61,6 @@ export default function SavingsPage() {
       setLoading(true);
       setError(null);
       try {
-        const roleRes = await fetch('/api/auth/role');
-        if (!roleRes.ok) throw new Error("Gagal mengambil data peran user");
-        const roleData = await roleRes.json();
-        const normalizedRole = roleData.role?.toUpperCase();
-        setRole(normalizedRole);
-
         const savingsRes = await fetch('/api/savings');
         if (!savingsRes.ok) {
           const errData = await savingsRes.json();
@@ -72,7 +68,7 @@ export default function SavingsPage() {
         }
         const savingsData = await savingsRes.json();
 
-        if (normalizedRole === "SUPPLIER") {
+        if (role === "SUPPLIER") {
           setSupplierData(savingsData);
         } else {
           // Ensure it's an array for admin
@@ -86,8 +82,10 @@ export default function SavingsPage() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (role) {
+      fetchData();
+    }
+  }, [role]);
 
   const handleSort = (key: string) => {
     let direction: "asc" | "desc" = "asc";

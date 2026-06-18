@@ -1,6 +1,6 @@
 import { Sidebar } from "@/components/sidebar";
-
 import { getSession } from "@/lib/auth-utils";
+import { SessionProvider } from "@/components/providers/session-provider";
 
 export default async function DashboardLayout({
   children,
@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const session = await getSession();
   
   return (
-    <>
+    <SessionProvider session={session}>
       <Sidebar 
         role={session?.user?.role} 
         name={session?.user?.name || session?.user?.username} 
@@ -21,7 +21,6 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
-
-    </>
+    </SessionProvider>
   );
 }

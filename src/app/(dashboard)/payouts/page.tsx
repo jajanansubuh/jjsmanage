@@ -11,9 +11,9 @@ import { PayoutsStats } from "@/components/payouts/PayoutsStats";
 import { PayoutsTable } from "@/components/payouts/PayoutsTable";
 
 export default function PayoutsPage() {
-  const { transactions, loading, userRole } = usePayoutsData();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
+  const { transactions, loading, userRole } = usePayoutsData(selectedMonth);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
 
   const filteredAndSorted = useMemo(() => {

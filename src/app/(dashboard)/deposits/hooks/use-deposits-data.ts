@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+import { useSession } from "@/components/providers/session-provider";
 
 export interface DepositItem {
   id: string;
@@ -17,7 +18,8 @@ export interface DepositItem {
 export function useDepositsData(dateRange: DateRange | undefined) {
   const [data, setData] = useState<DepositItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [role, setRole] = useState<string | null>(null);
+  const { user } = useSession();
+  const role = user?.role?.toUpperCase() || null;
 
   useEffect(() => {
     setLoading(true);
@@ -26,14 +28,10 @@ export function useDepositsData(dateRange: DateRange | undefined) {
     if (dateRange?.to) params.append("endDate", format(dateRange.to, "yyyy-MM-dd"));
     params.append("limit", "100000");
 
-    Promise.all([
-      fetch('/api/auth/role').then(res => res.json()),
-      fetch(`/api/reports?${params.toString()}`).then(res => res.json())
-    ])
-      .then(([roleData, reportsData]) => {
-        const userRole = roleData.role;
-        setRole(userRole);
-
+    fetch(`/api/reports?${params.toString()}`)
+      .then(res => res.json())
+      .then((reportsData) => {
+        const userRole = role;
         const reports = Array.isArray(reportsData) ? reportsData : (reportsData.reports || []);
         if (Array.isArray(reports)) {
           if (userRole === "SUPPLIER") {
@@ -83,7 +81,7 @@ export function useDepositsData(dateRange: DateRange | undefined) {
         console.error("Failed to fetch data:", err);
         setLoading(false);
       });
-  }, [dateRange]);
+  }, [dateRange, role]);
 
-  return { data, loading, role, setRole };
+  return { data, loading, role };
 }

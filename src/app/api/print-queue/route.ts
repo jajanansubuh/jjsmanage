@@ -7,19 +7,6 @@ export async function GET(req: Request) {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Auto-cleanup: silently delete completed items (DONE) older than today
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    try {
-      await prisma.labelPrint.deleteMany({
-        where: {
-          status: "DONE",
-          createdAt: { lt: startOfToday }
-        }
-      });
-    } catch (cleanupErr) {
-      console.error("Auto-cleanup labelPrint error:", cleanupErr);
-    }
 
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status") || "PENDING";
@@ -97,75 +84,122 @@ export async function PUT(req: Request) {
     const { id, status, qty, all } = await req.json();
     
     if (all) {
-      const where: { status: string; supplierId?: string } = { status: "PENDING" };
-      if (session.user.role === "SUPPLIER") {
-        where.supplierId = session.user.supplierId || "INVALID";
-      }
+      const sqlSupplierId = session.user.role === "SUPPLIER" ? (session.user.supplierId || "INVALID") : null;
 
-      // Fetch items before marking them as DONE to record history
-      const pendingItems = await prisma.labelPrint.findMany({
-        where,
-        select: { name: true, code: true, qty: true, supplierId: true }
-      });
+      const updatedCount = await prisma.$transaction(async (tx) => {
+        // Fetch and lock the pending items using raw SQL FOR UPDATE
+        const pendingItems = await tx.$queryRaw<Array<{ id: string; name: string; code: string | null; qty: number; supplierId: string }>>`
+          SELECT id, name, code, qty, "supplierId"
+          FROM "LabelPrint"
+          WHERE status = 'PENDING'
+            AND (${sqlSupplierId}::text IS NULL OR "supplierId" = ${sqlSupplierId})
+          FOR UPDATE
+        `;
 
-      const updated = await prisma.labelPrint.updateMany({
-        where,
-        data: { status: "DONE" }
-      });
+        if (pendingItems.length === 0) {
+          return 0;
+        }
 
-      // Record history grouped by supplier
-      if (pendingItems.length > 0) {
+        // Update status of these specific items
+        const updateResult = await tx.labelPrint.updateMany({
+          where: {
+            id: { in: pendingItems.map(item => item.id) }
+          },
+          data: { status: "DONE" }
+        });
+
+        // Group history records by supplier
         const grouped = new Map<string, { name: string; code: string | null; qty: number }[]>();
         for (const item of pendingItems) {
           const sid = item.supplierId;
           if (!grouped.has(sid)) grouped.set(sid, []);
           grouped.get(sid)!.push({ name: item.name, code: item.code, qty: item.qty });
         }
-        
-        const historyCreates = Array.from(grouped.entries()).map(([supplierId, items]) => {
+
+        // Create history records
+        for (const [supplierId, items] of grouped.entries()) {
           const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
-          return prisma.labelPrintHistory.create({
+          await tx.labelPrintHistory.create({
             data: {
               supplierId,
               itemCount: items.length,
               totalQty,
-              items: JSON.stringify(items),
+              items: items as any,
             }
           });
+        }
+
+        return updateResult.count;
+      });
+
+      // Auto-cleanup old items asynchronously without blocking the response
+      if (updatedCount > 0) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        prisma.labelPrint.deleteMany({
+          where: {
+            status: "DONE",
+            createdAt: { lt: startOfToday }
+          }
+        }).catch((cleanupErr) => {
+          console.error("Auto-cleanup labelPrint error in PUT:", cleanupErr);
         });
-        
-        await prisma.$transaction(historyCreates);
       }
 
-      return NextResponse.json({ message: "All items marked as done", count: updated.count });
+      return NextResponse.json({ message: "All items marked as done", count: updatedCount });
     }
     
     // Single item update
     if (status === "DONE") {
-      // Fetch the item first to record history
-      const item = await prisma.labelPrint.findUnique({
-        where: { id },
-        select: { name: true, code: true, qty: true, supplierId: true }
+      const updatedItem = await prisma.$transaction(async (tx) => {
+        // Fetch and lock the single item using raw SQL FOR UPDATE
+        const items = await tx.$queryRaw<Array<{ id: string; name: string; code: string | null; qty: number; supplierId: string }>>`
+          SELECT id, name, code, qty, "supplierId"
+          FROM "LabelPrint"
+          WHERE id = ${id} AND status = 'PENDING'
+          FOR UPDATE
+        `;
+
+        if (items.length === 0) {
+          return null;
+        }
+
+        const item = items[0];
+
+        // Update the item status
+        const updated = await tx.labelPrint.update({
+          where: { id },
+          data: { status: "DONE" }
+        });
+
+        // Create the history record
+        await tx.labelPrintHistory.create({
+          data: {
+            supplierId: item.supplierId,
+            itemCount: 1,
+            totalQty: item.qty,
+            items: [{ name: item.name, code: item.code, qty: item.qty }] as any,
+          }
+        });
+
+        return updated;
       });
 
-      if (item) {
-        await prisma.$transaction([
-          prisma.labelPrint.update({
-            where: { id },
-            data: { status: "DONE" }
-          }),
-          prisma.labelPrintHistory.create({
-            data: {
-              supplierId: item.supplierId,
-              itemCount: 1,
-              totalQty: item.qty,
-              items: JSON.stringify([{ name: item.name, code: item.code, qty: item.qty }]),
-            }
-          })
-        ]);
-
-        return NextResponse.json({ message: "Marked as done and recorded in history" });
+      // Trigger auto-cleanup asynchronously if updated
+      if (updatedItem) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        prisma.labelPrint.deleteMany({
+          where: {
+            status: "DONE",
+            createdAt: { lt: startOfToday }
+          }
+        }).catch((cleanupErr) => {
+          console.error("Auto-cleanup labelPrint error in PUT:", cleanupErr);
+        });
       }
+
+      return NextResponse.json({ message: "Marked as done and recorded in history" });
     }
 
     const updated = await prisma.labelPrint.update({

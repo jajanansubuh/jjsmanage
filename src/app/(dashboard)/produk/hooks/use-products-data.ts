@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { useSession } from "@/components/providers/session-provider";
 
 export interface AggregatedProduct {
   id?: string;
@@ -78,19 +79,9 @@ export function useProductsData(dateRange: DateRange | undefined) {
   const [products, setProducts] = useState<AggregatedProduct[]>([]);
   const [allMasterProducts, setAllMasterProducts] = useState<MasterProduct[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
-  const [role, setRole] = useState<string | null>(null);
-  const [userSupplierId, setUserSupplierId] = useState<string | null>(null);
-
-  const fetchRole = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/role");
-      if (res.ok) {
-        const data = await res.json() as RoleResponse;
-        setRole(data.role || null);
-        setUserSupplierId(data.supplierId || null);
-      }
-    } catch {}
-  }, []);
+  const { user } = useSession();
+  const role = user?.role?.toUpperCase() || null;
+  const userSupplierId = user?.supplierId || null;
 
   const fetchSuppliers = useCallback(async () => {
     try {
@@ -130,20 +121,8 @@ export function useProductsData(dateRange: DateRange | undefined) {
       const reports = reportsData.reports || [];
       const masterData = masterRes.ok ? await masterRes.json() as MasterProduct[] : [];
 
-      let currentRole = role;
-      let currentSupplierId = userSupplierId;
-      if (!currentRole) {
-        try {
-          const res = await fetch("/api/auth/role");
-          if (res.ok) {
-            const data = await res.json() as RoleResponse;
-            currentRole = data.role || null;
-            currentSupplierId = data.supplierId || null;
-            setRole(currentRole);
-            setUserSupplierId(currentSupplierId);
-          }
-        } catch {}
-      }
+      const currentRole = role;
+      const currentSupplierId = userSupplierId;
 
       const masterMap: MasterProductMap = {};
       masterData.forEach((p) => {
@@ -198,7 +177,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
         const key = `${normName}_${p.supplierId || "null"}`;
 
         // Saring agar supplier hanya melihat produk suplier itu sendiri
-        if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId && p.supplierId !== currentSupplierId) {
+        if (currentRole === "SUPPLIER" && currentSupplierId && p.supplierId !== currentSupplierId) {
           return;
         }
 
@@ -245,7 +224,7 @@ export function useProductsData(dateRange: DateRange | undefined) {
       );
       productsList = productsList.filter(p => p.supplierId || !supplierProductNames.has(normalizeName(p.name)));
 
-      if (currentRole?.toUpperCase() === "SUPPLIER" && currentSupplierId) {
+      if (currentRole === "SUPPLIER" && currentSupplierId) {
         productsList = productsList.filter(p => p.supplierId === currentSupplierId);
       }
 
@@ -259,10 +238,11 @@ export function useProductsData(dateRange: DateRange | undefined) {
   }, [dateRange, role, userSupplierId]);
 
   useEffect(() => {
-    fetchData();
-    fetchSuppliers();
-    fetchRole();
-  }, [fetchData, fetchRole, fetchSuppliers]);
+    if (role) {
+      fetchData();
+      fetchSuppliers();
+    }
+  }, [fetchData, fetchSuppliers, role]);
 
   return { loading, error, products, allMasterProducts, suppliers, role, refresh: fetchData };
 }

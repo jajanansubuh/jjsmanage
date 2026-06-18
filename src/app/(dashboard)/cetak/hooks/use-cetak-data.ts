@@ -1,74 +1,46 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
+import { useSession } from "@/components/providers/session-provider";
 import { PrintQueueItem, Product } from "@/types/cetak";
 
 export function useCetakData() {
+  const { user } = useSession();
+  const userRole = user?.role?.toUpperCase() || null;
   const [products, setProducts] = useState<Product[]>([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const [queueItems, setQueueItems] = useState<PrintQueueItem[]>([]);
   const [isQueueLoading, setIsQueueLoading] = useState(false);
   const [codeLookupMap, setCodeLookupMap] = useState<Record<string, string>>({});
   const codeLookupMapRef = useRef<Record<string, string>>({});
 
-  const fetchUserRole = useCallback(async () => {
-    try {
-      const res = await fetch("/api/auth/me");
-      if (res.ok) {
-        const data = await res.json();
-        const role = data.role?.toUpperCase() || "SUPPLIER";
-        setUserRole(role);
-        return role;
-      }
-    } catch (err) {
-      console.error("Failed to fetch role:", err);
-    }
-    return null;
-  }, []);
-
-  const fetchCodeLookup = useCallback(async () => {
-    try {
-      const res = await fetch("/api/products?forLookup=true");
-      if (res.ok) {
-        const data = await res.json() as Product[];
-        const map: Record<string, string> = {};
-        data.forEach((p) => {
-          map[`${normalizeName(p.name)}_${p.supplierId || 'null'}`] = p.code || "";
-        });
-        codeLookupMapRef.current = map;
-        setCodeLookupMap(map);
-        return map;
-      }
-    } catch (e) {
-      console.error("Failed to fetch code lookup:", e);
-    }
-    return {};
-  }, []);
-
-  const fetchProducts = useCallback(async (role: string, lookup: Record<string, string>) => {
+  const fetchProducts = useCallback(async () => {
     setIsDataLoading(true);
     try {
       const res = await fetch("/api/products");
       if (res.ok) {
         const myProducts = await res.json() as Product[];
         
-        // Use a Map to deduplicate products based on normalized name ONLY
-        // This handles cases like "PRODUK" vs "PRODUK." or different codes for same name
+        // Build the code lookup map directly on the fly
+        const map: Record<string, string> = {};
+        myProducts.forEach((p) => {
+          map[`${normalizeName(p.name)}_${p.supplierId || 'null'}`] = p.code || "";
+        });
+        codeLookupMapRef.current = map;
+        setCodeLookupMap(map);
+
+        // Process products and deduplicate
         const finalProductsMap = new Map<string, Product>();
-        
-        // Process products
         myProducts.forEach((p) => {
           const normalizedName = normalizeName(p.name);
           if (!normalizedName) return;
 
-          // Hapus produk yang tidak memiliki suplier
+          // Remove products without a supplier
           if (!p.supplierId || p.supplierId.trim() === "") return;
 
           const lookupKey = `${normalizedName}_${p.supplierId || 'null'}`;
-          const rawCode = p.code || lookup[lookupKey] || "";
+          const rawCode = p.code || map[lookupKey] || "";
           const code = String(rawCode).trim();
           
-          // Use normalized name AND supplierId as key to ensure separate products per supplier
           const key = lookupKey;
           
           if (!finalProductsMap.has(key)) {
@@ -80,28 +52,25 @@ export function useCetakData() {
               supplierName: p.supplier?.name || "Tanpa Suplier"
             });
           } else {
-            // If already exists, maybe update with a "better" code (e.g. numeric only)
             const existing = finalProductsMap.get(key)!;
             const existingCode = existing.code || "";
-            
-            // If current existing code has letters and new code is pure numeric, prioritize the numeric one
             if (/[A-Z]/i.test(existingCode) && /^\d+$/.test(code)) {
               existing.code = code;
-              existing.id = p.id; // Also use the ID from the cleaner product
+              existing.id = p.id;
             }
           }
         });
 
         const displayData = Array.from(finalProductsMap.values());
         setProducts(displayData);
-        return displayData;
+        return { displayData, map };
       }
     } catch (err) {
       console.error("fetchProducts error:", err);
     } finally {
       setIsDataLoading(false);
     }
-    return [];
+    return null;
   }, []);
 
   const fetchQueue = useCallback(async (lookupOverride?: Record<string, string>) => {
@@ -119,7 +88,7 @@ export function useCetakData() {
           };
         });
         
-        // Hapus item antrian yang tidak memiliki suplier
+        // Remove print queue items that don't have a supplier
         enriched = enriched.filter((item) => item.supplierId && item.supplierId.trim() !== "");
 
         enriched.sort((a, b) => {
@@ -138,13 +107,15 @@ export function useCetakData() {
 
   useEffect(() => {
     const init = async () => {
-      const role = await fetchUserRole();
-      const lookup = await fetchCodeLookup();
-      if (role) await fetchProducts(role, lookup);
-      await fetchQueue(lookup);
+      const result = await fetchProducts();
+      if (result) {
+        await fetchQueue(result.map);
+      } else {
+        await fetchQueue();
+      }
     };
     init();
-  }, [fetchCodeLookup, fetchProducts, fetchQueue, fetchUserRole]);
+  }, [fetchProducts, fetchQueue]);
 
   return { 
     products, 
