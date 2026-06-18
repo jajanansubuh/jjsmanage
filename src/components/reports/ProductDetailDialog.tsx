@@ -30,7 +30,7 @@ export function ProductDetailDialog({
         </div>
         <div className="flex-1 overflow-auto p-8">
           <Table>
-            <TableHeader className="bg-white/[0.02]">
+            <TableHeader className="bg-white/2">
               <TableRow className="border-white/5">
                 <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Barang</TableHead>
                 <TableHead className="py-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-500">Beli</TableHead>
@@ -43,7 +43,7 @@ export function ProductDetailDialog({
               {selectedProdukNote?.products.map((p: any, idx: number) => {
                 const sellRate = p.totalBeli > 0 ? ((p.totalJual / p.totalBeli) * 100).toFixed(1) : "0";
                 return (
-                  <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                  <TableRow key={idx} className="border-white/5 hover:bg-white/2">
                     <TableCell className="py-4 font-black text-white">{p.name}</TableCell>
                     <TableCell className="py-4 text-center font-bold text-slate-400">{p.totalBeli}</TableCell>
                     <TableCell className="py-4 text-center font-black text-emerald-400">{p.totalJual}</TableCell>

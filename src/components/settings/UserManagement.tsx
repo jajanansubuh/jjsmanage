@@ -22,10 +22,10 @@ import { Label } from "@/components/ui/label";
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogFooter, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { 
   Select, 
@@ -277,7 +277,7 @@ export default function UserManagement() {
 
   return (
     <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
-      <CardHeader className="border-b border-white/5 bg-white/[0.02] p-4 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+      <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-1 min-w-0">
           <CardTitle className="flex items-center text-base sm:text-2xl font-black text-white tracking-tight">
             <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-2.5 sm:mr-4 shrink-0">
@@ -300,7 +300,7 @@ export default function UserManagement() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
           <Input 
             placeholder="Cari username..." 
-            className="pl-11 sm:pl-12 h-11 sm:h-14 bg-white/5 border-white/10 text-white text-sm sm:text-lg font-medium rounded-2xl focus:ring-blue-500/50 focus:bg-white/[0.08] transition-all"
+            className="pl-11 sm:pl-12 h-11 sm:h-14 bg-white/5 border-white/10 text-white text-sm sm:text-lg font-medium rounded-2xl focus:ring-blue-500/50 focus:bg-white/8 transition-all"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -312,7 +312,7 @@ export default function UserManagement() {
             <p className="text-slate-400 font-medium animate-pulse">Memuat database user...</p>
           </div>
         ) : paginatedUsers.length === 0 ? (
-          <div className="text-center py-12 sm:py-24 border-2 border-dashed border-white/5 rounded-2xl sm:rounded-[2.5rem] bg-white/[0.01]">
+          <div className="text-center py-12 sm:py-24 border-2 border-dashed border-white/5 rounded-2xl sm:rounded-[2.5rem] bg-white/1">
             <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
               <Users className="w-10 h-10 text-slate-600" />
             </div>
@@ -324,7 +324,7 @@ export default function UserManagement() {
             {/* Mobile Card Layout */}
             <div className="sm:hidden space-y-3">
               {paginatedUsers.map((user) => (
-                <div key={user.id} className="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-3">
+                <div key={user.id} className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
@@ -358,10 +358,10 @@ export default function UserManagement() {
             </div>
 
             {/* Desktop Table Layout */}
-            <div className="hidden sm:block rounded-[2rem] border border-white/5 overflow-hidden bg-white/[0.01] shadow-inner">
+            <div className="hidden sm:block rounded-[2rem] border border-white/5 overflow-hidden bg-white/1 shadow-inner">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-white/[0.03]">
+                  <TableHeader className="bg-white/3">
                     <TableRow className="border-white/5 hover:bg-transparent">
                       <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Identitas User</TableHead>
                       <TableHead className="text-slate-500 font-black uppercase text-[10px] tracking-[0.2em] h-14 px-6">Hak Akses</TableHead>
@@ -371,7 +371,7 @@ export default function UserManagement() {
                   </TableHeader>
                   <TableBody>
                     {paginatedUsers.map((user) => (
-                      <TableRow key={user.id} className="border-white/5 hover:bg-white/[0.03] transition-colors group">
+                      <TableRow key={user.id} className="border-white/5 hover:bg-white/3 transition-colors group">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
@@ -412,7 +412,7 @@ export default function UserManagement() {
             </div>
 
             {totalPages > 1 && (
-              <div className="flex items-center justify-between p-6 border border-white/5 rounded-[2rem] bg-white/[0.01]">
+              <div className="flex items-center justify-between p-6 border border-white/5 rounded-[2rem] bg-white/1">
                 <p className="text-xs text-slate-400 font-medium">
                   Halaman {currentPage} dari {totalPages}
                 </p>
@@ -446,7 +446,7 @@ export default function UserManagement() {
         {/* Force a larger width and prevent squishing with min-width on desktop */}
         <DialogContent className="bg-slate-950 border-white/10 text-white rounded-2xl sm:rounded-[2.5rem] p-0 overflow-hidden sm:max-w-[850px] w-[95vw] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh]">
           {/* Header Section */}
-          <div className="p-4 sm:p-8 border-b border-white/5 bg-white/[0.01] shrink-0">
+          <div className="p-4 sm:p-8 border-b border-white/5 bg-white/1 shrink-0">
             <div className="flex items-center gap-3 sm:gap-5">
               <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/5 shrink-0">
                 {editingUser ? <Pencil className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" /> : <UserPlus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" />}
@@ -481,7 +481,7 @@ export default function UserManagement() {
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                         placeholder="contoh: admin_toko"
-                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/[0.08] focus:border-blue-500/50 transition-all font-bold"
+                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/8 focus:border-blue-500/50 transition-all font-bold"
                       />
                     </div>
 
@@ -491,7 +491,7 @@ export default function UserManagement() {
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         placeholder="Nama asli user"
-                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/[0.08] transition-all"
+                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/8 transition-all"
                       />
                     </div>
 
@@ -502,7 +502,7 @@ export default function UserManagement() {
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         placeholder={editingUser ? "Kosongkan jika tidak diubah" : "Minimal 6 karakter"}
-                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/[0.08] transition-all"
+                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/8 transition-all"
                       />
                     </div>
 
@@ -605,7 +605,7 @@ export default function UserManagement() {
                         "flex items-center justify-between px-3 py-3 sm:px-4 sm:py-4 rounded-xl sm:rounded-2xl border transition-all duration-200 group text-left",
                         formData.permissions.includes(item.href)
                           ? "bg-purple-500/10 border-purple-500/40 text-white shadow-[0_0_20px_rgba(168,85,247,0.05)]"
-                          : "bg-white/5 border-white/5 text-slate-500 hover:border-white/10 hover:bg-white/[0.07]"
+                          : "bg-white/5 border-white/5 text-slate-500 hover:border-white/10 hover:bg-white/7"
                       )}
                     >
                       <span className="text-[11px] sm:text-[13px] font-bold tracking-tight truncate pr-2">{item.name}</span>
@@ -625,7 +625,7 @@ export default function UserManagement() {
           </div>
 
           {/* Action Footer */}
-          <div className="p-4 sm:p-8 border-t border-white/5 bg-white/[0.02] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-4 shrink-0">
+          <div className="p-4 sm:p-8 border-t border-white/5 bg-white/2 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-4 shrink-0">
             <Button 
               variant="ghost" 
               onClick={() => setIsDialogOpen(false)}

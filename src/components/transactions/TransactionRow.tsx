@@ -49,11 +49,11 @@ export const TransactionRow = memo(({
   const currentSupplier = suppliers.find(s => s.id === row.supplierId);
 
   return (
-    <TableRow key={row.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-      <TableCell className="font-medium text-slate-500 py-3 px-2 text-[11px]">{index + 1}</TableCell>
+    <TableRow key={row.id} className="border-border hover:bg-muted/50 transition-colors group">
+      <TableCell className="font-medium text-muted-foreground py-3 px-2 text-[11px]">{index + 1}</TableCell>
       <TableCell>
         <div className="flex flex-col gap-1">
-          <div className="font-bold text-white print:text-black min-w-[150px]">
+          <div className="font-bold text-foreground min-w-[150px]">
             {currentSupplier ? (
               row.items && row.items.length > 0 ? (
                 <Dialog>
@@ -86,7 +86,7 @@ export const TransactionRow = memo(({
                             </TableHeader>
                             <TableBody>
                               {row.items.map((item, idx) => (
-                                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                                <TableRow key={idx} className="border-white/5 hover:bg-white/2">
                                   <TableCell className="font-bold text-slate-200 py-4">{item.name}</TableCell>
                                   <TableCell className="text-center font-black text-slate-400">{item.qtyBeli}</TableCell>
                                   <TableCell className="text-center font-black text-emerald-400">{item.qtyJual}</TableCell>
@@ -132,7 +132,7 @@ export const TransactionRow = memo(({
           value={row.revenue ? new Intl.NumberFormat("id-ID").format(row.revenue) : "0"}
           onChange={(e) => onUpdateField(row.id, "revenue", e.target.value)}
           onKeyDown={(e) => onKeyDown(e, index, "revenue")}
-          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-foreground px-2 focus:bg-accent focus:ring-1 focus:ring-primary/30 rounded-md transition-all outline-none w-full"
         />
       </TableCell>
       <TableCell className="text-right p-2">
@@ -141,7 +141,7 @@ export const TransactionRow = memo(({
           value={row.cost ? new Intl.NumberFormat("id-ID").format(row.cost) : "0"}
           onChange={(e) => onUpdateField(row.id, "cost", e.target.value)}
           onKeyDown={(e) => onKeyDown(e, index, "cost")}
-          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-muted-foreground px-2 focus:bg-accent focus:ring-1 focus:ring-primary/30 rounded-md transition-all outline-none w-full"
         />
       </TableCell>
       <TableCell className="text-right p-2">
@@ -150,13 +150,13 @@ export const TransactionRow = memo(({
           value={row.barcode ? new Intl.NumberFormat("id-ID").format(row.barcode) : "0"}
           onChange={(e) => onUpdateField(row.id, "barcode", e.target.value)}
           onKeyDown={(e) => onKeyDown(e, index, "barcode")}
-          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-white/70 px-2 focus:bg-white/10 focus:ring-1 focus:ring-blue-500/30 rounded-md transition-all outline-none w-full"
+          className="bg-transparent border-none text-right h-8 text-sm font-semibold text-muted-foreground px-2 focus:bg-accent focus:ring-1 focus:ring-primary/30 rounded-md transition-all outline-none w-full"
         />
       </TableCell>
-      <TableCell className="text-right font-semibold text-white/70 print:text-black">
+      <TableCell className="text-right font-semibold text-muted-foreground">
         {new Intl.NumberFormat("id-ID").format(row.profit80)}
       </TableCell>
-      <TableCell className="text-right font-bold text-emerald-400 print:text-black">
+      <TableCell className="text-right font-bold text-primary">
         {new Intl.NumberFormat("id-ID").format(row.profit20)}
       </TableCell>
       <TableCell className="no-print px-2">
@@ -164,7 +164,7 @@ export const TransactionRow = memo(({
           variant="ghost"
           size="icon"
           onClick={() => onRemove(index)}
-          className="w-8 h-8 text-white/20 hover:text-red-400 hover:bg-red-400/10 transition-all"
+          className="w-8 h-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
         >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>

@@ -29,7 +29,7 @@ export function SupplierSetoranDetailDialog({
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto">
           <Table>
-            <TableHeader className="bg-white/[0.02] sticky top-0 z-10 backdrop-blur-md">
+            <TableHeader className="bg-white/2 sticky top-0 z-10 backdrop-blur-md">
               <TableRow className="border-white/5">
                 <TableHead className="py-4 px-6 text-[10px] font-black uppercase tracking-widest text-slate-500">Tanggal</TableHead>
                 <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Jumlah Setoran</TableHead>
@@ -38,7 +38,7 @@ export function SupplierSetoranDetailDialog({
             </TableHeader>
             <TableBody>
               {selectedSupplier?.data.map((d: any, idx: number) => (
-                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                <TableRow key={idx} className="border-white/5 hover:bg-white/2">
                   <TableCell className="py-4 px-6 font-bold text-white">{format(new Date(d.date), "dd MMMM yyyy", { locale: id })}</TableCell>
                   <TableCell className="py-4 text-right font-black text-emerald-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(d.amount)}</TableCell>
                   <TableCell className="py-4 px-6 text-right text-slate-500 font-bold uppercase text-[10px] tracking-widest">{d.paymentMethod}</TableCell>

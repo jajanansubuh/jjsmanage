@@ -12,14 +12,11 @@ import {
   History,
   Coins
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { RevenueTrend } from "@/components/revenue-trend";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
 import { PayoutHistoryModal } from "@/components/payout-history-modal";
+import { DashboardCards, DashboardCardProps } from "@/components/dashboard/DashboardCards";
+import { DateRangeFilter } from "@/components/dashboard/DateRangeFilter";
+import { TopSuppliersList } from "@/components/dashboard/TopSuppliersList";
+import { RevenueChartCard } from "@/components/dashboard/RevenueChartCard";
 
 
 export default function DashboardPage() {
@@ -107,18 +104,7 @@ function DashboardContent() {
 
   const isSupplier = stats.role === "SUPPLIER";
 
-  interface DashboardCard {
-    title: string;
-    value: string | number;
-    icon: any;
-    trend: string;
-    trendUp: boolean;
-    color: string;
-    bg: string;
-    onClick?: () => void;
-  }
-
-  const cards: DashboardCard[] = isSupplier ? [
+  const cards: DashboardCardProps[] = isSupplier ? [
     {
       title: "Omzet Penjualan",
       value: isMounted ? new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(stats.totalRevenue) : "Rp 0",
@@ -220,196 +206,37 @@ function DashboardContent() {
         onOpenChange={setIsPayoutModalOpen} 
       />
 
-      {/* Subtle background decoration - Wrapped to prevent overflow */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-blue-600/10 rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 -left-20 w-80 h-80 bg-purple-600/10 rounded-full blur-[120px]" />
-      </div>
+      {/* Remove decorative background for cleaner enterprise look */}
 
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 relative z-10 px-4 md:px-0">
         <div className="space-y-2 pt-8 md:pt-0">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white leading-tight">
-            Ringkasan <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Statistik</span>
+            Ringkasan Statistik
           </h2>
           <p className="text-slate-400 text-sm md:text-base font-medium opacity-80">Performa bisnis Anda dalam genggaman.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 p-1.5 bg-slate-900/50 backdrop-blur-md rounded-2xl border border-white/5 shadow-xl w-full lg:w-auto">
-          <div className="flex items-center gap-1 w-full sm:w-auto">
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group flex-1 sm:flex-none">
-              <div className="flex flex-col w-full">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-400 transition-colors">Dari</span>
-                <Popover>
-                  <PopoverTrigger
-                    className={cn(
-                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px] w-full sm:w-auto",
-                      !startDate && "text-slate-500"
-                    )}
-                  >
-                    {startDate ? format(new Date(startDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={startDate ? new Date(startDate) : undefined}
-                      onSelect={(date: Date | undefined) => date && setStartDate(format(date, "yyyy-MM-dd"))}
-                      initialFocus
-                      className="text-white p-3"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="h-8 w-px bg-white/10 mx-1" />
-
-            <div className="flex items-center gap-3 px-4 py-2 hover:bg-white/5 rounded-xl transition-colors group flex-1 sm:flex-none">
-              <div className="flex flex-col w-full">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-purple-400 transition-colors">Hingga</span>
-                <Popover>
-                  <PopoverTrigger
-                    className={cn(
-                      "flex items-center justify-start text-left bg-transparent border-0 text-sm font-bold text-white focus:outline-none cursor-pointer p-0 h-auto min-w-[90px] w-full sm:w-auto",
-                      !endDate && "text-slate-500"
-                    )}
-                  >
-                    {endDate ? format(new Date(endDate), "dd MMM yyyy") : <span>Pilih Tanggal</span>}
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={endDate ? new Date(endDate) : undefined}
-                      onSelect={(date: Date | undefined) => date && setEndDate(format(date, "yyyy-MM-dd"))}
-                      initialFocus
-                      className="text-white p-3"
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
-        </div>
+        <DateRangeFilter 
+          startDate={startDate}
+          endDate={endDate}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+        />
       </div>
 
-      <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 relative z-10 px-4 md:px-0">
-        {cards.map((card, index) => (
-          <Card
-            key={card.title}
-            onClick={card.onClick}
-            className={cn(
-              "group overflow-hidden border-white/5 bg-slate-900/40 backdrop-blur-xl hover:bg-slate-900/60 transition-all duration-500 rounded-3xl shadow-lg hover:shadow-blue-500/5 hover:-translate-y-1",
-              card.onClick && "cursor-pointer"
-            )}
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-slate-300 transition-colors">{card.title}</CardTitle>
-              <div className={cn("p-2 rounded-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-inner", card.bg)}>
-                <card.icon className={cn("h-4.5 w-4.5", card.color)} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-xl md:text-2xl font-black text-white tracking-tight group-hover:scale-[1.02] transition-transform origin-left">{card.value}</div>
-              <div className="flex items-center mt-3 text-[10px] font-bold">
-                <div className={cn(
-                  "flex items-center px-2 py-0.5 rounded-full mr-2",
-                  card.trendUp ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
-                )}>
-                  {card.trendUp ? (
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                  ) : (
-                    <ArrowDownRight className="h-3 w-3 mr-1" />
-                  )}
-                  {card.trend}
-                </div>
-                {card.trend.includes("%") && (
-                  <span className="text-slate-500">{getPeriodLabel()}</span>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DashboardCards cards={cards} periodLabel={getPeriodLabel()} />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 relative z-10">
-        <Card className="lg:col-span-4 border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
-          <CardHeader className="border-b border-white/5 bg-white/[0.02] py-5">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-blue-400" />
-                {isSupplier ? "Tren Mitra Jjs" : "Tren Pendapatan"}
-              </CardTitle>
-              <div className="flex items-center gap-1 bg-slate-950/50 p-1 rounded-lg border border-white/5">
-                {['D', 'W', 'M', 'Y'].map((t) => (
-                  <button 
-                    key={t} 
-                    onClick={() => {
-                      setSelectedPeriod(t);
-                      setStartDate("");
-                      setEndDate("");
-                    }}
-                    className={cn(
-                      "text-[10px] font-black px-2 py-1 rounded transition-colors",
-                      t === selectedPeriod ? "bg-blue-600 text-white shadow-lg" : "text-slate-500 hover:text-slate-300"
-                    )}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-8 pb-4">
-            <RevenueTrend data={stats.revenueTrend} />
-          </CardContent>
-        </Card>
+        <RevenueChartCard
+          isSupplier={isSupplier}
+          selectedPeriod={selectedPeriod}
+          setSelectedPeriod={setSelectedPeriod}
+          setStartDate={setStartDate}
+          setEndDate={setEndDate}
+          revenueTrend={stats.revenueTrend}
+        />
         {!isSupplier && (
-          <Card className="lg:col-span-3 border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
-            <CardHeader className="border-b border-white/5 bg-white/[0.02] py-5">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg font-bold text-white flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-400" />
-                  Pendapatan tertinggi
-                </CardTitle>
-                <Link 
-                  href="/master" 
-                  className={cn(
-                    buttonVariants({ variant: "ghost", size: "sm" }), 
-                    "h-8 rounded-lg text-blue-400 hover:bg-blue-400/10 font-bold text-[10px] uppercase tracking-widest px-3 border border-blue-400/20 transition-all flex items-center justify-center"
-                  )}
-                >
-                  Data Suplier
-                </Link>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-white/5">
-                {stats.topSuppliers && stats.topSuppliers.length > 0 ? (
-                  stats.topSuppliers.map((s, index) => (
-                    <div key={s.id} className="p-4 flex items-center gap-4 hover:bg-white/5 transition-colors group cursor-pointer">
-                      <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center font-bold text-slate-400 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-white group-hover:text-blue-400 transition-colors truncate">{s.name}</p>
-                        <p className="text-xs text-slate-500">{s.transactionCount} Transaksi</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-black text-white">
-                          {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumSignificantDigits: 3 }).format(s.totalRevenue)}
-                        </p>
-                        <p className="text-[10px] text-emerald-400 font-bold">Terpopuler</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-8 text-center">
-                    <p className="text-sm text-slate-500 font-medium">Belum ada data suplier untuk periode ini.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          <TopSuppliersList topSuppliers={stats.topSuppliers} />
         )}
       </div>
     </div>

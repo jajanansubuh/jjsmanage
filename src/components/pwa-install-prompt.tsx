@@ -79,7 +79,7 @@ export function PWAInstallPrompt() {
   if (pathname !== "/login" || isStandalone || !showPrompt) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 animate-in fade-in duration-300">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -87,9 +87,9 @@ export function PWAInstallPrompt() {
       />
 
       {/* Prompt Card */}
-      <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-3xl shadow-2xl shadow-blue-500/10 overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
+      <div className="relative w-full max-w-sm bg-[#0f1117] border border-white/5 rounded-3xl shadow-2xl shadow-emerald-500/5 overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
         {/* Gradient accent top */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-500" />
 
         {/* Close button */}
         <button
@@ -102,8 +102,8 @@ export function PWAInstallPrompt() {
         <div className="p-6 pt-8 flex flex-col items-center text-center space-y-4">
           {/* App Icon */}
           <div className="relative">
-            <div className="absolute inset-2 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-2xl blur-xl opacity-40" />
-            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/10 bg-slate-800 shadow-lg">
+            <div className="absolute inset-2 bg-gradient-to-tr from-emerald-500 to-teal-500 rounded-2xl blur-xl opacity-40" />
+            <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-white/5 bg-slate-950 shadow-lg">
               <Image
                 src="/logojjsmanage.png"
                 alt="JJS Manage"
@@ -130,16 +130,16 @@ export function PWAInstallPrompt() {
             <div className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 space-y-3">
               <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider text-center">Cara Install di iOS:</p>
               <div className="flex items-center gap-3 text-left">
-                <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                  <Share size={16} className="text-blue-400" />
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                  <Share size={16} className="text-emerald-400" />
                 </div>
                 <p className="text-sm text-slate-300">
                   Ketuk tombol <span className="font-bold text-white">Share</span>
                 </p>
               </div>
               <div className="flex items-center gap-3 text-left">
-                <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0">
-                  <Download size={16} className="text-purple-400" />
+                <div className="w-8 h-8 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0">
+                  <Download size={16} className="text-teal-400" />
                 </div>
                 <p className="text-sm text-slate-300">
                   Pilih <span className="font-bold text-white">Add to Home Screen</span>
@@ -152,7 +152,7 @@ export function PWAInstallPrompt() {
               {deferredPrompt ? (
                 <button
                   onClick={handleInstall}
-                  className="w-full flex items-center justify-center gap-2.5 h-13 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-600/20 active:scale-[0.97] transition-all duration-200"
+                  className="w-full flex items-center justify-center gap-2.5 h-13 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-600/20 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                 >
                   <Download size={18} />
                   Install Sekarang
@@ -162,16 +162,16 @@ export function PWAInstallPrompt() {
                 <div className="w-full p-4 rounded-2xl bg-white/5 border border-white/5 space-y-3 text-left">
                   <p className="text-xs font-semibold text-slate-300 uppercase tracking-wider text-center">Cara Install di Android:</p>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <MoreVertical size={16} className="text-blue-400" />
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <MoreVertical size={16} className="text-emerald-400" />
                     </div>
                     <p className="text-sm text-slate-300">
                       Klik <span className="font-bold text-white">titik tiga (⋮)</span> di pojok kanan atas browser
                     </p>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Download size={16} className="text-purple-400" />
+                    <div className="w-8 h-8 rounded-xl bg-teal-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <Download size={16} className="text-teal-400" />
                     </div>
                     <p className="text-sm text-slate-300">
                       Pilih <span className="font-bold text-white">Instal aplikasi</span>
@@ -181,7 +181,7 @@ export function PWAInstallPrompt() {
               )}
               <button
                 onClick={handleDismiss}
-                className="w-full text-xs text-slate-500 hover:text-slate-300 font-medium py-2 transition-colors"
+                className="w-full text-xs text-slate-500 hover:text-slate-300 font-medium py-2 transition-colors cursor-pointer"
               >
                 Nanti saja
               </button>

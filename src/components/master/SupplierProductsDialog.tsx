@@ -45,7 +45,7 @@ export function SupplierProductsDialog({
           ) : (
             <div className="space-y-4 pt-6 animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300 ease-out">
               <Table>
-                <TableHeader className="bg-white/[0.02] sticky top-0 z-10">
+                <TableHeader className="bg-white/2 sticky top-0 z-10">
                   <TableRow className="border-white/5 hover:bg-transparent">
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 w-16">No</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4">Kode Produk</TableHead>
@@ -54,7 +54,7 @@ export function SupplierProductsDialog({
                 </TableHeader>
                 <TableBody>
                   {supplierProducts.map((product, index) => (
-                    <TableRow key={product.id} className="border-white/5 hover:bg-white/[0.02] transition-colors">
+                    <TableRow key={product.id} className="border-white/5 hover:bg-white/2 transition-colors">
                       <TableCell className="text-slate-400 font-medium py-4">
                         {index + 1}
                       </TableCell>
@@ -72,7 +72,7 @@ export function SupplierProductsDialog({
           )}
         </div>
         
-        <div className="p-6 border-t border-white/5 bg-white/[0.01] flex justify-end">
+        <div className="p-6 border-t border-white/5 bg-white/1 flex justify-end">
           <Button variant="ghost" onClick={() => onOpenChange(false)} className="h-11 px-8 rounded-xl text-white bg-white/5 hover:bg-white/10 font-bold">
             Tutup
           </Button>

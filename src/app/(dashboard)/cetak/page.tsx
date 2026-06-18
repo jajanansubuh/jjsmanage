@@ -16,6 +16,7 @@ import { CetakProductSearch } from "@/components/cetak/CetakProductSearch";
 import { CetakSelectedTable } from "@/components/cetak/CetakSelectedTable";
 import { CetakPrintView } from "@/components/cetak/CetakPrintView";
 import { SupplierPrintHistory } from "@/components/cetak/SupplierPrintHistory";
+import { AdminPrintHistory } from "@/components/cetak/AdminPrintHistory";
 
 // Dialogs
 import { ClearQueueDialog } from "@/components/cetak/ClearQueueDialog";
@@ -176,6 +177,7 @@ export default function CetakLabelPage() {
       if (res.ok) {
         toast.success("Semua antrean berhasil ditandai selesai");
         fetchQueue();
+        setHistoryKey(prev => prev + 1);
       } else {
         toast.error("Gagal memperbarui status antrean");
       }
@@ -230,8 +232,27 @@ export default function CetakLabelPage() {
         body: JSON.stringify({ id, status: "DONE" })
       });
       fetchQueue();
+      setHistoryKey(prev => prev + 1);
     } catch {
       toast.error("Gagal memperbarui status");
+    }
+  };
+
+  const handleDeleteQueueItem = async (id: string) => {
+    try {
+      const res = await fetch("/api/print-queue", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      if (res.ok) {
+        toast.success("Barang antrean berhasil dihapus");
+        fetchQueue();
+      } else {
+        toast.error("Gagal menghapus barang antrean");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan jaringan");
     }
   };
 
@@ -258,7 +279,6 @@ export default function CetakLabelPage() {
         isExporting={isExporting}
         onSaveQueue={handleSaveQueue}
         onExport={handleExportQueue}
-        onPrint={() => window.print()}
         hasSelected={selectedItems.length > 0}
         hasQueue={queueItems.length > 0}
       />
@@ -281,7 +301,12 @@ export default function CetakLabelPage() {
           onMarkAsDone={handleMarkAsDone}
           onMarkAllDone={() => handleMarkAllAsDone(false)}
           onUpdateQty={handleUpdateQueueQty}
+          onDeleteQueueItem={handleDeleteQueueItem}
         />
+      )}
+
+      {userRole === "ADMIN" && (
+        <AdminPrintHistory key={historyKey} />
       )}
 
       {userRole === "SUPPLIER" && (

@@ -43,7 +43,7 @@ export function ProductTab({
   );
 
   return (
-    <Card className="border border-white/5 border-t-4 border-t-emerald-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-emerald-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card className="border border-border bg-card rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
@@ -70,7 +70,7 @@ export function ProductTab({
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="bg-white/[0.02]">
+          <TableHeader className="bg-white/2">
             <TableRow className="border-white/5">
               <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
               <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
@@ -88,7 +88,7 @@ export function ProductTab({
                 return (
                   <TableRow 
                     key={idx} 
-                    className="border-white/5 hover:bg-white/[0.02] cursor-pointer group transition-all"
+                    className="border-white/5 hover:bg-white/2 cursor-pointer group transition-all"
                     onClick={() => onSelectProductNote(g)}
                   >
                     <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(g.date), "dd MMM yyyy", { locale: id })}</TableCell>
@@ -111,7 +111,7 @@ export function ProductTab({
         </Table>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/[0.01]">
+          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/1">
             <p className="text-xs text-slate-400 font-medium">
               Halaman {currentPage} dari {totalPages}
             </p>

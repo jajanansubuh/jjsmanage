@@ -36,7 +36,7 @@ export function ConfirmDoneDialog({
           </div>
         </div>
 
-        <DialogFooter className="p-6 bg-white/[0.02] border-t border-white/5 gap-3 sm:gap-0">
+        <DialogFooter className="p-6 bg-white/2 border-t border-white/5 gap-3 sm:gap-0">
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}

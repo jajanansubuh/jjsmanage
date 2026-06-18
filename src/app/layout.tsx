@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Poppins } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
-// poppins font
 
-const poppins = Poppins({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-poppins",
+  weight: ["400", "500", "700", "800", "900"],
+  variable: "--font-dm-sans",
 });
 
 import { Toaster } from "@/components/ui/sonner";
@@ -20,16 +19,28 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "JJS Manage",
-    startupImage: "/logojjsmanage.png",
+    startupImage: "/apple-touch-icon.png",
   },
   icons: {
     icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
+  },
+  openGraph: {
+    images: [
+      { url: "/icon-512x512.png", width: 512, height: 512, alt: "JJS Manage Logo" }
+    ]
+  },
+  twitter: {
+    card: "summary",
+    images: ["/icon-512x512.png"]
   },
   formatDetection: {
     telephone: false,
@@ -52,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${poppins.variable} h-full antialiased dark`}
+      className={`${dmSans.variable} h-full antialiased dark`}
     >
       <body className="min-h-full bg-background font-sans">
         {children}

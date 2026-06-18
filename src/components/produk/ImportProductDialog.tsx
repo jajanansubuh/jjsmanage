@@ -102,7 +102,7 @@ export function ImportProductDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900 border-white/10 text-white rounded-3xl p-0 overflow-hidden max-w-md">
-        <DialogHeader className="p-8 pb-4 border-b border-white/5 bg-white/[0.02]">
+        <DialogHeader className="p-8 pb-4 border-b border-white/5 bg-white/2">
           <DialogTitle className="text-2xl font-black tracking-tight flex items-center gap-4 italic uppercase">
             <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-lg shadow-blue-500/5">
               <Upload className="w-6 h-6 text-blue-400" />
@@ -148,7 +148,7 @@ export function ImportProductDialog({
               "flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-[2rem] transition-all duration-300",
               isImporting 
                 ? "bg-white/5 border-white/5" 
-                : "bg-white/[0.02] border-white/10 group-hover:bg-blue-500/5 group-hover:border-blue-500/40"
+                : "bg-white/2 border-white/10 group-hover:bg-blue-500/5 group-hover:border-blue-500/40"
             )}>
               {isImporting ? (
                 <div className="flex flex-col items-center gap-4">
@@ -170,7 +170,7 @@ export function ImportProductDialog({
           </div>
         </div>
         
-        <div className="p-6 bg-white/[0.01] border-t border-white/5 text-center">
+        <div className="p-6 bg-white/1 border-t border-white/5 text-center">
           <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest italic">JjsManage • Catalog Import System v2.0</p>
         </div>
       </DialogContent>

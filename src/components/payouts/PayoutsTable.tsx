@@ -132,7 +132,7 @@ export function PayoutsTable({
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-white/[0.02]">
+              <TableHeader className="bg-white/2">
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="py-6 pl-8 pr-2 w-10"><span className="sr-only">Detail</span></TableHead>
                   <TableHead className="py-6 cursor-pointer group" onClick={() => onSort("date")}>
@@ -191,7 +191,7 @@ export function PayoutsTable({
           </div>
 
           {!loading && transactions.length > 0 && (
-            <div className="border-t border-white/5 bg-white/[0.02] px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="border-t border-white/5 bg-white/2 px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
               <span className="text-sm font-bold text-slate-400">Menampilkan {transactions.length} transaksi</span>
               <div className="flex items-center gap-4 sm:gap-6">
                 <div className="text-right">
@@ -221,8 +221,8 @@ function PayoutsTableRow({ t, userRole, isExpanded, onToggle, hasDeductions }: {
       <TableRow 
         className={cn(
           "border-white/5 transition-all duration-300 group",
-          hasDeductions ? "cursor-pointer hover:bg-white/[0.03]" : "hover:bg-white/[0.02]",
-          isExpanded && "bg-white/[0.03]"
+          hasDeductions ? "cursor-pointer hover:bg-white/3" : "hover:bg-white/2",
+          isExpanded && "bg-white/3"
         )}
         onClick={() => hasDeductions && onToggle()}
       >
@@ -245,7 +245,7 @@ function PayoutsTableRow({ t, userRole, isExpanded, onToggle, hasDeductions }: {
         <TableCell className="py-5 px-8 text-right"><span className="font-black text-lg tracking-tighter text-emerald-400 group-hover:scale-105 inline-block origin-right transition-transform">+{formatCurrency(t.profit80)}</span></TableCell>
       </TableRow>
       {isExpanded && (
-        <TableRow className="border-white/5 bg-white/[0.01]">
+        <TableRow className="border-white/5 bg-white/1">
           <TableCell colSpan={userRole === "SUPPLIER" ? 5 : 6} className="py-0">
             <div className="py-4 px-8 animate-in slide-in-from-top-2 fade-in duration-300">
               <div className="flex items-center gap-2 mb-3"><Scissors className="w-3.5 h-3.5 text-slate-500" /><span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Detail Potongan</span></div>

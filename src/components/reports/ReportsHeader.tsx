@@ -10,7 +10,7 @@ export function ReportsHeader({ onExport }: ReportsHeaderProps) {
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
       <div className="space-y-1">
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-          Arsip <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-400">JjsManage</span>
+          Arsip JjsManage
         </h2>
         <p className="text-slate-400 font-medium text-sm md:text-base">Riwayat lengkap transaksi harian, setoran tunai, dan akumulasi tabungan mitra.</p>
       </div>

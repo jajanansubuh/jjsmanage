@@ -67,24 +67,23 @@ export function DepositsTable({
         </div>
       </div>
     ) : null;
-
   return (
     <>
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
         {loading ? (
-          <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-12 text-center border border-white/5">
+          <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
              <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-             <p className="text-slate-500 font-medium">Memuat data...</p>
+             <p className="text-muted-foreground font-medium">Memuat data...</p>
           </div>
         ) : filteredAndSortedData.length === 0 ? (
-          <div className="bg-slate-900/40 backdrop-blur-xl rounded-2xl p-12 text-center border border-white/5">
-            <p className="text-slate-500 font-medium italic">Tidak ada transaksi pada tanggal ini.</p>
+          <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
+            <p className="text-muted-foreground font-medium italic">Tidak ada transaksi pada tanggal ini.</p>
           </div>
         ) : (
           <>
             {paginatedData.map((item) => (
-            <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
+            <Card key={item.id} className="bg-card border-border rounded-xl overflow-hidden group shadow-sm">
               <CardContent className="p-5">
                 <div className="flex justify-between items-start mb-4">
                   <div className="space-y-1">
@@ -157,11 +156,11 @@ export function DepositsTable({
       </div>
 
       {/* Desktop View */}
-      <Card className="hidden md:block border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl relative z-10">
+      <Card className="hidden md:block border-border bg-card rounded-xl overflow-hidden shadow-sm relative z-10">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-white/[0.02]">
+              <TableHeader className="bg-white/2">
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => onSort("name")}>
                     <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
@@ -215,7 +214,7 @@ export function DepositsTable({
                   </TableRow>
                 ) : (
                   paginatedData.map((item) => (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.03] transition-all duration-500 group relative">
+                    <TableRow key={item.id} className="border-border hover:bg-muted/50 transition-all duration-500 group relative">
                       <TableCell className="py-6 px-8 relative overflow-hidden">
                         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-emerald-500 group-hover:h-1/2 transition-all duration-500 rounded-r-full" />
                         <span className="font-black text-lg text-white tracking-tight group-hover:text-emerald-400 transition-all duration-300 uppercase">

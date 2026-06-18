@@ -231,10 +231,10 @@ export default function DepositsPage() {
       {/* Header */}
       <div className="space-y-6">
         <div className="flex flex-col gap-2">
-          <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-white">
-            Info <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-400 to-cyan-400">{role === "SUPPLIER" ? "Saldo" : "Penyetoran"}</span>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tighter text-foreground">
+            Info {role === "SUPPLIER" ? "Saldo" : "Penyetoran"}
           </h2>
-          <p className="text-slate-400 text-sm md:text-base font-medium max-w-2xl">
+          <p className="text-muted-foreground text-sm md:text-base font-medium max-w-2xl">
             {role === "SUPPLIER" ? "Rekapitulasi saldo pendapatan Anda yang sudah dicairkan." : "Rekapitulasi transaksi harian yang siap disetorkan ke Mitra Jjs. Gunakan filter untuk melihat data spesifik."}
           </p>
         </div>

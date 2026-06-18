@@ -26,10 +26,10 @@ export function ProductTable({ products, onSort, isAdmin, suppliers, onSuccess }
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden md:block bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden">
+      <div className="hidden md:block bg-card rounded-xl border border-border shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="border-white/5 bg-white/[0.02]">
+            <TableRow className="border-border hover:bg-transparent">
               <TableHead className="w-12 text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No</TableHead>
               <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Kode</TableHead>
               <TableHead className="py-5">
@@ -152,17 +152,17 @@ function ProductTableRow({
   const sellRate = product.totalBeli > 0 ? ((product.totalJual / product.totalBeli) * 100).toFixed(1) : "0";
   
   return (
-    <TableRow className="border-white/5 hover:bg-white/[0.02] transition-colors group">
-      <TableCell className="text-center font-bold text-slate-500 py-5">{index + 1}</TableCell>
-      <TableCell className="font-mono text-[10px] text-blue-400/70 font-bold">{product.code || "-"}</TableCell>
-      <TableCell className="font-black text-white py-5">{product.name}</TableCell>
-      <TableCell className="font-bold text-slate-500 text-[11px] uppercase tracking-tighter">{product.supplierName}</TableCell>
-      <TableCell className="text-center font-bold text-slate-400">{product.totalBeli}</TableCell>
-      <TableCell className="text-center font-black text-emerald-400 text-lg">{product.totalJual}</TableCell>
-      <TableCell className="text-center font-bold text-rose-400">{product.totalRetureJual}</TableCell>
+    <TableRow className="border-border hover:bg-muted/50 transition-colors group">
+      <TableCell className="text-center font-bold text-muted-foreground py-5">{index + 1}</TableCell>
+      <TableCell className="font-mono text-[10px] text-primary/70 font-bold">{product.code || "-"}</TableCell>
+      <TableCell className="font-black text-foreground py-5">{product.name}</TableCell>
+      <TableCell className="font-bold text-muted-foreground text-[11px] uppercase tracking-tighter">{product.supplierName}</TableCell>
+      <TableCell className="text-center font-bold text-muted-foreground">{product.totalBeli}</TableCell>
+      <TableCell className="text-center font-black text-primary text-lg">{product.totalJual}</TableCell>
+      <TableCell className="text-center font-bold text-destructive">{product.totalRetureJual}</TableCell>
       <TableCell className="text-right px-8">
         <div className="flex flex-col items-end">
-          <span className="font-black text-white">{sellRate}%</span>
+          <span className="font-black text-foreground">{sellRate}%</span>
           <div className="w-16 h-1 bg-white/5 rounded-full mt-1.5 overflow-hidden">
             <div 
               className={cn(

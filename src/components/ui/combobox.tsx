@@ -39,7 +39,7 @@ function ComboboxTrigger({ className, children, ...props }: ComboboxPrimitive.Tr
 function ComboboxContent({ className, children, ...props }: ComboboxPrimitive.Popup.Props) {
   return (
     <ComboboxPrimitive.Portal>
-      <ComboboxPrimitive.Positioner sideOffset={4}>
+      <ComboboxPrimitive.Positioner sideOffset={4} className="isolate z-50">
         <ComboboxPrimitive.Popup
           className={cn(
             "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",

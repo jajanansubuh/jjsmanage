@@ -95,8 +95,8 @@ export function DateRangePicker({
   const pickerContent = (
     <div className="flex flex-col sm:flex-row">
       {/* Preset Shortcuts */}
-      <div className="flex sm:flex-col gap-1 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-white/10 overflow-x-auto sm:overflow-x-visible shrink-0 bg-slate-950/20">
-        <span className="hidden sm:block text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2 px-3">
+      <div className="flex sm:flex-col gap-1 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-border overflow-x-auto sm:overflow-x-visible shrink-0 bg-muted/20">
+        <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 px-3">
           PILIH CEPAT
         </span>
         {[
@@ -109,7 +109,7 @@ export function DateRangePicker({
             key={preset.label}
             type="button"
             onClick={() => applyPreset(preset.getRange)}
-            className="whitespace-nowrap text-left text-[11px] sm:text-xs font-bold text-slate-400 hover:text-white hover:bg-white/5 px-3 py-2 sm:py-2.5 rounded-xl transition-all"
+            className="whitespace-nowrap text-left text-[11px] sm:text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-2 sm:py-2.5 rounded-xl transition-all"
           >
             {preset.label}
           </button>
@@ -119,15 +119,15 @@ export function DateRangePicker({
       {/* Calendar Picker Panel */}
       <div className="flex flex-col flex-1 min-w-0">
         {/* Mobile: Tab switcher between Dari/Hingga */}
-        <div className="flex sm:hidden border-b border-white/10">
+        <div className="flex sm:hidden border-b border-border">
           <button
             type="button"
             onClick={() => setActiveTab("from")}
             className={cn(
               "flex-1 py-3 text-xs font-black uppercase tracking-wider text-center transition-all",
               activeTab === "from"
-                ? "text-blue-400 border-b-2 border-blue-400 bg-blue-400/5"
-                : "text-slate-500"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground"
             )}
           >
             DARI {localStart ? format(localStart, "dd/MM", { locale: localeId }) : ""}
@@ -138,8 +138,8 @@ export function DateRangePicker({
             className={cn(
               "flex-1 py-3 text-xs font-black uppercase tracking-wider text-center transition-all",
               activeTab === "to"
-                ? "text-blue-400 border-b-2 border-blue-400 bg-blue-400/5"
-                : "text-slate-500"
+                ? "text-primary border-b-2 border-primary bg-primary/5"
+                : "text-muted-foreground"
             )}
           >
             HINGGA {localEnd ? format(localEnd, "dd/MM", { locale: localeId }) : ""}
@@ -147,7 +147,7 @@ export function DateRangePicker({
         </div>
 
         {/* Mobile: Single calendar with tab switching */}
-        <div className="sm:hidden p-1 flex justify-center bg-slate-950/10">
+        <div className="sm:hidden p-1 flex justify-center bg-transparent">
           {activeTab === "from" ? (
             <Calendar
               mode="single"
@@ -157,14 +157,14 @@ export function DateRangePicker({
                 // Auto-switch to "to" tab after selecting start
                 setTimeout(() => setActiveTab("to"), 200);
               }}
-              className="text-white"
+              className="text-foreground"
             />
           ) : (
             <Calendar
               mode="single"
               selected={localEnd}
               onSelect={setLocalEnd}
-              className="text-white"
+              className="text-foreground"
             />
           )}
         </div>
@@ -172,39 +172,39 @@ export function DateRangePicker({
         {/* Desktop: Side-by-side calendars */}
         <div className="hidden sm:flex gap-2 p-4">
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-blue-400 tracking-wider mb-1 px-3">TANGGAL MULAI</span>
+            <span className="text-[10px] font-black text-primary tracking-wider mb-1 px-3">TANGGAL MULAI</span>
             <Calendar
               mode="single"
               selected={localStart}
               onSelect={setLocalStart}
-              className="text-white bg-slate-950/30 rounded-2xl border border-white/5"
+              className="text-foreground bg-card rounded-xl border border-border"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-slate-500 tracking-wider mb-1 px-3">TANGGAL AKHIR</span>
+            <span className="text-[10px] font-black text-muted-foreground tracking-wider mb-1 px-3">TANGGAL AKHIR</span>
             <Calendar
               mode="single"
               selected={localEnd}
               onSelect={setLocalEnd}
-              className="text-white bg-slate-950/30 rounded-2xl border border-white/5"
+              className="text-foreground bg-card rounded-xl border border-border"
             />
           </div>
         </div>
 
         {/* Confirmation Footer */}
-        <div className="p-3 sm:p-4 border-t border-white/10 flex justify-end bg-slate-950/40 gap-2">
+        <div className="p-3 sm:p-4 border-t border-border flex justify-end bg-muted/20 gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsOpen(false)}
-            className="text-slate-400 hover:text-white hover:bg-white/5 font-bold px-4 rounded-xl"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent font-bold px-4 rounded-xl"
           >
             Batal
           </Button>
           <Button
             size="sm"
             onClick={handleApply}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 rounded-xl shadow-lg shadow-blue-600/20"
+            className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 rounded-xl shadow-lg shadow-primary/20"
           >
             OK
           </Button>
@@ -220,13 +220,13 @@ export function DateRangePicker({
           type="button"
           onClick={() => setIsOpen(true)}
           className={cn(
-            "flex items-center bg-slate-950/40 border border-white/5 hover:bg-white/5 transition-all text-left h-14 rounded-2xl overflow-hidden cursor-pointer shrink-0 select-none group w-full",
+            "flex items-center bg-background border border-border hover:border-primary/50 transition-all text-left h-12 rounded-lg overflow-hidden cursor-pointer shrink-0 select-none group w-full",
             className
           )}
         >
           {/* Dari Field */}
           <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-            <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1 group-hover:text-blue-300 transition-colors">
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
               DARI
             </span>
             <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
@@ -240,7 +240,7 @@ export function DateRangePicker({
 
           {/* Hingga Field */}
           <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-            <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1 group-hover:text-slate-400 transition-colors">
+            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
               HINGGA
             </span>
             <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
@@ -253,7 +253,7 @@ export function DateRangePicker({
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogContent 
             showCloseButton={false}
-            className="p-0 bg-slate-900 border-white/10 shadow-2xl rounded-2xl overflow-hidden w-[calc(100vw-2rem)] max-w-sm border-0 ring-0 focus:ring-0 outline-none"
+            className="p-0 bg-popover border border-border shadow-2xl rounded-2xl overflow-hidden w-[calc(100vw-2rem)] max-w-sm outline-none"
           >
             {pickerContent}
           </DialogContent>
@@ -266,13 +266,13 @@ export function DateRangePicker({
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger
         className={cn(
-          "flex items-center bg-slate-950/40 border border-white/5 hover:bg-white/5 transition-all text-left h-14 rounded-2xl overflow-hidden cursor-pointer shrink-0 select-none group w-full",
+          "flex items-center bg-background border border-border hover:border-primary/50 transition-all text-left h-12 rounded-lg overflow-hidden cursor-pointer shrink-0 select-none group w-full",
           className
         )}
       >
         {/* Dari Field */}
         <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-          <span className="text-[9px] font-black uppercase text-blue-400 tracking-widest leading-none mb-1 group-hover:text-blue-300 transition-colors">
+          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
             DARI
           </span>
           <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
@@ -286,7 +286,7 @@ export function DateRangePicker({
 
         {/* Hingga Field */}
         <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-          <span className="text-[9px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1 group-hover:text-slate-400 transition-colors">
+          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
             HINGGA
           </span>
           <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
@@ -295,7 +295,7 @@ export function DateRangePicker({
           </span>
         </div>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10 shadow-2xl rounded-[2rem] overflow-hidden" align="start">
+      <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-2xl rounded-2xl overflow-hidden" align="start">
         {pickerContent}
       </PopoverContent>
     </Popover>

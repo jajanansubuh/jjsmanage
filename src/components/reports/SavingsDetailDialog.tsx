@@ -34,16 +34,16 @@ export function SavingsDetailDialog({
         </div>
         <div className="flex-1 overflow-auto p-8">
           <Table>
-            <TableHeader className="bg-white/[0.02]">
+            <TableHeader className="bg-white/2">
               <TableRow className="border-white/5">
                 <TableHead className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama Suplier</TableHead>
                 <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500">Omzet</TableHead>
-                <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-slate-500 text-purple-400">Potongan Tabungan</TableHead>
+                <TableHead className="py-4 text-right text-[10px] font-black uppercase tracking-widest text-purple-400">Potongan Tabungan</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {selectedTabunganNote?.suppliers.map((s: any, idx: number) => (
-                <TableRow key={idx} className="border-white/5 hover:bg-white/[0.02]">
+                <TableRow key={idx} className="border-white/5 hover:bg-white/2">
                   <TableCell className="py-4 font-black text-white">{s.name}</TableCell>
                   <TableCell className="py-4 text-right font-bold text-slate-400">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(s.revenue)}</TableCell>
                   <TableCell className="py-4 text-right font-black text-purple-400">+ {new Intl.NumberFormat("id-ID").format(s.tabungan)}</TableCell>

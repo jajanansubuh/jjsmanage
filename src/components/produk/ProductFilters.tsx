@@ -27,14 +27,14 @@ export function ProductFilters({
         <DateRangePicker
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
-          className="bg-slate-950/50 border-white/5 rounded-2xl w-full lg:w-auto h-14 no-print"
+          className="w-full lg:w-auto h-10 no-print"
         />
 
         <div className="relative group w-full lg:w-80">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Cari nama produk..."
-            className="pl-11 pr-4 h-14 lg:h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all font-bold text-white placeholder:text-slate-600"
+            className="pl-11 pr-4 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -42,10 +42,10 @@ export function ProductFilters({
 
         {userRole !== "SUPPLIER" && onAdd && (
           <Button
-            className="h-14 lg:h-12 px-6 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] border border-emerald-500/20 shadow-lg shadow-emerald-950/20 rounded-2xl text-white gap-2 transition-all w-full sm:w-auto text-sm font-bold cursor-pointer shrink-0"
+            className="w-full sm:w-auto shrink-0 whitespace-nowrap"
             onClick={onAdd}
           >
-            <PlusCircle className="w-5 h-5" />
+            <PlusCircle className="w-4 h-4 mr-2" />
             <span>Tambah Produk</span>
           </Button>
         )}

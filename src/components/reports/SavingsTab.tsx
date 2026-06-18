@@ -43,7 +43,7 @@ export function SavingsTab({
   );
 
   return (
-    <Card className="border border-white/5 border-t-4 border-t-purple-500 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] overflow-hidden shadow-2xl shadow-purple-900/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card className="border border-border bg-card rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
       <CardHeader className="p-8 border-b border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
@@ -70,12 +70,12 @@ export function SavingsTab({
       </CardHeader>
       <CardContent className="p-0">
         <Table>
-          <TableHeader className="bg-white/[0.02]">
+          <TableHeader className="bg-white/2">
             <TableRow className="border-white/5">
               <TableHead className="py-5 px-8 font-black text-[10px] uppercase tracking-widest text-slate-500">Tanggal</TableHead>
               <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No Nota</TableHead>
               <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500 text-right">Total Omzet</TableHead>
-              <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-slate-500 text-purple-400">Total Tabungan</TableHead>
+              <TableHead className="py-5 text-right px-8 font-black text-[10px] uppercase tracking-widest text-purple-400">Total Tabungan</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,7 +85,7 @@ export function SavingsTab({
               paginatedSavings.map((s) => (
                 <TableRow 
                   key={s.id} 
-                  className="border-white/5 hover:bg-white/[0.02] cursor-pointer group transition-all"
+                  className="border-white/5 hover:bg-white/2 cursor-pointer group transition-all"
                   onClick={() => onSelectSavings(s)}
                 >
                   <TableCell className="py-5 px-8 font-bold text-white whitespace-nowrap">{format(new Date(s.date), "dd MMM yyyy", { locale: id })}</TableCell>
@@ -99,7 +99,7 @@ export function SavingsTab({
         </Table>
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/[0.01]">
+          <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/1">
             <p className="text-xs text-slate-400 font-medium">
               Halaman {currentPage} dari {totalPages}
             </p>

@@ -107,17 +107,17 @@ export function Sidebar({
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-xl border-b border-white/5 z-40 flex items-center justify-between px-4">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center justify-between px-4">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 rounded-xl bg-white/5 text-white hover:bg-white/10 active:scale-95 transition-all border border-white/10 shadow-lg"
+          className="p-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
 
         <div className="flex items-center gap-2.5 pr-2">
-          <span className="text-lg font-black tracking-tight text-white">
-            Jjs<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Manage</span>
+          <span className="text-lg font-bold tracking-tight text-foreground">
+            Jjs<span className="text-primary">Manage</span>
           </span>
           <div className="relative w-12 h-12 overflow-hidden">
             <Image
@@ -134,31 +134,34 @@ export function Sidebar({
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-40 w-72 lg:w-64 bg-slate-900/60 backdrop-blur-3xl border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0 h-[100dvh]",
+        "fixed inset-y-0 left-0 z-50 w-72 lg:w-64 bg-[#0f1117] border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0 h-[100dvh]",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Header - More compact on mobile */}
-          <div className="px-6 py-6 lg:py-8">
+          {/* Header */}
+          <div className="px-5 py-6 lg:py-7">
             <div className="flex items-center gap-3 group">
-              <div className="relative w-12 h-12 lg:w-[72px] lg:h-[72px] overflow-hidden group-hover:scale-110 transition-transform duration-300 shrink-0">
+              <div className="relative w-11 h-11 lg:w-14 lg:h-14 overflow-hidden group-hover:scale-105 transition-transform duration-300 shrink-0">
                 <Image
                   src="/logojjsmanage.png"
                   alt="JJS Manage Logo"
                   fill
-                  sizes="(max-width: 1024px) 48px, 72px"
+                  sizes="(max-width: 1024px) 44px, 56px"
                   className="object-contain"
                   unoptimized
                 />
               </div>
-              <h1 className="text-xl lg:text-2xl font-black tracking-tighter text-white leading-tight">
-                Jjs<span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Manage</span>
-              </h1>
+              <div>
+                <h1 className="text-lg lg:text-xl font-black tracking-tight text-white leading-tight">
+                  Jjs<span className="text-emerald-400">Manage</span>
+                </h1>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500/60 mt-0.5">Sukabumi</p>
+              </div>
             </div>
           </div>
 
-          {/* Nav - Scrollable with custom scrollbar hide */}
-          <nav className="flex-1 px-4 space-y-1 lg:space-y-1.5 overflow-y-auto custom-scrollbar pb-6">
+          {/* Nav */}
+          <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto custom-scrollbar pb-4 min-h-0">
             {filteredNavigation.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -167,57 +170,65 @@ export function Sidebar({
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    "flex items-center px-4 py-3 lg:py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 group",
+                    "relative flex items-center gap-3 px-3.5 py-2 text-[13px] font-bold rounded-xl transition-all duration-200 group",
                     isActive
-                      ? "bg-linear-to-r from-blue-600/20 to-purple-600/20 text-white shadow-[inset_0_0_20px_rgba(59,130,246,0.1)] ring-1 ring-blue-500/20"
+                      ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20"
                       : "text-slate-400 hover:text-white hover:bg-white/5"
                   )}
                 >
+                  {/* Active indicator dot (left side) */}
+                  {!isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-0 rounded-full bg-emerald-400 transition-all duration-200 group-hover:h-5" />
+                  )}
                   <item.icon className={cn(
-                    "mr-3.5 h-5 w-5 transition-transform duration-300",
-                    isActive ? "text-blue-400 scale-110" : "text-slate-500 group-hover:text-slate-300 group-hover:scale-110"
+                    "h-[18px] w-[18px] shrink-0 transition-all duration-200",
+                    isActive
+                      ? "text-white"
+                      : "text-slate-500 group-hover:text-emerald-400"
                   )} />
-                  {item.name}
+                  <span className="uppercase tracking-wider text-[11px]">{item.name}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Footer Profile - Fixed at bottom */}
-          <div className="p-3 mt-auto border-t border-white/5 bg-slate-900/40 backdrop-blur-md">
-            <div className="p-3 rounded-2xl bg-white/5 border border-white/5 space-y-2.5">
+          {/* Footer Profile */}
+          <div className="p-3 shrink-0 border-t border-white/5 bg-white/[0.02]">
+            <div className="flex flex-col gap-2">
               <Link
                 href={role === "SUPPLIER" ? "/" : "/settings"}
-                className="flex items-center gap-2.5 group"
+                className="flex items-center gap-3 group p-2.5 rounded-xl hover:bg-white/5 transition-all duration-200"
               >
                 <div className="relative">
-                  <div className="w-8 h-8 rounded-xl bg-linear-to-tr from-blue-500 to-purple-500 group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-blue-500/20" />
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border border-slate-900 rounded-full" />
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/15 flex items-center justify-center text-xs font-black text-emerald-400 ring-1 ring-emerald-500/20 group-hover:scale-105 transition-transform duration-200">
+                    {name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-[#0f1117] rounded-full" />
                 </div>
                 <div className="text-left flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">{name}</p>
-                  <p className="text-[9px] uppercase tracking-wider font-black text-blue-400/70">{role === "SUPPLIER" ? "Supplier" : "Master Admin"}</p>
+                  <p className="text-sm font-bold text-white truncate group-hover:text-emerald-400 transition-colors duration-200">{name}</p>
+                  <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider truncate mt-0.5">{role === "SUPPLIER" ? "Supplier" : "Administrator"}</p>
                 </div>
               </Link>
 
               <button
                 onClick={() => setIsLogoutDialogOpen(true)}
-                className="flex items-center justify-center w-full gap-2 px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 group border border-transparent hover:border-red-500/20"
+                className="flex items-center justify-center w-full gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 active:scale-[0.98]"
               >
-                <LogOut className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-                Keluar
+                <LogOut className="h-3.5 w-3.5" />
+                Sign out
               </button>
 
               {/* Version and Copyright Info */}
-              <div className="!mt-2 pt-2 border-t border-white/5 text-center text-[8.5px] text-slate-500/50 space-y-0.5 whitespace-nowrap">
-                <p>Versi 2.1.0</p>
-                <p>
-                  &copy; 2026 jjsmanage &bull; Powered by{" "}
+              <div className="pt-1 text-center text-[10px] text-slate-500 font-medium">
+                <p>JjsManage v2.9.0 &middot; &copy; 2026</p>
+                <p className="text-slate-500/60">
+                  Powered by{" "}
                   <a
-                    href="https://www.instagram.com/chikalarc?igsh=c3NmcWkyc3p3a2lw"
+                    href="https://nadhivadam.my.id/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-bold text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400 hover:from-blue-300 hover:to-purple-300 transition-all duration-300 underline decoration-purple-400/20"
+                    className="text-emerald-500/70 hover:text-emerald-400 transition-colors duration-200 font-semibold underline decoration-emerald-500/20 hover:decoration-emerald-400/60 underline-offset-2"
                   >
                     ndhvbase
                   </a>
@@ -231,44 +242,43 @@ export function Sidebar({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Logout Confirmation Modal */}
       <Dialog open={isLogoutDialogOpen} onOpenChange={setIsLogoutDialogOpen}>
-        <DialogContent className="bg-slate-950 border-white/10 rounded-3xl shadow-2xl max-w-sm p-0 overflow-hidden">
-          <div className="p-8 space-y-6">
-            <div className="flex flex-col items-center text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <AlertCircle className="w-8 h-8 text-amber-500" />
+        <DialogContent className="max-w-sm">
+          <div className="p-6 space-y-6">
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-warning" />
               </div>
               <DialogHeader>
-                <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Yakin Ingin Keluar ?</DialogTitle>
-                <DialogDescription className="text-slate-400 font-medium pt-2 text-center">
-                  Anda akan keluar dari sistem. Pastikan semua pekerjaan telah disimpan.
+                <DialogTitle className="text-xl font-bold">Sign Out</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to sign out?
                 </DialogDescription>
               </DialogHeader>
             </div>
           </div>
 
-          <div className="p-6 md:p-8 bg-white/[0.02] border-t border-white/5">
-            <div className="flex flex-col gap-3">
-              <Button
-                onClick={() => logoutAction()}
-                className="w-full h-14 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-black shadow-lg shadow-red-600/20 active:scale-95 transition-all text-sm uppercase tracking-wider"
-              >
-                YA, KELUAR SEKARANG
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => setIsLogoutDialogOpen(false)}
-                className="w-full h-12 rounded-2xl text-slate-500 font-bold hover:bg-white/5 hover:text-white transition-all text-xs uppercase tracking-widest"
-              >
-                Kembali ke Aplikasi
-              </Button>
-            </div>
+          <div className="p-6 pt-0 flex flex-col gap-3">
+            <Button
+              onClick={() => logoutAction()}
+              variant="destructive"
+              className="w-full"
+            >
+              Sign Out
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsLogoutDialogOpen(false)}
+              className="w-full"
+            >
+              Cancel
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

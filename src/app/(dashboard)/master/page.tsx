@@ -240,38 +240,36 @@ export default function MasterDataPage() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-white">Data Master</h2>
+        <h2 className="text-3xl font-black tracking-tight text-white">Data Master</h2>
         <p className="text-muted-foreground">Kelola data suplier dan kasir sistem Anda.</p>
       </div>
 
       <MasterTabs 
         supplierContent={
-          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-3xl overflow-hidden shadow-2xl">
-            <CardHeader className="flex flex-col sm:flex-row items-center justify-between border-b border-white/5 bg-white/[0.02] py-6 px-8 gap-4">
+          <Card className="overflow-hidden">
+            <CardHeader className="flex flex-col sm:flex-row items-center justify-between border-b border-border bg-muted/30 py-5 px-6 gap-4">
               <div className="text-center sm:text-left">
-                <CardTitle className="text-xl font-bold text-white">Daftar Suplier</CardTitle>
-                <CardDescription className="text-slate-400">Kelola informasi UMKM, pemilik, dan Pendapatan bagi hasil.</CardDescription>
+                <CardTitle className="text-xl font-bold text-foreground">Daftar Suplier</CardTitle>
+                <CardDescription className="text-muted-foreground">Kelola informasi UMKM, pemilik, dan Pendapatan bagi hasil.</CardDescription>
               </div>
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64 group">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input 
                     placeholder="Cari suplier..." 
                     value={supplierSearch}
                     onChange={(e) => setSupplierSearch(e.target.value)}
-                    className="pl-10 h-11 bg-white/5 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all text-white placeholder:text-slate-500 font-medium"
+                    className="pl-9"
                   />
                 </div>
+                <Button onClick={() => setIsSupplierDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Tambah Suplier
+                </Button>
                 <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
-                  <DialogTrigger render={
-                    <Button className="h-11 px-6 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold shadow-lg shadow-blue-500/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
-                      <Plus className="w-5 h-5 mr-2" /> Tambah Suplier
-                    </Button>
-                  } />
-                  <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
+                  <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="text-2xl font-black text-white">Tambah Suplier</DialogTitle>
-                      <DialogDescription className="text-slate-400 font-medium">Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
+                      <DialogTitle>Tambah Suplier</DialogTitle>
+                      <DialogDescription>Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
                     </DialogHeader>
                     <SupplierAddForm 
                       onSave={handleAddSupplier} 
@@ -301,7 +299,7 @@ export default function MasterDataPage() {
           </Card>
         }
         cashierContent={
-          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Daftar Kasir</CardTitle>
@@ -317,12 +315,10 @@ export default function MasterDataPage() {
                     className="pl-9 h-10 bg-white/5 border-white/5 rounded-lg focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
                   />
                 </div>
+                <Button onClick={() => setIsCashierDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> Tambah Kasir
+                </Button>
                 <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-                  <DialogTrigger render={
-                    <Button className="bg-purple-600 hover:bg-purple-700">
-                      <Plus className="w-4 h-4 mr-2" /> Tambah Kasir
-                    </Button>
-                  } />
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Tambah Kasir Baru</DialogTitle>

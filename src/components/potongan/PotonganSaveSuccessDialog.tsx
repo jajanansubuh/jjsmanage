@@ -54,7 +54,7 @@ export function PotonganSaveSuccessDialog({
           </div>
         </div>
 
-        <div className="bg-white/[0.02] p-4 border-t border-white/5">
+        <div className="bg-white/2 p-4 border-t border-white/5">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 text-center">Jajanan Subuh • Management System</p>
         </div>
       </DialogContent>

@@ -20,7 +20,7 @@ const MemoizedRow = memo(
   function PotonganTableRow({ row, onUpdateField, handleTableKeyDown }: PotonganTableRowProps) {
     const netMitra = row.baseProfit80 - (row.serviceCharge + row.kukuluban + row.tabungan);
     return (
-      <TableRow className="border-white/5 hover:bg-white/[0.03] transition-all group">
+      <TableRow className="border-white/5 hover:bg-white/3 transition-all group">
         <TableCell className="py-6 px-8">
           <div className="flex flex-col gap-0.5">
             <span className="font-black text-white uppercase tracking-tight group-hover:text-rose-400 transition-colors">{row.supplierName}</span>
@@ -39,7 +39,7 @@ const MemoizedRow = memo(
             placeholder="0"
             onChange={(e) => onUpdateField(row.supplierId, "serviceCharge", e.target.value)}
             onKeyDown={(e) => handleTableKeyDown(e, "serviceCharge")}
-            className="bg-slate-950/30 border-white/5 text-right font-black text-rose-400 focus:bg-rose-500/10 focus:border-rose-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+            className="bg-background border-border text-right font-black text-foreground focus:border-primary/50 focus:ring-0 h-10 w-28 ml-auto rounded-md transition-all"
           />
         </TableCell>
         <TableCell className="text-right">
@@ -49,7 +49,7 @@ const MemoizedRow = memo(
             placeholder="0"
             onChange={(e) => onUpdateField(row.supplierId, "kukuluban", e.target.value)}
             onKeyDown={(e) => handleTableKeyDown(e, "kukuluban")}
-            className="bg-slate-950/30 border-white/5 text-right font-black text-orange-400 focus:bg-orange-500/10 focus:border-orange-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+            className="bg-background border-border text-right font-black text-foreground focus:border-primary/50 focus:ring-0 h-10 w-28 ml-auto rounded-md transition-all"
           />
         </TableCell>
         <TableCell className="text-right">
@@ -59,7 +59,7 @@ const MemoizedRow = memo(
             placeholder="0"
             onChange={(e) => onUpdateField(row.supplierId, "tabungan", e.target.value)}
             onKeyDown={(e) => handleTableKeyDown(e, "tabungan")}
-            className="bg-slate-950/30 border-white/5 text-right font-black text-purple-400 focus:bg-purple-500/10 focus:border-purple-500/50 focus:ring-0 h-10 w-28 ml-auto rounded-xl transition-all"
+            className="bg-background border-border text-right font-black text-foreground focus:border-primary/50 focus:ring-0 h-10 w-28 ml-auto rounded-md transition-all"
           />
         </TableCell>
         <TableCell className="py-6 px-8 text-right font-black text-emerald-400 text-lg">{new Intl.NumberFormat("id-ID").format(netMitra)}</TableCell>
@@ -107,16 +107,16 @@ export function PotonganTable({ loading, rows, onUpdateField }: PotonganTablePro
   );
 
   return (
-    <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden overflow-x-auto">
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden overflow-x-auto">
       <Table>
-        <TableHeader className="bg-white/[0.02]">
-          <TableRow className="border-white/5 hover:bg-transparent">
-            <TableHead className="py-6 px-8 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Suplier & Nota</TableHead>
+        <TableHeader className="bg-muted/30">
+          <TableRow className="border-border hover:bg-transparent">
+            <TableHead className="py-6 px-8 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Suplier & Nota</TableHead>
             <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Total Cost</TableHead>
-            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 text-rose-400">S.Charge</TableHead>
-            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 text-orange-400">Kukuluban</TableHead>
-            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 text-purple-400">Tabungan</TableHead>
-            <TableHead className="py-6 px-8 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 text-emerald-400">Net Mitra</TableHead>
+            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-rose-400">S.Charge</TableHead>
+            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-orange-400">Kukuluban</TableHead>
+            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-purple-400">Tabungan</TableHead>
+            <TableHead className="py-6 px-8 text-right font-black text-[10px] uppercase tracking-[0.2em] text-emerald-400">Net Mitra</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -60,10 +60,10 @@ export function AddTransactionForm({
   };
 
   return (
-    <Card className="border border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+    <Card className="overflow-hidden">
       <CardContent className="p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 items-end gap-6">
-          <div className="lg:col-span-4 space-y-2.5">
+          <div className="lg:col-span-4 flex flex-col gap-2.5">
             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Nama Suplier</Label>
             <SupplierCombobox
               id="supplier-combobox-trigger"
@@ -74,7 +74,7 @@ export function AddTransactionForm({
             />
           </div>
 
-          <div className="lg:col-span-2 space-y-2.5">
+          <div className="lg:col-span-2 flex flex-col gap-2.5">
             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Pendapatan</Label>
             <Input
               id="revenue-input"
@@ -83,11 +83,11 @@ export function AddTransactionForm({
               value={formData.revenue ? new Intl.NumberFormat("id-ID").format(Number(formData.revenue)) : ""}
               onChange={(e) => onFormNumberChange("revenue", e.target.value)}
               onKeyDown={handleRevenueKeyDown}
-              className="h-12 bg-white/5 border-white/10 rounded-2xl text-white font-bold focus:ring-blue-500/20"
+              className="font-bold text-foreground"
             />
           </div>
 
-          <div className="lg:col-span-2 space-y-2.5">
+          <div className="lg:col-span-2 flex flex-col gap-2.5">
             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cost</Label>
             <Input
               ref={costRef}
@@ -95,11 +95,11 @@ export function AddTransactionForm({
               value={formData.cost ? new Intl.NumberFormat("id-ID").format(Number(formData.cost)) : ""}
               onChange={(e) => onFormNumberChange("cost", e.target.value)}
               onKeyDown={handleCostKeyDown}
-              className="h-12 bg-white/5 border-white/10 rounded-2xl text-white font-bold focus:ring-blue-500/20"
+              className="font-bold text-foreground"
             />
           </div>
 
-          <div className="lg:col-span-2 space-y-2.5">
+          <div className="lg:col-span-2 flex flex-col gap-2.5">
             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Barcode</Label>
             <Input
               ref={barcodeRef}
@@ -107,12 +107,12 @@ export function AddTransactionForm({
               value={formData.barcode ? new Intl.NumberFormat("id-ID").format(Number(formData.barcode)) : ""}
               onChange={(e) => onFormNumberChange("barcode", e.target.value)}
               onKeyDown={handleBarcodeKeyDown}
-              className="h-12 bg-white/5 border-white/10 rounded-2xl text-white font-bold focus:ring-blue-500/20"
+              className="font-bold text-foreground"
             />
           </div>
 
           <div className="lg:col-span-2">
-            <Button onClick={onAdd} className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black shadow-xl shadow-blue-900/20 transition-all active:scale-95 group">
+            <Button onClick={onAdd} className="w-full group">
               <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-300" /> TAMBAH
             </Button>
           </div>

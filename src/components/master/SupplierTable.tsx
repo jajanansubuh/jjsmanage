@@ -30,7 +30,7 @@ export function SupplierTable({
   return (
     <div className="overflow-x-auto">
       <Table>
-        <TableHeader className="bg-white/[0.02]">
+        <TableHeader className="bg-white/2">
           <TableRow className="border-white/5 hover:bg-transparent">
             <TableHead onClick={() => requestSupplierSort('name')} className="font-black text-[10px] uppercase tracking-widest text-slate-500 py-4 px-8 cursor-pointer hover:text-white transition-colors group/th">
               Nama UMKM {getSortIcon('name')}
@@ -58,7 +58,7 @@ export function SupplierTable({
             <TableRow><TableCell colSpan={7} className="text-center py-20 text-slate-500 font-medium italic">{supplierSearch ? "Tidak ada suplier yang cocok dengan pencarian." : "Belum ada data suplier yang terdaftar."}</TableCell></TableRow>
           ) : (
             filteredSuppliers.map((s) => (
-              <TableRow key={s.id} className="border-white/5 hover:bg-white/[0.02] transition-colors group">
+              <TableRow key={s.id} className="border-white/5 hover:bg-white/2 transition-colors group">
                 <TableCell 
                   className="font-bold text-white py-4 px-8 group-hover:text-blue-400 transition-colors cursor-pointer"
                   onClick={() => onSupplierClick(s)}

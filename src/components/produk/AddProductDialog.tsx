@@ -86,7 +86,7 @@ export function AddProductDialog({
                   <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", isSupplierPopoverOpen && "rotate-180")} />
                 </PopoverTrigger>
                 <PopoverContent 
-                  className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-[100] shadow-2xl rounded-2xl overflow-hidden"
+                  className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-100 shadow-2xl rounded-2xl overflow-hidden"
                   align="start"
                   sideOffset={8}
                 >
@@ -153,7 +153,7 @@ export function AddProductDialog({
             </div>
           </div>
         </div>
-        <div className="p-8 bg-white/[0.02] border-t border-white/5 flex flex-col gap-3">
+        <div className="p-8 bg-white/2 border-t border-white/5 flex flex-col gap-3">
           <Button
             className="w-full h-14 rounded-2xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg shadow-emerald-900/20 transition-all text-sm uppercase tracking-wider"
             onClick={handleAddProduct}

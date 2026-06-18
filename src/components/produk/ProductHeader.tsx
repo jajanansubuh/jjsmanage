@@ -19,10 +19,10 @@ export function ProductHeader({
   return (
     <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 px-4 md:px-0">
       <div className="space-y-1">
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-          Katalog <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-purple-400">Produk</span>
+        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+          Katalog Produk
         </h2>
-        <p className="text-slate-400 text-sm md:text-base font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
+        <p className="text-muted-foreground text-sm md:text-base font-medium">Ringkasan performa penjualan produk Anda berdasarkan transaksi terbaru.</p>
       </div>
 
       {userRole !== "SUPPLIER" && (
@@ -30,24 +30,27 @@ export function ProductHeader({
           <Button
             onClick={onExport}
             disabled={isExporting}
-            className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            variant="outline"
+            className="shrink-0 whitespace-nowrap"
           >
-            <Download className="w-4 h-4 text-blue-400" />
+            <Download className="w-4 h-4 mr-2" />
             <span>{isExporting ? "..." : "Export"}</span>
           </Button>
           <Button
-            className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+            variant="outline"
+            className="shrink-0 whitespace-nowrap"
             onClick={onImport}
           >
-            <Upload className="w-4 h-4 text-purple-400" />
+            <Upload className="w-4 h-4 mr-2" />
             <span>Import</span>
           </Button>
           {onMerge && (
             <Button
-              className="h-10 px-4 md:px-5 bg-slate-900/60 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/50 hover:text-white text-slate-300 gap-2 transition-all duration-200 rounded-xl text-xs md:text-sm font-semibold shadow-md shadow-black/20 hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+              variant="outline"
+              className="shrink-0 whitespace-nowrap"
               onClick={onMerge}
             >
-              <GitMerge className="w-4 h-4 text-amber-400" />
+              <GitMerge className="w-4 h-4 mr-2" />
               <span>Gabung Produk</span>
             </Button>
           )}

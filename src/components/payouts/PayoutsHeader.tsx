@@ -32,7 +32,7 @@ export function PayoutsHeader({
           <span className="text-xs font-black uppercase tracking-widest text-slate-500">Finansial</span>
         </div>
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-          Riwayat <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-400 to-orange-400">Transaksi</span>
+          Riwayat Transaksi
         </h2>
         <p className="text-slate-400 text-sm md:text-base font-medium">Seluruh riwayat transaksi consignment yang diinput oleh Admin.</p>
       </div>

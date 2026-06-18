@@ -101,13 +101,73 @@ export async function PUT(req: Request) {
       if (session.user.role === "SUPPLIER") {
         where.supplierId = session.user.supplierId || "INVALID";
       }
+
+      // Fetch items before marking them as DONE to record history
+      const pendingItems = await prisma.labelPrint.findMany({
+        where,
+        select: { name: true, code: true, qty: true, supplierId: true }
+      });
+
       const updated = await prisma.labelPrint.updateMany({
         where,
         data: { status: "DONE" }
       });
+
+      // Record history grouped by supplier
+      if (pendingItems.length > 0) {
+        const grouped = new Map<string, { name: string; code: string | null; qty: number }[]>();
+        for (const item of pendingItems) {
+          const sid = item.supplierId;
+          if (!grouped.has(sid)) grouped.set(sid, []);
+          grouped.get(sid)!.push({ name: item.name, code: item.code, qty: item.qty });
+        }
+        
+        const historyCreates = Array.from(grouped.entries()).map(([supplierId, items]) => {
+          const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
+          return prisma.labelPrintHistory.create({
+            data: {
+              supplierId,
+              itemCount: items.length,
+              totalQty,
+              items: JSON.stringify(items),
+            }
+          });
+        });
+        
+        await prisma.$transaction(historyCreates);
+      }
+
       return NextResponse.json({ message: "All items marked as done", count: updated.count });
     }
     
+    // Single item update
+    if (status === "DONE") {
+      // Fetch the item first to record history
+      const item = await prisma.labelPrint.findUnique({
+        where: { id },
+        select: { name: true, code: true, qty: true, supplierId: true }
+      });
+
+      if (item) {
+        await prisma.$transaction([
+          prisma.labelPrint.update({
+            where: { id },
+            data: { status: "DONE" }
+          }),
+          prisma.labelPrintHistory.create({
+            data: {
+              supplierId: item.supplierId,
+              itemCount: 1,
+              totalQty: item.qty,
+              items: JSON.stringify([{ name: item.name, code: item.code, qty: item.qty }]),
+            }
+          })
+        ]);
+
+        return NextResponse.json({ message: "Marked as done and recorded in history" });
+      }
+    }
+
     const updated = await prisma.labelPrint.update({
       where: { id },
       data: { 

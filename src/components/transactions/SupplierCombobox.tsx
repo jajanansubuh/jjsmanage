@@ -48,8 +48,8 @@ export function SupplierCombobox({
       <ComboboxTrigger id={id} onKeyDown={onKeyDown} className="w-full bg-white/5 border-white/10 h-10 text-white hover:bg-white/10 transition-all">
         {suppliers.find(s => s.id === value)?.name || "Pilih Suplier"}
       </ComboboxTrigger>
-      <ComboboxContent className="w-[300px] bg-slate-900/95 backdrop-blur-xl border-white/10 p-2 shadow-2xl">
-        <div className="flex items-center border-b border-white/10 mb-2 px-2 pb-2">
+      <ComboboxContent className="w-[300px] bg-popover/95 backdrop-blur-xl border-border p-2 shadow-2xl">
+        <div className="flex items-center border-b border-border mb-2 px-2 pb-2">
           <Search className="w-4 h-4 mr-2 text-muted-foreground" />
           <input
             type="text"
@@ -65,7 +65,7 @@ export function SupplierCombobox({
             <div className="p-4 text-sm text-muted-foreground text-center italic">Belum ada data suplier</div>
           ) : (
             filtered.map((s) => (
-              <ComboboxItem key={s.id} value={s.id} className="cursor-pointer hover:bg-blue-600/30 py-2 px-3 rounded-md transition-colors">
+              <ComboboxItem key={s.id} value={s.id} className="cursor-pointer hover:bg-accent data-[highlighted]:bg-accent py-2 px-3 rounded-md transition-colors">
                 <div className="flex flex-col">
                   <span className="font-semibold text-white">{s.name}</span>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-tight">{s.ownerName || "-"}</span>

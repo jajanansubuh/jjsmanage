@@ -41,11 +41,8 @@ export function PotonganHeader({
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Kembali ke Input Transaksi
         </Link>
-        <h2 className="text-4xl font-black tracking-tight text-white">
-          Input{" "}
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-rose-400 to-orange-400">
-            Potongan
-          </span>
+        <h2 className="text-4xl font-black tracking-tight text-foreground">
+          Input Potongan
         </h2>
         <p className="text-slate-400 font-medium">
           Penginputan potongan secara kolektif per suplier untuk rentang waktu terpilih.
@@ -55,11 +52,11 @@ export function PotonganHeader({
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">No. Nota</span>
-          <div className="flex items-center px-4 h-12 bg-slate-900/50 rounded-2xl border border-white/5 shadow-inner group hover:bg-slate-900/80 transition-all">
+          <div className="flex items-center px-4 h-10 bg-background rounded-lg border border-border group hover:border-primary/50 transition-all">
             <Input
               value={deductionNoteNumber}
               onChange={(e) => setDeductionNoteNumber(e.target.value)}
-              className="bg-transparent border-none focus-visible:ring-0 text-sm font-bold text-white p-0 h-auto w-32 placeholder:text-slate-600"
+              className="bg-transparent border-none focus-visible:ring-0 text-sm font-bold text-foreground p-0 h-auto w-32 placeholder:text-muted-foreground"
               placeholder="No. Nota..."
             />
           </div>
@@ -67,14 +64,14 @@ export function PotonganHeader({
 
         <div className="flex flex-col gap-1.5">
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Nota Potongan</span>
-          <div className="flex items-center gap-3 px-4 h-12 bg-slate-900/50 rounded-2xl border border-white/5 shadow-inner group hover:bg-slate-900/80 transition-all">
+          <div className="flex items-center gap-3 px-4 h-10 bg-background rounded-lg border border-border group hover:border-primary/50 transition-all">
             <Popover>
-              <PopoverTrigger className="text-sm font-bold text-white focus:outline-none flex items-center gap-2">
-                <CalendarIcon className="w-3.5 h-3.5 text-blue-400" />
+              <PopoverTrigger className="text-sm font-bold text-foreground focus:outline-none flex items-center gap-2">
+                <CalendarIcon className="w-3.5 h-3.5 text-primary" />
                 {format(new Date(deductionDate), "dd/MM/yy")}
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-slate-900 border-white/10" align="start">
-                <Calendar mode="single" selected={new Date(deductionDate)} onSelect={(d) => d && setDeductionDate(format(d, "yyyy-MM-dd"))} initialFocus className="text-white" />
+              <PopoverContent className="w-auto p-0 bg-popover border-border" align="start">
+                <Calendar mode="single" selected={new Date(deductionDate)} onSelect={(d) => d && setDeductionDate(format(d, "yyyy-MM-dd"))} initialFocus className="text-foreground" />
               </PopoverContent>
             </Popover>
           </div>
@@ -89,15 +86,15 @@ export function PotonganHeader({
               setStartDate(s);
               setEndDate(e);
             }}
-            className="h-12 !bg-slate-900/50"
+            className="h-12 bg-slate-900/50!"
           />
         </div>
 
         <div className="relative group w-full md:w-56 mt-auto">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <Input
             placeholder="Cari suplier..."
-            className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-rose-500/20 focus:border-rose-500/50 transition-all font-medium text-white shadow-inner"
+            className="pl-11 pr-4 h-10 bg-background border-border rounded-lg focus:ring-primary/20 focus:border-primary/50 transition-all font-medium text-foreground"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />

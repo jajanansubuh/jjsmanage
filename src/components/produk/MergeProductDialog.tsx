@@ -147,7 +147,7 @@ export function MergeProductDialog({ isOpen, onOpenChange, onSuccess, suppliers 
                 <span className="truncate">{suppliers.find(s => s.id === fromSupplierId)?.name || "-- Pilih Supplier Asal --"}</span>
                 <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", isFromPopoverOpen && "rotate-180")} />
               </PopoverTrigger>
-              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-[100] shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
+              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-100 shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
                 <div className="p-3 border-b border-white/5 bg-slate-950/30">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
@@ -185,7 +185,7 @@ export function MergeProductDialog({ isOpen, onOpenChange, onSuccess, suppliers 
                   <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", isProductPopoverOpen && "rotate-180")} />
                 )}
               </PopoverTrigger>
-              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-[100] shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
+              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-100 shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
                 <div className="p-3 border-b border-white/5 bg-slate-950/30">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
@@ -221,7 +221,7 @@ export function MergeProductDialog({ isOpen, onOpenChange, onSuccess, suppliers 
                 <span className="truncate">{suppliers.find(s => s.id === toSupplierId)?.name || "-- Pilih Supplier Tujuan --"}</span>
                 <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform duration-200", isToPopoverOpen && "rotate-180")} />
               </PopoverTrigger>
-              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-[100] shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
+              <PopoverContent className="p-0 bg-slate-900 border-white/10 text-white w-[var(--radix-popover-trigger-width)] z-100 shadow-2xl rounded-2xl overflow-hidden" align="start" sideOffset={8}>
                 <div className="p-3 border-b border-white/5 bg-slate-950/30">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />

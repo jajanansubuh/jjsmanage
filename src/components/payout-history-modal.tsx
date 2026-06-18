@@ -120,7 +120,7 @@ export function PayoutHistoryModal({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-3xl p-0 overflow-hidden text-white flex flex-col max-h-[90vh]">
-        <div className="p-6 md:p-8 border-b border-white/5 bg-white/[0.02]">
+        <div className="p-6 md:p-8 border-b border-white/5 bg-white/2">
           <DialogHeader>
             <DialogTitle className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
               <History className="w-5 h-5 md:w-6 md:h-6 text-amber-400" />
@@ -226,7 +226,7 @@ export function PayoutHistoryModal({
           {/* Desktop View */}
           <div className="hidden md:block">
             <Table>
-              <TableHeader className="bg-white/[0.02] sticky top-0 z-10 backdrop-blur-md">
+              <TableHeader className="bg-white/2 sticky top-0 z-10 backdrop-blur-md">
                 <TableRow className="border-white/5">
                   <TableHead className="py-4 pl-6 pr-1 w-8">
                     <span className="sr-only">Detail</span>
@@ -264,8 +264,8 @@ export function PayoutHistoryModal({
                           key={t.id} 
                           className={cn(
                             "border-white/5 transition-colors group",
-                            showExpand ? "cursor-pointer hover:bg-white/[0.03]" : "hover:bg-white/[0.02]",
-                            isExpanded && "bg-white/[0.03]"
+                            showExpand ? "cursor-pointer hover:bg-white/3" : "hover:bg-white/2",
+                            isExpanded && "bg-white/3"
                           )}
                           onClick={() => showExpand && toggleRow(t.id)}
                         >
@@ -311,7 +311,7 @@ export function PayoutHistoryModal({
 
                         {/* Expanded deductions detail */}
                         {isExpanded && (
-                          <TableRow key={`${t.id}-detail`} className="border-white/5 bg-white/[0.01]">
+                          <TableRow key={`${t.id}-detail`} className="border-white/5 bg-white/1">
                             <TableCell colSpan={5} className="py-0">
                               <div className="py-3 px-6 animate-in slide-in-from-top-1 fade-in duration-200">
                                 <div className="flex items-center gap-1.5 mb-2">
@@ -344,7 +344,7 @@ export function PayoutHistoryModal({
             </Table>
           </div>
         </div>
-        <div className="p-4 md:p-6 border-t border-white/5 bg-white/[0.02] flex justify-end">
+        <div className="p-4 md:p-6 border-t border-white/5 bg-white/2 flex justify-end">
           <Button onClick={() => onOpenChange(false)} className="rounded-xl px-8 font-bold bg-white/5 hover:bg-white/10 text-white w-full sm:w-auto">Tutup</Button>
         </div>
       </DialogContent>

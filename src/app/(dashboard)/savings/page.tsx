@@ -17,7 +17,7 @@ import {
   ChevronRight,
   User as UserIcon,
   Calendar,
-  AlertCircle
+  Banknote
 } from "lucide-react";
 
 interface SavingsDetail {
@@ -142,23 +142,23 @@ export default function SavingsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-slate-400 font-medium animate-pulse">Memuat data tabungan...</p>
-      </div>
+                <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
+                   <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                   <p className="text-muted-foreground font-medium">Memuat data tabungan...</p>
+                </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center">
-          <AlertCircle className="w-8 h-8 text-red-500" />
-        </div>
-        <h3 className="text-xl font-bold text-white">Oops! Terjadi Kesalahan</h3>
+          <div className="mx-4 md:mx-0 flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-border shadow-sm">
+            <div className="w-16 h-16 md:w-24 md:h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+              <Banknote className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl md:text-3xl font-black text-foreground mb-2 md:mb-3">Tidak Ada Data Tabungan</h3>
         <p className="text-slate-400 max-w-md">{error}</p>
         <Button onClick={() => window.location.reload()} className="mt-4 bg-blue-600 hover:bg-blue-700 rounded-xl">
-          Coba Lagi
+           Coba Lagi
         </Button>
       </div>
     );
@@ -170,7 +170,7 @@ export default function SavingsPage() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 md:px-0">
         <div className="space-y-1">
           <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-            Tabungan <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 to-indigo-400">Mitra</span>
+            Tabungan Mitra
           </h2>
           <p className="text-slate-400 text-sm md:text-base font-medium">Akumulasi potongan tabungan dari setiap transaksi setoran.</p>
         </div>
@@ -236,7 +236,7 @@ export default function SavingsPage() {
               ) : (
                 <>
                 {paginatedHistory.map((item) => (
-                  <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
+                  <Card key={item.id} className="bg-card border-border rounded-xl overflow-hidden group shadow-sm">
                     <CardContent className="p-5">
                       <div className="flex justify-between items-start mb-4">
                         <div className="space-y-1">
@@ -311,11 +311,11 @@ export default function SavingsPage() {
                 <h3 className="text-xl font-bold text-white">Riwayat Pemotongan</h3>
               </div>
 
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl">
+              <Card className="border-border bg-card rounded-xl overflow-hidden shadow-sm">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader className="bg-white/[0.02]">
+                      <TableHeader className="bg-white/2">
                         <TableRow className="border-white/5 hover:bg-transparent">
                           <TableHead className="py-6 px-8 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Tanggal</TableHead>
                           <TableHead className="py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">No. Nota</TableHead>
@@ -333,7 +333,7 @@ export default function SavingsPage() {
                           </TableRow>
                         ) : (
                           paginatedHistory.map((item) => (
-                            <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
+                            <TableRow key={item.id} className="border-white/5 hover:bg-white/2 transition-all duration-300 group">
                               <TableCell className="py-6 px-8">
                                 <div className="flex items-center gap-3">
                                   <Calendar className="w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
@@ -410,11 +410,11 @@ export default function SavingsPage() {
       ) : (
         /* Admin View */
         <div className="px-4 md:px-0 space-y-4">
-          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl">
+          <Card className="border-border bg-card rounded-xl overflow-hidden shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-white/[0.02]">
+                  <TableHeader className="bg-white/2">
                     <TableRow className="border-white/5 hover:bg-transparent">
                       <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
                         <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
@@ -442,7 +442,7 @@ export default function SavingsPage() {
                       </TableRow>
                     ) : (
                       paginatedAdminData.map((item) => (
-                        <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
+                        <TableRow key={item.id} className="border-white/5 hover:bg-white/2 transition-all duration-300 group">
                           <TableCell className="py-6 px-8">
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -482,7 +482,7 @@ export default function SavingsPage() {
           </Card>
 
           {adminTotalPages > 1 && (
-            <div className="flex items-center justify-between p-6 border border-white/5 rounded-[2rem] bg-slate-900/40">
+            <div className="flex items-center justify-between p-6 border border-border rounded-xl bg-card">
               <p className="text-xs text-slate-400 font-medium">
                 Halaman {adminPage} dari {adminTotalPages}
               </p>

@@ -37,7 +37,7 @@ export function TransactionDetailDialog({
         </div>
         <div className="flex-1 overflow-auto p-8">
           <Table>
-            <TableHeader className="bg-white/[0.02]">
+            <TableHeader className="bg-white/2">
               <TableRow className="border-white/5">
                 <TableHead className="text-[10px] font-black uppercase text-slate-500">Nota</TableHead>
                 <TableHead className="text-[10px] font-black uppercase text-slate-500">Suplier</TableHead>
@@ -46,7 +46,7 @@ export function TransactionDetailDialog({
                 <TableHead className="text-right text-[10px] font-black uppercase text-slate-500">S.Charge</TableHead>
                 <TableHead className="text-right text-[10px] font-black uppercase text-slate-500">Kukuluban</TableHead>
                 <TableHead className="text-right text-[10px] font-black uppercase text-slate-500">Tabungan</TableHead>
-                <TableHead className="text-right text-[10px] font-black uppercase text-slate-500 text-emerald-400">Net Mitra</TableHead>
+                <TableHead className="text-right text-[10px] font-black uppercase text-emerald-400">Net Mitra</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

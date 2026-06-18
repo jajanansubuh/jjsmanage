@@ -21,6 +21,21 @@ model Supplier {
   payouts          SupplierPayout[]
   products         Product[]
   labelPrints      LabelPrint[]
+  labelPrintHistory LabelPrintHistory[]
+}
+
+model LabelPrintHistory {
+  id         String   @id @default(cuid())
+  supplierId String
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  itemCount  Int      @default(0)
+  totalQty   Int      @default(0)
+  items      Json     @default("[]") // Array of {name, code, qty}
+  completedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([supplierId])
+  @@index([completedAt])
 }
 
 model LabelPrint {

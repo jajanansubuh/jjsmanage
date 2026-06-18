@@ -187,10 +187,10 @@ export default function PotonganSummaryPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-4 md:px-0">
         <div className="space-y-1">
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
-            Ringkasan <span className="text-transparent bg-clip-text bg-linear-to-r from-rose-400 to-orange-400">Potongan</span>
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+            Ringkasan Potongan
           </h2>
-          <p className="text-slate-400 text-sm md:text-base font-medium">Akumulasi potongan (Barcode, S.Charge, Kukuluban) dari transaksi.</p>
+          <p className="text-muted-foreground text-sm md:text-base font-medium">Akumulasi potongan (Barcode, S.Charge, Kukuluban) dari transaksi.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
@@ -206,10 +206,10 @@ export default function PotonganSummaryPage() {
 
           {role !== "SUPPLIER" && (
             <div className="relative group w-full sm:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 placeholder="Cari Mitra / Pemilik..."
-                className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-rose-500/20 focus:border-rose-500/50 transition-all font-medium text-white"
+                className="pl-11 pr-4"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -222,16 +222,16 @@ export default function PotonganSummaryPage() {
         supplierData ? (
           <div className="grid grid-cols-1 gap-6 md:gap-8">
             {/* Summary Card */}
-            <Card className="border-white/5 bg-linear-to-br from-rose-600 to-orange-600 overflow-hidden relative group shadow-2xl shadow-rose-500/20 rounded-3xl md:rounded-[2.5rem] mx-4 md:mx-0">
+            <Card className="overflow-hidden relative group shadow-lg mx-4 md:mx-0">
               <div className="absolute top-0 right-0 p-6 md:p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
                 <Scissors size={140} className="text-white md:hidden" />
                 <Scissors size={180} className="text-white hidden md:block" />
               </div>
               <CardContent className="p-6 md:p-10 relative z-10">
                 <div className="flex flex-col gap-2 text-center md:text-left">
-                  <span className="text-rose-100 font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">Jumlah Total Yang Dipotong</span>
+                  <span className="text-muted-foreground font-black uppercase tracking-[0.2em] text-[10px] md:text-xs">Jumlah Total Yang Dipotong</span>
                   <div className="flex flex-col md:flex-row md:items-baseline gap-3">
-                    <span className="text-4xl md:text-6xl font-black text-white tracking-tighter">
+                    <span className="text-4xl md:text-6xl font-black text-primary tracking-tighter">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
@@ -241,21 +241,21 @@ export default function PotonganSummaryPage() {
                   </div>
                   
                   <div className="grid grid-cols-3 gap-4 mt-6">
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                      <p className="text-[10px] font-black uppercase text-rose-200 tracking-wider mb-1">Barcode</p>
-                      <p className="text-lg font-bold text-white">
+                    <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-1">Barcode</p>
+                      <p className="text-lg font-bold text-foreground">
                         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(supplierData.totalBarcode)}
                       </p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                      <p className="text-[10px] font-black uppercase text-rose-200 tracking-wider mb-1">S.Charge</p>
-                      <p className="text-lg font-bold text-white">
+                    <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-1">S.Charge</p>
+                      <p className="text-lg font-bold text-foreground">
                         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(supplierData.totalServiceCharge)}
                       </p>
                     </div>
-                    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                      <p className="text-[10px] font-black uppercase text-rose-200 tracking-wider mb-1">Kukuluban</p>
-                      <p className="text-lg font-bold text-white">
+                    <div className="bg-muted/50 rounded-xl p-4 border border-border">
+                      <p className="text-[10px] font-black uppercase text-muted-foreground tracking-wider mb-1">Kukuluban</p>
+                      <p className="text-lg font-bold text-foreground">
                         {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(supplierData.totalKukuluban)}
                       </p>
                     </div>
@@ -282,7 +282,7 @@ export default function PotonganSummaryPage() {
                 {paginatedHistory.map((item) => {
                   const total = Number(item.barcode || 0) + Number(item.serviceCharge || 0) + Number(item.kukuluban || 0);
                   return (
-                  <Card key={item.id} className="bg-slate-900/40 border-white/5 rounded-2xl overflow-hidden group">
+                  <Card key={item.id} className="group">
                     <CardContent className="p-5">
                       <div className="flex justify-between items-start mb-4">
                         <div className="space-y-1">
@@ -369,11 +369,11 @@ export default function PotonganSummaryPage() {
                 <h3 className="text-xl font-bold text-white">Riwayat Pemotongan</h3>
               </div>
 
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-2xl">
+              <Card className="overflow-hidden shadow-sm">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
-                      <TableHeader className="bg-white/[0.02]">
+                      <TableHeader className="bg-white/2">
                         <TableRow className="border-white/5 hover:bg-transparent">
                           <TableHead className="py-6 px-8 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Tanggal</TableHead>
                           <TableHead className="py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">No. Nota</TableHead>
@@ -394,7 +394,7 @@ export default function PotonganSummaryPage() {
                           paginatedHistory.map((item) => {
                             const total = Number(item.barcode || 0) + Number(item.serviceCharge || 0) + Number(item.kukuluban || 0);
                             return (
-                            <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
+                            <TableRow key={item.id} className="border-white/5 hover:bg-white/2 transition-all duration-300 group">
                               <TableCell className="py-6 px-8">
                                 <div className="flex items-center gap-3">
                                   <Calendar className="w-4 h-4 text-slate-500 group-hover:text-rose-400 transition-colors" />
@@ -476,11 +476,11 @@ export default function PotonganSummaryPage() {
       ) : (
         /* Admin View */
         <div className="px-4 md:px-0 space-y-4">
-          <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl">
+          <Card className="overflow-hidden shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-white/[0.02]">
+                  <TableHeader className="bg-white/2">
                     <TableRow className="border-white/5 hover:bg-transparent">
                       <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
                         <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
@@ -523,7 +523,7 @@ export default function PotonganSummaryPage() {
                       </TableRow>
                     ) : (
                       paginatedAdminData.map((item) => (
-                        <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02] transition-all duration-300 group">
+                        <TableRow key={item.id} className="border-white/5 hover:bg-white/2 transition-all duration-300 group">
                           <TableCell className="py-6 px-8">
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">

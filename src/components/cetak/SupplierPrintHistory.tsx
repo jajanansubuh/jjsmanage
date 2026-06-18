@@ -112,7 +112,7 @@ export function SupplierPrintHistory() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-white/[0.02]">
+              <TableHeader className="bg-white/2">
                 <TableRow className="border-white/5 hover:bg-transparent">
                   <TableHead className="py-4 px-6 font-black text-[9px] uppercase tracking-[0.2em] text-slate-500">Tanggal Diajukan</TableHead>
                   <TableHead className="py-4 font-black text-[9px] uppercase tracking-[0.2em] text-slate-500">Nama Barang</TableHead>
@@ -139,7 +139,7 @@ export function SupplierPrintHistory() {
                   </TableRow>
                 ) : (
                   paginatedHistory.map((item) => (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.01] transition-all duration-200 group">
+                    <TableRow key={item.id} className="border-white/5 hover:bg-white/1 transition-all duration-200 group">
                       <TableCell className="py-4 px-6">
                         <span className="font-bold text-slate-400 text-xs group-hover:text-slate-300">
                           {format(new Date(item.createdAt), "dd MMM yyyy, HH:mm", { locale: localeId })}

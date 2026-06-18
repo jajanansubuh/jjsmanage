@@ -25,11 +25,11 @@ export function TransactionsTable({
   totals
 }: TransactionsTableProps) {
   return (
-    <div className="bg-slate-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden">
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-white/5 bg-white/[0.02]">
+            <TableRow className="border-border hover:bg-transparent">
               <TableHead className="w-12 text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No</TableHead>
               <TableHead className="py-5">
                 <Button variant="ghost" onClick={onToggleSort} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center gap-2">
@@ -48,7 +48,7 @@ export function TransactionsTable({
             {rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center gap-3 text-slate-500">
+                  <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground">
                     <p className="text-sm font-medium italic">Belum ada transaksi yang ditambahkan.</p>
                   </div>
                 </TableCell>
@@ -69,13 +69,13 @@ export function TransactionsTable({
 
             {/* Total Row */}
             {rows.length > 0 && (
-              <TableRow className="bg-slate-950/60 border-t-2 border-white/10 font-bold print:bg-gray-100">
-                <TableCell colSpan={2} className="text-center text-[9px] font-black tracking-[0.1em] uppercase py-6 print:text-black text-slate-400 px-2">Total</TableCell>
-                <TableCell className="text-right text-base font-black text-white py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.revenue)}</TableCell>
-                <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.cost)}</TableCell>
-                <TableCell className="text-right text-sm font-bold text-white/40 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.barcode)}</TableCell>
-                <TableCell className="text-right text-base font-black text-blue-400/80 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.profit80)}</TableCell>
-                <TableCell className="text-right text-lg font-black text-emerald-400 py-6 px-2 drop-shadow-[0_0_10px_rgba(52,211,153,0.3)]">{new Intl.NumberFormat("id-ID").format(totals.profit20)}</TableCell>
+              <TableRow className="bg-muted border-t-2 border-border font-bold">
+                <TableCell colSpan={2} className="text-center text-[9px] font-black tracking-[0.1em] uppercase py-6 text-muted-foreground px-2">Total</TableCell>
+                <TableCell className="text-right text-base font-black text-foreground py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.revenue)}</TableCell>
+                <TableCell className="text-right text-sm font-bold text-muted-foreground py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.cost)}</TableCell>
+                <TableCell className="text-right text-sm font-bold text-muted-foreground py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.barcode)}</TableCell>
+                <TableCell className="text-right text-base font-black text-primary/80 py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.profit80)}</TableCell>
+                <TableCell className="text-right text-lg font-black text-primary py-6 px-2">{new Intl.NumberFormat("id-ID").format(totals.profit20)}</TableCell>
                 <TableCell className="no-print px-2"></TableCell>
               </TableRow>
             )}

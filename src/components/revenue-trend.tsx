@@ -22,26 +22,26 @@ export function RevenueTrend({ data }: RevenueTrendProps) {
       <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+            <stop offset="5%" stopColor="#1DB954" stopOpacity={0.3}/>
+            <stop offset="95%" stopColor="#1DB954" stopOpacity={0}/>
           </linearGradient>
         </defs>
         <CartesianGrid 
           vertical={false} 
           strokeDasharray="3 3" 
-          stroke="#1e293b" 
-          opacity={0.5} 
+          stroke="#282828" 
+          opacity={0.8} 
         />
         <XAxis 
           dataKey="name" 
-          stroke="#64748b" 
+          stroke="#888888" 
           fontSize={11} 
           tickLine={false} 
           axisLine={false} 
           dy={10}
         />
         <YAxis 
-          stroke="#64748b" 
+          stroke="#888888" 
           fontSize={10} 
           tickLine={false} 
           axisLine={false} 
@@ -57,12 +57,12 @@ export function RevenueTrend({ data }: RevenueTrendProps) {
           content={({ active, payload }) => {
             if (active && payload && payload.length) {
               return (
-                <div className="rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-md p-3 shadow-2xl">
+                <div className="rounded-xl border border-border bg-popover p-3 shadow-md">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                    <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                       {payload[0].payload.name}
                     </span>
-                    <span className="text-sm font-black text-white">
+                    <span className="text-sm font-black text-foreground">
                       {new Intl.NumberFormat("id-ID", {
                         style: "currency",
                         currency: "IDR",
@@ -79,7 +79,7 @@ export function RevenueTrend({ data }: RevenueTrendProps) {
         <Area 
           type="monotone" 
           dataKey="total" 
-          stroke="#3b82f6" 
+          stroke="#1DB954" 
           strokeWidth={3}
           fillOpacity={1} 
           fill="url(#colorTotal)" 

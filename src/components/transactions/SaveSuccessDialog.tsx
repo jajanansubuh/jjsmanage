@@ -1,6 +1,6 @@
-import { CheckCircle2, Printer, ArrowUpDown } from "lucide-react";
+import { CheckCircle2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface SaveSuccessDialogProps {
   isOpen: boolean;
