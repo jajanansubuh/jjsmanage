@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { getSession } = await import("@/lib/auth-utils");
@@ -26,7 +28,11 @@ export async function GET(req: Request) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(items);
+    return NextResponse.json(items, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate"
+      }
+    });
   } catch (error: unknown) {
     console.error("GET /api/print-queue error:", error);
     return NextResponse.json({ error: "Failed to fetch print queue" }, { status: 500 });

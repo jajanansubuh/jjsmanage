@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { getSession } = await import("@/lib/auth-utils");
@@ -45,7 +47,11 @@ export async function GET(req: Request) {
       take: 200,
     });
 
-    return NextResponse.json(history);
+    return NextResponse.json(history, {
+      headers: {
+        "Cache-Control": "no-store, max-age=0, must-revalidate"
+      }
+    });
   } catch (error: unknown) {
     console.error("GET /api/print-queue/history error:", error);
     return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
