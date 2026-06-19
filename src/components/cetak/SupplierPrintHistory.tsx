@@ -36,7 +36,7 @@ export function SupplierPrintHistory() {
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/print-queue?status=ALL");
+      const res = await fetch("/api/print-queue?status=PENDING");
       if (res.ok) {
         const data = await res.json();
         setHistory(data);
@@ -81,8 +81,8 @@ export function SupplierPrintHistory() {
             <History className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white tracking-tight">Riwayat Permintaan Label</h3>
-            <p className="text-slate-500 text-xs font-medium">Log antrean cetak Anda yang sedang diajukan atau sudah dicetak oleh Admin.</p>
+            <h3 className="text-xl font-black text-white tracking-tight">Permintaan Label Aktif</h3>
+            <p className="text-slate-500 text-xs font-medium">Log antrean cetak Anda yang sedang diajukan dan menunggu dicetak oleh Admin.</p>
           </div>
         </div>
 
@@ -118,23 +118,22 @@ export function SupplierPrintHistory() {
                   <TableHead className="py-4 font-black text-[9px] uppercase tracking-[0.2em] text-slate-500">Nama Barang</TableHead>
                   <TableHead className="py-4 font-black text-[9px] uppercase tracking-[0.2em] text-slate-500 text-center">Barcode</TableHead>
                   <TableHead className="py-4 text-center font-black text-[9px] uppercase tracking-[0.2em] text-slate-500">Jumlah (Qty)</TableHead>
-                  <TableHead className="py-4 px-6 text-right font-black text-[9px] uppercase tracking-[0.2em] text-slate-500">Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-16">
+                    <TableCell colSpan={4} className="text-center py-16">
                       <div className="flex flex-col items-center justify-center gap-3">
                         <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                        <span className="text-xs text-slate-500 font-medium">Memuat riwayat...</span>
+                        <span className="text-xs text-slate-500 font-medium">Memuat antrean...</span>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : filteredHistory.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-16 text-slate-500 text-xs font-medium italic">
-                      Belum ada riwayat cetak label.
+                    <TableCell colSpan={4} className="text-center py-16 text-slate-500 text-xs font-medium italic">
+                      Belum ada permintaan label aktif.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -159,17 +158,6 @@ export function SupplierPrintHistory() {
                         <span className="font-bold text-white text-xs bg-slate-950/60 py-1 px-3 rounded-full border border-white/5">
                           {item.qty} pcs
                         </span>
-                      </TableCell>
-                      <TableCell className="py-4 px-6 text-right">
-                        {item.status === "PENDING" ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                            <Clock className="w-3.5 h-3.5" /> Antrean
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <CheckCircle2 className="w-3.5 h-3.5" /> Selesai
-                          </span>
-                        )}
                       </TableCell>
                     </TableRow>
                   ))

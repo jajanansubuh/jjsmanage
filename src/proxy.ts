@@ -14,6 +14,9 @@ export default async function middleware(req: NextRequest) {
 
   // Redirect to /login if the user is not authenticated and trying to access a protected route
   if (!isPublicRoute && !session) {
+    if (path.startsWith("/api")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 

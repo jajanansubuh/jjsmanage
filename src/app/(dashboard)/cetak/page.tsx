@@ -16,6 +16,7 @@ import { CetakProductSearch } from "@/components/cetak/CetakProductSearch";
 import { CetakSelectedTable } from "@/components/cetak/CetakSelectedTable";
 import { CetakPrintView } from "@/components/cetak/CetakPrintView";
 import { SupplierPrintHistory } from "@/components/cetak/SupplierPrintHistory";
+import { SupplierCompletedHistory } from "@/components/cetak/SupplierCompletedHistory";
 import { AdminPrintHistory } from "@/components/cetak/AdminPrintHistory";
 
 // Dialogs
@@ -320,6 +321,10 @@ export default function CetakLabelPage() {
 
       {userRole === "SUPPLIER" && (
         <SupplierPrintHistory key={historyKey} />
+      )}
+
+      {userRole === "SUPPLIER" && (
+        <SupplierCompletedHistory key={historyKey} />
       )}
 
       {userRole === "SUPPLIER" && <CetakPrintView items={sortedSelectedItems} />}

@@ -142,6 +142,7 @@ export async function PUT(req: Request) {
       if (updatedCount > 0) {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
+        
         prisma.labelPrint.deleteMany({
           where: {
             status: "DONE",
@@ -149,6 +150,16 @@ export async function PUT(req: Request) {
           }
         }).catch((cleanupErr) => {
           console.error("Auto-cleanup labelPrint error in PUT:", cleanupErr);
+        });
+
+        const startOfYesterday = new Date(startOfToday);
+        startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+        prisma.labelPrintHistory.deleteMany({
+          where: {
+            completedAt: { lt: startOfYesterday }
+          }
+        }).catch((cleanupErr) => {
+          console.error("Auto-cleanup labelPrintHistory error in PUT:", cleanupErr);
         });
       }
 
@@ -195,6 +206,7 @@ export async function PUT(req: Request) {
       if (updatedItem) {
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
+        
         prisma.labelPrint.deleteMany({
           where: {
             status: "DONE",
@@ -202,6 +214,16 @@ export async function PUT(req: Request) {
           }
         }).catch((cleanupErr) => {
           console.error("Auto-cleanup labelPrint error in PUT:", cleanupErr);
+        });
+
+        const startOfYesterday = new Date(startOfToday);
+        startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+        prisma.labelPrintHistory.deleteMany({
+          where: {
+            completedAt: { lt: startOfYesterday }
+          }
+        }).catch((cleanupErr) => {
+          console.error("Auto-cleanup labelPrintHistory error in PUT:", cleanupErr);
         });
       }
 
