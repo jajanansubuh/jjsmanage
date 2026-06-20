@@ -93,14 +93,20 @@ export async function PUT(req: Request) {
       const sqlSupplierId = session.user.role === "SUPPLIER" ? (session.user.supplierId || "INVALID") : null;
 
       const updatedCount = await prisma.$transaction(async (tx) => {
-        // Fetch and lock the pending items using raw SQL FOR UPDATE
-        const pendingItems = await tx.$queryRaw<Array<{ id: string; name: string; code: string | null; qty: number; supplierId: string }>>`
-          SELECT id, name, code, qty, "supplierId"
-          FROM "LabelPrint"
-          WHERE status = 'PENDING'
-            AND (${sqlSupplierId}::text IS NULL OR "supplierId" = ${sqlSupplierId})
-          FOR UPDATE
-        `;
+        // Fetch the pending items using standard Prisma client
+        const pendingItems = await tx.labelPrint.findMany({
+          where: {
+            status: "PENDING",
+            ...(sqlSupplierId ? { supplierId: sqlSupplierId } : {})
+          },
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            qty: true,
+            supplierId: true,
+          }
+        });
 
         if (pendingItems.length === 0) {
           return 0;
@@ -169,19 +175,14 @@ export async function PUT(req: Request) {
     // Single item update
     if (status === "DONE") {
       const updatedItem = await prisma.$transaction(async (tx) => {
-        // Fetch and lock the single item using raw SQL FOR UPDATE
-        const items = await tx.$queryRaw<Array<{ id: string; name: string; code: string | null; qty: number; supplierId: string }>>`
-          SELECT id, name, code, qty, "supplierId"
-          FROM "LabelPrint"
-          WHERE id = ${id} AND status = 'PENDING'
-          FOR UPDATE
-        `;
+        // Fetch single item using standard Prisma client
+        const item = await tx.labelPrint.findUnique({
+          where: { id }
+        });
 
-        if (items.length === 0) {
+        if (!item || item.status !== "PENDING") {
           return null;
         }
-
-        const item = items[0];
 
         // Update the item status
         const updated = await tx.labelPrint.update({
