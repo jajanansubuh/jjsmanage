@@ -40,6 +40,7 @@ interface PrintHistoryRecord {
   totalQty: number;
   items: string | HistoryItem[];
   completedAt: string;
+  status?: "PENDING" | "DONE";
 }
 
 const getSupplierAvatarStyles = (name: string) => {
@@ -186,7 +187,7 @@ export function AdminPrintHistory() {
               Riwayat Cetak Label
             </h3>
             <p className="text-slate-400 text-xs font-medium">
-              Riwayat suplier yang sudah cetak/selesai label.
+              Riwayat pengajuan cetak label dari suplier beserta statusnya (Antrean / Selesai).
             </p>
           </div>
         </div>
@@ -404,11 +405,22 @@ export function AdminPrintHistory() {
                             {record.supplier.name.substring(0, 3)}
                           </span>
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-black text-white text-sm truncate group-hover:text-blue-400 transition-colors uppercase leading-tight">
-                            {record.supplier.name}
-                          </p>
-                          <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                        <div className="min-w-0 flex flex-col gap-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-black text-white text-sm truncate group-hover:text-blue-400 transition-colors uppercase leading-none">
+                              {record.supplier.name}
+                            </p>
+                            {record.status === "PENDING" ? (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase leading-none">
+                                Antrean
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase leading-none">
+                                Selesai
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-semibold leading-none mt-0.5">
                             Pukul {format(new Date(record.completedAt), "HH:mm")} WIB
                           </p>
                         </div>

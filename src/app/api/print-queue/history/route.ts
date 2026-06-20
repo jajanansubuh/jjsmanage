@@ -24,13 +24,27 @@ export async function GET(req: Request) {
       supplierId?: string;
     } = {};
 
+    const pendingWhere: {
+      status: string;
+      createdAt?: { gte?: Date; lte?: Date };
+      supplierId?: string;
+    } = {
+      status: "PENDING",
+    };
+
     if (from || to) {
       where.completedAt = {};
-      if (from) where.completedAt.gte = new Date(from);
+      pendingWhere.createdAt = {};
+      if (from) {
+        const fromDate = new Date(from);
+        where.completedAt.gte = fromDate;
+        pendingWhere.createdAt.gte = fromDate;
+      }
       if (to) {
         const toDate = new Date(to);
         toDate.setHours(23, 59, 59, 999);
         where.completedAt.lte = toDate;
+        pendingWhere.createdAt.lte = toDate;
       }
     } else {
       const startOfToday = new Date();
@@ -38,14 +52,19 @@ export async function GET(req: Request) {
       const startOfYesterday = new Date(startOfToday);
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       where.completedAt = { gte: startOfYesterday };
+      pendingWhere.createdAt = { gte: startOfYesterday };
     }
 
     if (session.user.role === "SUPPLIER") {
-      where.supplierId = session.user.supplierId || "INVALID";
+      const sId = session.user.supplierId || "INVALID";
+      where.supplierId = sId;
+      pendingWhere.supplierId = sId;
     } else if (supplierId) {
       where.supplierId = supplierId;
+      pendingWhere.supplierId = supplierId;
     }
 
+    // Fetch completed history records
     const history = await prisma.labelPrintHistory.findMany({
       where,
       include: {
@@ -55,7 +74,66 @@ export async function GET(req: Request) {
       take: 200,
     });
 
-    return NextResponse.json(history, {
+    // Fetch pending queue items
+    const pendingItems = await prisma.labelPrint.findMany({
+      where: pendingWhere,
+      include: {
+        supplier: { select: { name: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Group pending items into "pending sessions" (by supplier and createdAt within 5 seconds)
+    const pendingSessions: any[] = [];
+    
+    // Sort pendingItems by createdAt desc
+    const sortedPendingItems = [...pendingItems].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+
+    // Grouping pending items
+    let currentSession: any = null;
+    for (const item of sortedPendingItems) {
+      const itemTime = item.createdAt.getTime();
+      if (
+        !currentSession ||
+        currentSession.supplierId !== item.supplierId ||
+        Math.abs(currentSession.time - itemTime) > 5000
+      ) {
+        currentSession = {
+          id: `pending-${item.id}`,
+          supplierId: item.supplierId,
+          supplier: item.supplier,
+          itemCount: 0,
+          totalQty: 0,
+          items: [],
+          completedAt: item.createdAt, // use for sorting
+          createdAt: item.createdAt,
+          status: "PENDING",
+          time: itemTime,
+        };
+        pendingSessions.push(currentSession);
+      }
+      currentSession.items.push({
+        name: item.name,
+        code: item.code,
+        qty: item.qty,
+      });
+      currentSession.itemCount += 1;
+      currentSession.totalQty += item.qty;
+    }
+
+    // Map completed history records to have status "DONE"
+    const formattedHistory = history.map((h) => ({
+      ...h,
+      status: "DONE",
+    }));
+
+    // Combine and sort
+    const combined = [...pendingSessions, ...formattedHistory];
+    combined.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+
+    return NextResponse.json(combined, {
       headers: {
         "Cache-Control": "no-store, max-age=0, must-revalidate"
       }
@@ -65,3 +143,4 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Failed to fetch history" }, { status: 500 });
   }
 }
+

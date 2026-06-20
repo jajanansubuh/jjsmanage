@@ -39,6 +39,7 @@ interface PrintHistoryRecord {
   totalQty: number;
   items: string | HistoryItem[];
   completedAt: string;
+  status?: "PENDING" | "DONE";
 }
 
 export function SupplierCompletedHistory() {
@@ -153,10 +154,10 @@ export function SupplierCompletedHistory() {
           </div>
           <div>
             <h3 className="text-xl font-black text-white tracking-tight">
-              Riwayat Cetak Selesai
+              Riwayat Cetak Label
             </h3>
             <p className="text-slate-400 text-xs font-medium">
-              Riwayat label harga Anda yang sudah selesai dicetak oleh Admin.
+              Riwayat pengajuan cetak label Anda beserta statusnya (Antrean / Selesai).
             </p>
           </div>
         </div>
@@ -245,7 +246,7 @@ export function SupplierCompletedHistory() {
             </div>
           ) : filteredHistory.length === 0 ? (
             <div className="text-center py-20 text-slate-500 text-sm font-medium italic">
-              Belum ada riwayat cetak selesai.
+              Belum ada riwayat cetak.
             </div>
           ) : (
             <div className="divide-y divide-white/5">
@@ -357,11 +358,22 @@ export function SupplierCompletedHistory() {
                         <div className="flex-shrink-0 w-10 h-10 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center justify-center shadow-inner text-purple-400">
                           <Printer className="w-5 h-5" />
                         </div>
-                        <div className="min-w-0">
-                          <p className="font-black text-white text-sm truncate group-hover:text-purple-400 transition-colors uppercase leading-tight">
-                            Pukul {format(new Date(record.completedAt), "HH:mm")} WIB
-                          </p>
-                          <p className="text-[10px] text-slate-500 font-semibold mt-1">
+                        <div className="min-w-0 flex flex-col gap-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-black text-white text-sm truncate group-hover:text-purple-400 transition-colors uppercase leading-none">
+                              Pukul {format(new Date(record.completedAt), "HH:mm")} WIB
+                            </p>
+                            {record.status === "PENDING" ? (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase leading-none">
+                                Antrean
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase leading-none">
+                                Selesai
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-slate-500 font-semibold leading-none mt-0.5">
                             {record.itemCount} barang • {record.totalQty} pcs
                           </p>
                         </div>
