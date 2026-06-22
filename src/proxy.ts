@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { decrypt } from "@/lib/auth-utils";
 
 // List of public routes that don't require authentication
-const publicRoutes = ["/login", "/api/print-queue/recover-history"];
+const publicRoutes = ["/login"];
 
 export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;

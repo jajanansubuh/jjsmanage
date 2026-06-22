@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 // GET: Preview what would be recovered (dry run)
 export async function GET(req: Request) {
   try {
-    // const { getSession } = await import("@/lib/auth-utils");
-    // const session = await getSession();
-    // if (!session || session.user.role !== "ADMIN") {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
+    const { getSession } = await import("@/lib/auth-utils");
+    const session = await getSession();
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
@@ -64,11 +64,11 @@ export async function GET(req: Request) {
 // POST: Actually perform the recovery
 export async function POST(req: Request) {
   try {
-    // const { getSession } = await import("@/lib/auth-utils");
-    // const session = await getSession();
-    // if (!session || session.user.role !== "ADMIN") {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
+    const { getSession } = await import("@/lib/auth-utils");
+    const session = await getSession();
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
