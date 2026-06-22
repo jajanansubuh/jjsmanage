@@ -47,10 +47,12 @@ export async function GET(req: Request) {
     // Also count total labelPrint items in DB by status
     const pendingCount = await prisma.labelPrint.count({ where: { status: "PENDING" } });
     const doneCount = await prisma.labelPrint.count({ where: { status: "DONE" } });
+    const supplierCount = await prisma.supplier.count();
 
     return NextResponse.json({
       totalPendingInDb: pendingCount,
       totalDoneInDb: doneCount,
+      totalSuppliersInDb: supplierCount,
       hourlyHistoryWIB: hourlyGroups,
     });
   } catch (error: unknown) {
