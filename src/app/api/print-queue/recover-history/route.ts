@@ -17,11 +17,10 @@ export async function GET(req: Request) {
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
-    // 1. Get all DONE items from LabelPrint created today
+    // 1. Get all DONE items from LabelPrint
     const doneItems = await prisma.labelPrint.findMany({
       where: {
         status: "DONE",
-        createdAt: { gte: startOfToday, lte: endOfToday },
       },
       select: {
         id: true,
@@ -29,17 +28,21 @@ export async function GET(req: Request) {
         code: true,
         qty: true,
         supplierId: true,
+        createdAt: true,
       },
     });
 
-    // 2. Get all existing history records for today
+    // 2. Get all history records from the last 3 days
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const existingHistory = await prisma.labelPrintHistory.findMany({
       where: {
-        completedAt: { gte: startOfToday, lte: endOfToday },
+        completedAt: { gte: threeDaysAgo },
       },
       include: {
         supplier: { select: { name: true } },
       },
+      orderBy: { completedAt: "desc" },
     });
 
     // 3. Group DONE items by supplier
@@ -49,7 +52,7 @@ export async function GET(req: Request) {
       groupedDone.get(item.supplierId)!.push({ name: item.name, code: item.code, qty: item.qty });
     }
 
-    // 4. Find suppliers with DONE items but NO history record today
+    // 4. Find suppliers with DONE items but NO history record
     const existingSupplierIds = new Set(existingHistory.map(h => h.supplierId));
     const missingSuppliers: { supplierId: string; itemCount: number; totalQty: number }[] = [];
 
@@ -63,22 +66,31 @@ export async function GET(req: Request) {
       }
     }
 
-    // 5. Get all PENDING items for today  
+    // 5. Get all PENDING items in the entire database
     const pendingItems = await prisma.labelPrint.findMany({
       where: {
         status: "PENDING",
-        createdAt: { gte: startOfToday, lte: endOfToday },
+      },
+      include: {
+        supplier: { select: { name: true } },
       },
     });
 
     return NextResponse.json({
       summary: {
-        doneItemsToday: doneItems.length,
+        totalDoneItemsInDb: doneItems.length,
         uniqueDoneSuppliers: groupedDone.size,
-        existingHistoryRecords: existingHistory.length,
+        historyRecordsLast3Days: existingHistory.length,
         missingHistoryRecords: missingSuppliers.length,
-        pendingItemsToday: pendingItems.length,
+        totalPendingItemsInDb: pendingItems.length,
       },
+      pendingItems: pendingItems.map(p => ({
+        id: p.id,
+        name: p.name,
+        qty: p.qty,
+        supplierName: p.supplier?.name,
+        createdAt: p.createdAt,
+      })),
       existingHistory: existingHistory.map(h => ({
         id: h.id,
         supplierName: h.supplier.name,
