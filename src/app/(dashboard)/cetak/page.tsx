@@ -226,15 +226,21 @@ export default function CetakLabelPage() {
 
   const handleMarkAsDone = async (id: string) => {
     try {
-      await fetch("/api/print-queue", {
+      const res = await fetch("/api/print-queue", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, status: "DONE" })
       });
-      fetchQueue();
-      setHistoryKey(prev => prev + 1);
+      if (res.ok) {
+        toast.success("Berhasil ditandai selesai");
+        fetchQueue();
+        setHistoryKey(prev => prev + 1);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error || "Gagal memperbarui status");
+      }
     } catch {
-      toast.error("Gagal memperbarui status");
+      toast.error("Terjadi kesalahan jaringan");
     }
   };
 
