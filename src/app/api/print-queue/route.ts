@@ -128,20 +128,21 @@ export async function PUT(req: Request) {
           grouped.get(sid)!.push({ name: item.name, code: item.code, qty: item.qty });
         }
 
-        // Create history records
-        for (const [supplierId, items] of grouped.entries()) {
-          const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
-          await tx.labelPrintHistory.create({
-            data: {
-              supplierId,
-              itemCount: items.length,
-              totalQty,
-              items: items as any,
-            }
-          });
-        }
+        // Create ALL history records in a single batch insert (critical for 70+ suppliers)
+        const historyData = Array.from(grouped.entries()).map(([supplierId, items]) => ({
+          supplierId,
+          itemCount: items.length,
+          totalQty: items.reduce((sum, i) => sum + i.qty, 0),
+          items: items as any,
+        }));
+
+        await tx.labelPrintHistory.createMany({
+          data: historyData,
+        });
 
         return updateResult.count;
+      }, {
+        timeout: 30000, // 30 seconds timeout for large batches (70+ suppliers)
       });
 
       // Auto-cleanup old items asynchronously without blocking the response
