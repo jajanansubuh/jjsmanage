@@ -60,7 +60,7 @@ export async function mergeProductsAction(data: {
       // 2. Find all reports from the "from" supplier
       const reports = await tx.consignmentReport.findMany({
         where: { supplierId: fromSupplierId },
-        select: { id: true, items: true },
+        select: { id: true, items: true, profit80: true, isValidated: true },
       });
 
       // 3. Filter reports that have items matching the product name
@@ -72,10 +72,22 @@ export async function mergeProductsAction(data: {
         });
       });
 
-      // 4. Update report items - consolidate product name references
+      // 4. Update report items & reassign supplierId, calculate profit to move
       let itemsUpdated = 0;
+      let totalProfitToMove = 0;
+      let validatedProfitToMove = 0;
+
       for (const report of reportsToUpdate) {
         if (!Array.isArray(report.items)) continue;
+
+        const profit = typeof report.profit80 === 'object' && report.profit80 !== null && 'toNumber' in report.profit80 
+          ? (report.profit80 as any).toNumber() 
+          : Number(report.profit80);
+
+        totalProfitToMove += profit;
+        if (report.isValidated) {
+          validatedProfitToMove += profit;
+        }
 
         const updatedItems = report.items.map((item: any) => {
           const itemName = String(item.name || "").trim();
@@ -88,15 +100,41 @@ export async function mergeProductsAction(data: {
           return item;
         });
 
-        if (itemsUpdated > 0) {
-          await tx.consignmentReport.update({
-            where: { id: report.id },
-            data: { items: updatedItems },
-          });
-        }
+        await tx.consignmentReport.update({
+          where: { id: report.id },
+          data: {
+            supplierId: toSupplierId,
+            items: updatedItems
+          },
+        });
       }
 
-      // 5. Delete the "from" product (duplicate/redundant supplier variant)
+      // 5. Adjust supplier balances
+      if (totalProfitToMove !== 0) {
+        const fromSupplierUpdate: any = {
+          balance: { decrement: totalProfitToMove }
+        };
+        if (validatedProfitToMove !== 0) {
+          fromSupplierUpdate.validatedBalance = { decrement: validatedProfitToMove };
+        }
+        await tx.supplier.update({
+          where: { id: fromSupplierId },
+          data: fromSupplierUpdate
+        });
+
+        const toSupplierUpdate: any = {
+          balance: { increment: totalProfitToMove }
+        };
+        if (validatedProfitToMove !== 0) {
+          toSupplierUpdate.validatedBalance = { increment: validatedProfitToMove };
+        }
+        await tx.supplier.update({
+          where: { id: toSupplierId },
+          data: toSupplierUpdate
+        });
+      }
+
+      // 6. Delete the "from" product (duplicate/redundant supplier variant)
       await tx.product.delete({
         where: { id: fromProduct.id },
       });
@@ -109,7 +147,7 @@ export async function mergeProductsAction(data: {
           fromSupplierId,
           toSupplierId,
           itemsUpdated,
-          reportsModified: reports.length,
+          reportsModified: reportsToUpdate.length,
         },
       };
     });

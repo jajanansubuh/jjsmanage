@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Coins, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Coins, Search, ChevronLeft, ChevronRight, Printer, Download } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,8 @@ interface SavingsTabProps {
   endDate: string;
   setEndDate: (val: string) => void;
   onSelectSavings: (s: any) => void;
+  onExport: () => void;
+  onPrint: () => void;
 }
 
 export function SavingsTab({
@@ -27,7 +29,9 @@ export function SavingsTab({
   setStartDate,
   endDate,
   setEndDate,
-  onSelectSavings
+  onSelectSavings,
+  onExport,
+  onPrint
 }: SavingsTabProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -66,6 +70,20 @@ export function SavingsTab({
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-purple-400 transition-colors" />
             <Input placeholder="Cari nota atau suplier..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-purple-500/20 text-white" value={savingsSearch} onChange={(e) => setSavingsSearch(e.target.value)} />
           </div>
+
+          <Button
+            onClick={onPrint}
+            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95"
+          >
+            <Printer className="w-4 h-4 text-purple-400" /> Cetak
+          </Button>
+
+          <Button
+            onClick={onExport}
+            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95"
+          >
+            <Download className="w-4 h-4 text-blue-400" /> Export
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0">

@@ -385,6 +385,7 @@ export function useReports() {
     loading,
     userRole,
     reports,
+    rawDeductions,
     payouts,
     savings,
     searchTerm,

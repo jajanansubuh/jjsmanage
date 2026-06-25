@@ -2,10 +2,26 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth-utils";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getSession();
     const userRole = session?.user?.role?.toUpperCase();
+
+    const { searchParams } = new URL(req.url);
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
+
+    let dateFilter: any = undefined;
+    if (startDateParam && endDateParam) {
+      const start = new Date(startDateParam);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDateParam);
+      end.setHours(23, 59, 59, 999);
+      dateFilter = {
+        gte: start,
+        lte: end
+      };
+    }
 
     if (userRole === "SUPPLIER") {
       const supplierId = session.user.supplierId;
@@ -15,7 +31,10 @@ export async function GET() {
 
       // Get savings total for a specific supplier
       const aggregate = await prisma.consignmentReport.aggregate({
-        where: { supplierId },
+        where: { 
+          supplierId,
+          ...(dateFilter ? { date: dateFilter } : {})
+        },
         _sum: {
           tabungan: true
         }
@@ -25,7 +44,8 @@ export async function GET() {
       const history = await prisma.consignmentReport.findMany({
         where: {
           supplierId,
-          tabungan: { gt: 0 }
+          tabungan: { gt: 0 },
+          ...(dateFilter ? { date: dateFilter } : {})
         },
         orderBy: { date: 'desc' },
         select: {
@@ -50,7 +70,8 @@ export async function GET() {
           tabungan: true
         },
         where: {
-          tabungan: { gt: 0 }
+          tabungan: { gt: 0 },
+          ...(dateFilter ? { date: dateFilter } : {})
         }
       });
 

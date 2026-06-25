@@ -10,7 +10,7 @@ export async function updateDeductionsAction(data: { id: string, serviceCharge: 
         // Get old report to calculate balance adjustment
         const oldReport = await tx.consignmentReport.findUnique({
           where: { id: item.id },
-          select: { profit80: true, supplierId: true, cost: true, barcode: true }
+          select: { profit80: true, supplierId: true, cost: true, barcode: true, isValidated: true }
         });
 
         if (!oldReport) continue;
@@ -39,11 +39,15 @@ export async function updateDeductionsAction(data: { id: string, serviceCharge: 
 
         // Update supplier balance
         if (adjustment !== 0) {
+          const supplierDataToUpdate: any = {
+            balance: { increment: adjustment }
+          };
+          if (oldReport.isValidated) {
+            supplierDataToUpdate.validatedBalance = { increment: adjustment };
+          }
           await tx.supplier.update({
             where: { id: oldReport.supplierId },
-            data: {
-              balance: { increment: adjustment }
-            }
+            data: supplierDataToUpdate
           });
         }
       }
@@ -101,6 +105,7 @@ export async function updateAggregatedDeductionsAction(data: {
 
         // 2. Aggregate deductions and calculate total adjustment for the supplier
         let totalAdjustment = 0;
+        let totalValidatedAdjustment = 0;
 
         for (let i = 0; i < reports.length; i++) {
           const report = reports[i];
@@ -118,6 +123,9 @@ export async function updateAggregatedDeductionsAction(data: {
           const newProfit80 = cost - (barcode + sc + kukuluban + tabungan);
           const adjustment = newProfit80 - oldProfit80;
           totalAdjustment += adjustment;
+          if (report.isValidated) {
+            totalValidatedAdjustment += adjustment;
+          }
 
           // Update this report
           await tx.consignmentReport.update({
@@ -136,12 +144,17 @@ export async function updateAggregatedDeductionsAction(data: {
         }
 
         // 3. Update supplier balance ONCE per supplier (Efficiency)
-        if (totalAdjustment !== 0) {
+        if (totalAdjustment !== 0 || totalValidatedAdjustment !== 0) {
+          const supplierDataToUpdate: any = {};
+          if (totalAdjustment !== 0) {
+            supplierDataToUpdate.balance = { increment: totalAdjustment };
+          }
+          if (totalValidatedAdjustment !== 0) {
+            supplierDataToUpdate.validatedBalance = { increment: totalValidatedAdjustment };
+          }
           await tx.supplier.update({
             where: { id: item.supplierId },
-            data: {
-              balance: { increment: totalAdjustment }
-            }
+            data: supplierDataToUpdate
           });
         }
       }

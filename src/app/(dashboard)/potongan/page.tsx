@@ -17,9 +17,13 @@ import {
   ChevronRight,
   User as UserIcon,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Printer,
+  Download
 } from "lucide-react";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 interface DeductionDetail {
   id: string;
@@ -55,7 +59,7 @@ export default function PotonganSummaryPage() {
     history: DeductionDetail[] 
   } | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>(null);
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({ key: "name", direction: "asc" });
   const [historyPage, setHistoryPage] = useState(1);
   const historyPerPage = 10;
   const [adminPage, setAdminPage] = useState(1);
@@ -114,6 +118,220 @@ export default function PotonganSummaryPage() {
       direction = "desc";
     }
     setSortConfig({ key, direction });
+  };
+
+  const handleExport = () => {
+    if (role === "SUPPLIER") {
+      const history = supplierData?.history || [];
+      if (history.length === 0) {
+        toast.error("Tidak ada data untuk diexport");
+        return;
+      }
+      const exportData = history.map((item, index) => {
+        const total = Number(item.barcode || 0) + Number(item.serviceCharge || 0) + Number(item.kukuluban || 0);
+        return {
+          No: index + 1,
+          Tanggal: format(new Date(item.date), "dd/MM/yyyy"),
+          "No. Nota": item.noteNumber || "-",
+          Omzet: item.revenue,
+          Barcode: item.barcode,
+          "Service Charge": item.serviceCharge,
+          Kukuluban: item.kukuluban,
+          "Total Potongan": total
+        };
+      });
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Potongan");
+      XLSX.writeFile(workbook, `Laporan_Potongan_Mitra_${format(new Date(), "yyyyMMdd")}.xlsx`);
+    } else {
+      if (filteredAdminData.length === 0) {
+        toast.error("Tidak ada data untuk diexport");
+        return;
+      }
+      const exportData = filteredAdminData.map((item, index) => ({
+        No: index + 1,
+        "Nama Mitra": item.name,
+        "Pemilik": item.ownerName,
+        Barcode: item.totalBarcode,
+        "Service Charge": item.totalServiceCharge,
+        Kukuluban: item.totalKukuluban,
+        "Total Potongan": item.totalDeduction
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Potongan");
+      XLSX.writeFile(workbook, `Laporan_Potongan_Mitra_${format(new Date(), "yyyyMMdd")}.xlsx`);
+    }
+    toast.success("Export berhasil");
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    const periodText = startDate && endDate 
+      ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
+      : "Semua Periode";
+
+    let content = "";
+    if (role === "SUPPLIER") {
+      const rowsHtml = (supplierData?.history || []).map((item, index) => {
+        const total = Number(item.barcode || 0) + Number(item.serviceCharge || 0) + Number(item.kukuluban || 0);
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${format(new Date(item.date), "dd/MM/yyyy")}</td>
+            <td>${item.noteNumber || "-"}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(item.revenue)}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(item.barcode)}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(item.serviceCharge)}</td>
+            <td align="right">${new Intl.NumberFormat("id-ID").format(item.kukuluban)}</td>
+            <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(total)}</strong></td>
+          </tr>
+        `;
+      }).join("");
+
+      content = `
+        <html>
+          <head>
+            <title>Laporan Potongan Mitra</title>
+            <style>
+              @page { size: portrait; margin: 0; }
+              body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+              .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+              h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+              .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+              .meta-item { margin-bottom: 3px; }
+              .meta-label { font-weight: bold; color: #666; display: inline-block; width: 100px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+              th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+              td { padding: 6px 5px; border: 1px solid #ddd; }
+              .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+              .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+              .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header"><h1>Laporan Potongan Mitra</h1></div>
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Tanggal</th>
+                  <th>No. Nota</th>
+                  <th align="right">Omzet</th>
+                  <th align="right">Barcode</th>
+                  <th align="right">S.Charge</th>
+                  <th align="right">Kukuluban</th>
+                  <th align="right">Total Potongan</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+                <tr class="total-row">
+                  <td colspan="4" align="center">TOTAL KESELURUHAN</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(supplierData?.totalBarcode || 0)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(supplierData?.totalServiceCharge || 0)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(supplierData?.totalKukuluban || 0)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(supplierData?.totalDeduction || 0)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="footer-sig">
+              <div class="sig">Kasir / Admin</div>
+              <div class="sig">Manager Toko</div>
+            </div>
+          </body>
+        </html>
+      `;
+    } else {
+      const rowsHtml = filteredAdminData.map((item, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${item.name}</td>
+          <td>${item.ownerName}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(item.totalBarcode)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(item.totalServiceCharge)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(item.totalKukuluban)}</td>
+          <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(item.totalDeduction)}</strong></td>
+        </tr>
+      `).join("");
+
+      const grandTotals = {
+        bc: filteredAdminData.reduce((s, x) => s + x.totalBarcode, 0),
+        sc: filteredAdminData.reduce((s, x) => s + x.totalServiceCharge, 0),
+        kuk: filteredAdminData.reduce((s, x) => s + x.totalKukuluban, 0),
+        ded: filteredAdminData.reduce((s, x) => s + x.totalDeduction, 0),
+      };
+
+      content = `
+        <html>
+          <head>
+            <title>Laporan Ringkasan Potongan Mitra</title>
+            <style>
+              @page { size: portrait; margin: 0; }
+              body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+              .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+              h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+              .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+              .meta-item { margin-bottom: 3px; }
+              .meta-label { font-weight: bold; color: #666; display: inline-block; width: 100px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+              th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+              td { padding: 6px 5px; border: 1px solid #ddd; }
+              .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+              .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+              .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header"><h1>Laporan Ringkasan Potongan Mitra</h1></div>
+            <div class="meta-grid">
+              <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Mitra</th>
+                  <th>Pemilik</th>
+                  <th align="right">Barcode</th>
+                  <th align="right">S.Charge</th>
+                  <th align="right">Kukuluban</th>
+                  <th align="right">Total Potongan</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+                <tr class="total-row">
+                  <td colspan="3" align="center">TOTAL KESELURUHAN</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(grandTotals.bc)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(grandTotals.sc)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(grandTotals.kuk)}</td>
+                  <td align="right">${new Intl.NumberFormat("id-ID").format(grandTotals.ded)}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="footer-sig">
+              <div class="sig">Kasir / Admin</div>
+              <div class="sig">Manager Toko</div>
+            </div>
+          </body>
+        </html>
+      `;
+    }
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
   };
 
   const filteredAdminData = useMemo(() => {
@@ -215,6 +433,20 @@ export default function PotonganSummaryPage() {
               />
             </div>
           )}
+
+          <Button
+            onClick={handlePrint}
+            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95 w-full sm:w-auto"
+          >
+            <Printer className="w-4 h-4 text-rose-400" /> Cetak
+          </Button>
+
+          <Button
+            onClick={handleExport}
+            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95 w-full sm:w-auto"
+          >
+            <Download className="w-4 h-4 text-blue-400" /> Export
+          </Button>
         </div>
       </div>
 

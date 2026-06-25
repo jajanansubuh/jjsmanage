@@ -227,3 +227,174 @@ export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
     </html>
   `;
 };
+
+export const getSavingsSummaryPrintTemplate = (data: any[], startDate?: string, endDate?: string) => {
+  const rowsHtml = [...data]
+    .map((s, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${format(new Date(s.date), "dd/MM/yyyy")}</td>
+        <td>${s.noteNumber}</td>
+        <td>${s.supplierNames.join(", ") || "-"}</td>
+        <td align="right">${new Intl.NumberFormat("id-ID").format(s.totalRevenue)}</td>
+        <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(s.totalTabungan)}</strong></td>
+      </tr>
+    `)
+    .join("");
+
+  const totals = {
+    revenue: data.reduce((sum, s) => sum + s.totalRevenue, 0),
+    savings: data.reduce((sum, s) => sum + s.totalTabungan, 0),
+  };
+
+  const periodText = startDate && endDate 
+    ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
+    : "Semua Periode";
+
+  return `
+    <html>
+      <head>
+        <title>Laporan Ringkasan Tabungan</title>
+        <style>
+          @page { size: portrait; margin: 0; }
+          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+          .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+          .meta-item { margin-bottom: 3px; }
+          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+          td { padding: 6px 5px; border: 1px solid #ddd; }
+          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header"><h1>Laporan Ringkasan Tabungan Mitra</h1></div>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>No. Nota</th>
+              <th>Suplier</th>
+              <th align="right">Total Omzet</th>
+              <th align="right">Total Tabungan</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr class="total-row">
+              <td colspan="4" align="center">TOTAL KESELURUHAN</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.revenue)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.savings)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer-sig">
+          <div class="sig">Kasir / Admin</div>
+          <div class="sig">Manager Toko</div>
+        </div>
+        <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
+          Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+        </div>
+      </body>
+    </html>
+  `;
+};
+
+export const getDeductionsSummaryPrintTemplate = (data: any[], startDate?: string, endDate?: string) => {
+  const rowsHtml = [...data]
+    .map((d, index) => {
+      const total = (d.serviceCharge || 0) + (d.kukuluban || 0) + (d.tabungan || 0);
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${format(new Date(d.deductionDate || d.date || d.createdAt), "dd/MM/yyyy")}</td>
+          <td>${d.deductionNoteNumber || d.noteNumber || "-"}</td>
+          <td>${d.supplierNames.join(", ") || "-"}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(d.serviceCharge || 0)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(d.kukuluban || 0)}</td>
+          <td align="right">${new Intl.NumberFormat("id-ID").format(d.tabungan || 0)}</td>
+          <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(total)}</strong></td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const totals = {
+    sc: data.reduce((sum, r) => sum + (r.serviceCharge || 0), 0),
+    kuk: data.reduce((sum, r) => sum + (r.kukuluban || 0), 0),
+    tab: data.reduce((sum, r) => sum + (r.tabungan || 0), 0),
+    grand: data.reduce((sum, r) => sum + (r.serviceCharge || 0) + (r.kukuluban || 0) + (r.tabungan || 0), 0)
+  };
+
+  const periodText = startDate && endDate 
+    ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
+    : "Semua Periode";
+
+  return `
+    <html>
+      <head>
+        <title>Laporan Ringkasan Potongan</title>
+        <style>
+          @page { size: portrait; margin: 0; }
+          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
+          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
+          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+          .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+          .meta-item { margin-bottom: 3px; }
+          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
+          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
+          td { padding: 6px 5px; border: 1px solid #ddd; }
+          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
+          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
+          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header"><h1>Laporan Ringkasan Potongan Mitra</h1></div>
+        <div class="meta-grid">
+          <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>No. Nota</th>
+              <th>Suplier</th>
+              <th align="right">S.Charge</th>
+              <th align="right">Kukuluban</th>
+              <th align="right">Tabungan</th>
+              <th align="right">Total Pot.</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+            <tr class="total-row">
+              <td colspan="4" align="center">TOTAL KESELURUHAN</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.sc)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.kuk)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.tab)}</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(totals.grand)}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="footer-sig">
+          <div class="sig">Kasir / Admin</div>
+          <div class="sig">Manager Toko</div>
+        </div>
+        <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
+          Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
+        </div>
+      </body>
+    </html>
+  `;
+};

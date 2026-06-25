@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Hooks & Utils
 import { useReports } from "./hooks/use-reports";
 import { exportReportsToExcel } from "@/lib/export-utils";
-import { getTransactionPrintTemplate, getDeductionPrintTemplate, getSavingsPrintTemplate } from "@/lib/print-templates";
+import { getTransactionPrintTemplate, getDeductionPrintTemplate, getSavingsPrintTemplate, getSavingsSummaryPrintTemplate, getDeductionsSummaryPrintTemplate } from "@/lib/print-templates";
 
 // Components
 import { ReportsHeader } from "@/components/reports/ReportsHeader";
@@ -34,6 +34,7 @@ export default function ReportsPage() {
     loading,
     userRole,
     reports,
+    rawDeductions,
     searchTerm,
     setSearchTerm,
     payoutSearch,
@@ -150,6 +151,26 @@ export default function ReportsPage() {
     }, 250);
   };
 
+  const handlePrintSummary = (type: 'savings' | 'deduction') => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+
+    let content = "";
+    if (type === 'savings') {
+      content = getSavingsSummaryPrintTemplate(groupedSavingsByNote, startDate, endDate);
+    } else if (type === 'deduction') {
+      content = getDeductionsSummaryPrintTemplate(filteredDeductions, startDate, endDate);
+    }
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 250);
+  };
+
   if (!isMounted) return null;
 
   return (
@@ -250,6 +271,8 @@ export default function ReportsPage() {
                 });
                 setIsTabunganModalOpen(true);
               }}
+              onExport={() => exportReportsToExcel('tabungan', groupedSavingsByNote)}
+              onPrint={() => handlePrintSummary('savings')}
             />
           )}
         </TabsContent>
@@ -267,13 +290,15 @@ export default function ReportsPage() {
               onSelectDeduction={(d) => {
                 const targetNote = d.deductionNoteNumber || d.noteNumber;
                 setSelectedNote(targetNote);
-                setNoteDetails(reports.filter(item =>
+                setNoteDetails(rawDeductions.filter(item =>
                   item.noteNumber === targetNote ||
                   item.deductionNoteNumber === targetNote
                 ));
                 setIsNoteModalOpen(true);
                 setIsDeductionModal(true);
               }}
+              onExport={() => exportReportsToExcel('potongan', filteredDeductions)}
+              onPrint={() => handlePrintSummary('deduction')}
             />
           )}
         </TabsContent>

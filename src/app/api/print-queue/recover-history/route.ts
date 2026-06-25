@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { format } from "date-fns";
 
 export const dynamic = "force-dynamic";
 
@@ -18,42 +17,80 @@ export async function GET(req: Request) {
     const endOfToday = new Date();
     endOfToday.setHours(23, 59, 59, 999);
 
-    // Get all history records from the last 48 hours
-    const fortyEightHoursAgo = new Date();
-    fortyEightHoursAgo.setHours(fortyEightHoursAgo.getHours() - 48);
-    const history = await prisma.labelPrintHistory.findMany({
+    // 1. Get all DONE items from LabelPrint created today
+    const doneItems = await prisma.labelPrint.findMany({
       where: {
-        completedAt: { gte: fortyEightHoursAgo },
+        status: "DONE",
+        createdAt: { gte: startOfToday, lte: endOfToday },
       },
       select: {
-        completedAt: true,
+        id: true,
+        name: true,
+        code: true,
+        qty: true,
+        supplierId: true,
+      },
+    });
+
+    // 2. Get all existing history records for today
+    const existingHistory = await prisma.labelPrintHistory.findMany({
+      where: {
+        completedAt: { gte: startOfToday, lte: endOfToday },
+      },
+      include: {
         supplier: { select: { name: true } },
       },
     });
 
-    // Group by hour in WIB (UTC+7)
-    const hourlyGroups: Record<string, { count: number; suppliers: string[] }> = {};
-    for (const h of history) {
-      // Convert to WIB
-      const wibTime = new Date(h.completedAt.getTime() + 7 * 60 * 60 * 1000);
-      const key = format(wibTime, "yyyy-MM-dd HH:00") + " WIB";
-      if (!hourlyGroups[key]) {
-        hourlyGroups[key] = { count: 0, suppliers: [] };
-      }
-      hourlyGroups[key].count++;
-      hourlyGroups[key].suppliers.push(h.supplier.name);
+    // 3. Group DONE items by supplier
+    const groupedDone = new Map<string, { name: string; code: string | null; qty: number }[]>();
+    for (const item of doneItems) {
+      if (!groupedDone.has(item.supplierId)) groupedDone.set(item.supplierId, []);
+      groupedDone.get(item.supplierId)!.push({ name: item.name, code: item.code, qty: item.qty });
     }
 
-    // Also count total labelPrint items in DB by status
-    const pendingCount = await prisma.labelPrint.count({ where: { status: "PENDING" } });
-    const doneCount = await prisma.labelPrint.count({ where: { status: "DONE" } });
-    const supplierCount = await prisma.supplier.count();
+    // 4. Find suppliers with DONE items but NO history record today
+    const existingSupplierIds = new Set(existingHistory.map(h => h.supplierId));
+    const missingSuppliers: { supplierId: string; itemCount: number; totalQty: number }[] = [];
+
+    for (const [supplierId, items] of groupedDone.entries()) {
+      if (!existingSupplierIds.has(supplierId)) {
+        missingSuppliers.push({
+          supplierId,
+          itemCount: items.length,
+          totalQty: items.reduce((sum, i) => sum + i.qty, 0),
+        });
+      }
+    }
+
+    // 5. Get all PENDING items for today  
+    const pendingItems = await prisma.labelPrint.findMany({
+      where: {
+        status: "PENDING",
+        createdAt: { gte: startOfToday, lte: endOfToday },
+      },
+    });
 
     return NextResponse.json({
-      totalPendingInDb: pendingCount,
-      totalDoneInDb: doneCount,
-      totalSuppliersInDb: supplierCount,
-      hourlyHistoryWIB: hourlyGroups,
+      summary: {
+        doneItemsToday: doneItems.length,
+        uniqueDoneSuppliers: groupedDone.size,
+        existingHistoryRecords: existingHistory.length,
+        missingHistoryRecords: missingSuppliers.length,
+        pendingItemsToday: pendingItems.length,
+      },
+      existingHistory: existingHistory.map(h => ({
+        id: h.id,
+        supplierName: h.supplier.name,
+        supplierId: h.supplierId,
+        itemCount: h.itemCount,
+        totalQty: h.totalQty,
+        completedAt: h.completedAt,
+      })),
+      missingSuppliers,
+      message: missingSuppliers.length > 0
+        ? `Ditemukan ${missingSuppliers.length} supplier yang DONE tapi belum punya history. POST ke endpoint ini untuk recovery.`
+        : "Semua supplier DONE sudah punya history record. Tidak ada yang perlu di-recover.",
     });
   } catch (error: unknown) {
     console.error("GET /api/print-queue/recover-history error:", error);

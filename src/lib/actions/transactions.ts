@@ -92,6 +92,7 @@ export async function saveTransactionAction(rawData: any) {
 
           if (oldReports.length > 0) {
             const oldBalanceMap = new Map<string, number>();
+            const oldValidatedBalanceMap = new Map<string, number>();
             for (const report of oldReports) {
               const profit80 = typeof report.profit80 === 'object' && report.profit80 !== null && 'toNumber' in report.profit80 
                 ? (report.profit80 as any).toNumber() 
@@ -101,12 +102,27 @@ export async function saveTransactionAction(rawData: any) {
                 report.supplierId,
                 (oldBalanceMap.get(report.supplierId) || 0) + profit80
               );
+
+              if (report.isValidated) {
+                oldValidatedBalanceMap.set(
+                  report.supplierId,
+                  (oldValidatedBalanceMap.get(report.supplierId) || 0) + profit80
+                );
+              }
             }
 
             for (const [supplierId, totalProfit] of oldBalanceMap) {
+              const totalValidatedProfit = oldValidatedBalanceMap.get(supplierId) || 0;
+              const updateData: any = {
+                balance: { decrement: totalProfit }
+              };
+              if (totalValidatedProfit !== 0) {
+                updateData.validatedBalance = { decrement: totalValidatedProfit };
+              }
+
               await tx.supplier.update({
                 where: { id: supplierId },
-                data: { balance: { decrement: totalProfit } },
+                data: updateData,
               });
             }
 

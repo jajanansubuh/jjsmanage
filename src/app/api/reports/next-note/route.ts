@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { format, startOfDay, endOfDay } from "date-fns";
-import { requireAdmin } from "@/lib/api-auth";
+import { requireAuth } from "@/lib/api-auth";
 
 export async function GET(req: Request) {
   try {
-    const { response } = await requireAdmin();
+    const { response } = await requireAuth();
     if (response) return response;
 
     const { searchParams } = new URL(req.url);
