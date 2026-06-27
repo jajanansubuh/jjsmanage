@@ -52,7 +52,6 @@ export async function GET(req: Request) {
       const startOfYesterday = new Date(startOfToday);
       startOfYesterday.setDate(startOfYesterday.getDate() - 1);
       where.completedAt = { gte: startOfYesterday };
-      pendingWhere.createdAt = { gte: startOfYesterday };
     }
 
     if (session.user.role === "SUPPLIER") {
@@ -130,7 +129,7 @@ export async function GET(req: Request) {
     }));
 
     // Combine and sort
-    const combined = [...pendingSessions, ...formattedHistory];
+    const combined = session.user.role === "ADMIN" ? formattedHistory : [...pendingSessions, ...formattedHistory];
     combined.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
     return NextResponse.json(combined, {

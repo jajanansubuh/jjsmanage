@@ -167,6 +167,9 @@ export async function PUT(req: Request) {
     if (all || status === "DONE") {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
+      const startOfYesterday = new Date(startOfToday);
+      startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
       prisma.labelPrint.deleteMany({
         where: {
           status: "DONE",
@@ -174,6 +177,14 @@ export async function PUT(req: Request) {
         }
       }).catch((cleanupErr) => {
         console.error("Auto-cleanup labelPrint error in PUT:", cleanupErr);
+      });
+
+      prisma.labelPrintHistory.deleteMany({
+        where: {
+          completedAt: { lt: startOfYesterday }
+        }
+      }).catch((cleanupErr) => {
+        console.error("Auto-cleanup labelPrintHistory error in PUT:", cleanupErr);
       });
     }
 

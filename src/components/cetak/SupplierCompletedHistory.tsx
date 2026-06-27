@@ -109,6 +109,46 @@ export function SupplierCompletedHistory() {
     });
   }, [selectedDateGroup, modalSearchTerm]);
 
+  const modalSessions = useMemo(() => {
+    if (filteredModalRecords.length === 0) return [];
+    
+    // Sort chronological (ascending) first to assign session numbers
+    const chronologicalRecords = [...filteredModalRecords].sort(
+      (a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
+    );
+
+    interface SessionGroup {
+      id: string;
+      sessionNumber: number;
+      completedAt: string;
+      records: PrintHistoryRecord[];
+    }
+
+    const sessionGroups: SessionGroup[] = [];
+    
+    chronologicalRecords.forEach((record) => {
+      const recordTime = new Date(record.completedAt).getTime();
+      // Find if there is an existing session group within 10 seconds (10000 ms)
+      const group = sessionGroups.find(
+        (g) => Math.abs(new Date(g.completedAt).getTime() - recordTime) <= 10000
+      );
+
+      if (group) {
+        group.records.push(record);
+      } else {
+        sessionGroups.push({
+          id: `session-${record.id}`,
+          sessionNumber: sessionGroups.length + 1,
+          completedAt: record.completedAt,
+          records: [record]
+        });
+      }
+    });
+
+    // Return sessions in descending order (highest session number first)
+    return sessionGroups.reverse();
+  }, [filteredModalRecords]);
+
   const filteredHistory = useMemo(() => {
     if (!searchTerm) return history;
     const q = searchTerm.toLowerCase();
@@ -323,110 +363,126 @@ export function SupplierCompletedHistory() {
           </div>
           
           {/* Scrollable Sesi List */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-4">
-            {filteredModalRecords.length === 0 ? (
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 space-y-6">
+            {modalSessions.length === 0 ? (
               <div className="text-center py-10 text-slate-500 text-sm font-medium italic">
                 Tidak ada sesi atau barang yang cocok.
               </div>
             ) : (
-              filteredModalRecords.map((record) => {
-                const allItems = parseItems(record.items);
-                const filteredItems = modalSearchTerm
-                  ? allItems.filter(
-                      (item) =>
-                        item.name.toLowerCase().includes(modalSearchTerm.toLowerCase()) ||
-                        (item.code && item.code.toLowerCase().includes(modalSearchTerm.toLowerCase()))
-                    )
-                  : allItems;
-
-                const isExpanded = expandedId === record.id;
-                const showItems = isExpanded || (!!modalSearchTerm && filteredItems.length > 0);
-
-                return (
-                  <div
-                    key={record.id}
-                    className="bg-white/2 border border-white/5 rounded-2xl overflow-hidden transition-all duration-200 hover:bg-white/[0.03]"
-                  >
-                    {/* Session Header Row */}
-                    <button
-                      onClick={() =>
-                        setExpandedId(isExpanded ? null : record.id)
-                      }
-                      className="w-full flex items-center justify-between px-6 py-4 text-left group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center justify-center shadow-inner text-purple-400">
-                          <Printer className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0 flex flex-col gap-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-black text-white text-sm truncate group-hover:text-purple-400 transition-colors uppercase leading-none">
-                              Pukul {format(new Date(record.completedAt), "HH:mm")} WIB
-                            </p>
-                            {record.status === "PENDING" ? (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase leading-none">
-                                Antrean
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase leading-none">
-                                Selesai
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[10px] text-slate-500 font-semibold leading-none mt-0.5">
-                            {record.itemCount} barang • {record.totalQty} pcs
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        {showItems ? (
-                          <ChevronUp className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Session Detail (Items) */}
-                    {showItems && (
-                      <div className="px-6 pb-5 animate-in slide-in-from-top-2 duration-300">
-                        <div className="bg-slate-950/60 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-inner">
-                          <div className="grid grid-cols-[1fr_120px_60px] gap-4 px-5 py-3 bg-white/[0.01] border-b border-white/5">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
-                              Nama Barang
-                            </span>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 text-center">
-                              Barcode
-                            </span>
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">
-                              Qty
-                            </span>
-                          </div>
-                          <div className="divide-y divide-white/5 max-h-60 overflow-y-auto custom-scrollbar">
-                            {filteredItems.map((item, idx) => (
-                              <div
-                                key={idx}
-                                className="grid grid-cols-[1fr_120px_60px] gap-4 px-5 py-3 hover:bg-white/[0.01] transition-colors"
-                              >
-                                <span className="text-xs font-bold text-slate-100 truncate uppercase">
-                                  {item.name}
-                                </span>
-                                <span className="text-xs font-mono text-slate-500 text-center">
-                                  {item.code || "—"}
-                                </span>
-                                <span className="text-xs font-black text-white text-right">
-                                  {item.qty} <span className="text-[9px] font-medium text-slate-500">pcs</span>
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              modalSessions.map((session) => (
+                <div key={session.id} className="space-y-3">
+                  {/* Session Heading */}
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <span className="text-xs font-black text-purple-400 tracking-wider uppercase">
+                      Sesi {session.sessionNumber}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-bold">
+                      Pukul {format(new Date(session.completedAt), "HH:mm")} WIB
+                    </span>
                   </div>
-                );
-              })
+
+                  <div className="space-y-3">
+                    {session.records.map((record) => {
+                      const allItems = parseItems(record.items);
+                      const filteredItems = modalSearchTerm
+                        ? allItems.filter(
+                            (item) =>
+                              item.name.toLowerCase().includes(modalSearchTerm.toLowerCase()) ||
+                              (item.code && item.code.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                          )
+                        : allItems;
+
+                      const isExpanded = expandedId === record.id;
+                      const showItems = isExpanded || (!!modalSearchTerm && filteredItems.length > 0);
+
+                      return (
+                        <div
+                          key={record.id}
+                          className="bg-white/2 border border-white/5 rounded-2xl overflow-hidden transition-all duration-200 hover:bg-white/[0.03]"
+                        >
+                          {/* Session Header Row */}
+                          <button
+                            onClick={() =>
+                              setExpandedId(isExpanded ? null : record.id)
+                            }
+                            className="w-full flex items-center justify-between px-6 py-4 text-left group cursor-pointer"
+                          >
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="flex-shrink-0 w-10 h-10 rounded-xl border border-purple-500/20 bg-purple-500/5 flex items-center justify-center shadow-inner text-purple-400">
+                                <Printer className="w-5 h-5" />
+                              </div>
+                              <div className="min-w-0 flex flex-col gap-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="font-black text-white text-sm truncate group-hover:text-purple-400 transition-colors uppercase leading-none">
+                                    Pukul {format(new Date(record.completedAt), "HH:mm")} WIB
+                                  </p>
+                                  {record.status === "PENDING" ? (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20 uppercase leading-none">
+                                      Antrean
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase leading-none">
+                                      Selesai
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[10px] text-slate-500 font-semibold leading-none mt-0.5">
+                                  {record.itemCount} barang • {record.totalQty} pcs
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                              {showItems ? (
+                                <ChevronUp className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-slate-500 group-hover:text-white transition-colors" />
+                              )}
+                            </div>
+                          </button>
+
+                          {/* Session Detail (Items) */}
+                          {showItems && (
+                            <div className="px-6 pb-5 animate-in slide-in-from-top-2 duration-300">
+                              <div className="bg-slate-950/60 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-inner">
+                                <div className="grid grid-cols-[1fr_120px_60px] gap-4 px-5 py-3 bg-white/[0.01] border-b border-white/5">
+                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
+                                    Nama Barang
+                                  </span>
+                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 text-center">
+                                    Barcode
+                                  </span>
+                                  <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">
+                                    Qty
+                                  </span>
+                                </div>
+                                <div className="divide-y divide-white/5 max-h-60 overflow-y-auto custom-scrollbar">
+                                  {filteredItems.map((item, idx) => (
+                                    <div
+                                      key={idx}
+                                      className="grid grid-cols-[1fr_120px_60px] gap-4 px-5 py-3 hover:bg-white/[0.01] transition-colors"
+                                    >
+                                      <span className="text-xs font-bold text-slate-100 truncate uppercase">
+                                        {item.name}
+                                      </span>
+                                      <span className="text-xs font-mono text-slate-500 text-center">
+                                        {item.code || "—"}
+                                      </span>
+                                      <span className="text-xs font-black text-white text-right">
+                                        {item.qty} <span className="text-[9px] font-medium text-slate-500">pcs</span>
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </DialogContent>
