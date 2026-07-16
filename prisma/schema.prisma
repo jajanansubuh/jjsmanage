@@ -7,32 +7,32 @@ datasource db {
 }
 
 model Supplier {
-  id               String              @id @default(cuid())
-  name             String
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  accountNumber    String?
-  balance          Decimal             @default(0) @db.Decimal(20, 2)
-  validatedBalance Decimal             @default(0) @db.Decimal(20, 2)
-  ownerName        String?
-  bankName         String?
-  reports          ConsignmentReport[]
-  users            User[]
-  payouts          SupplierPayout[]
-  products         Product[]
-  labelPrints      LabelPrint[]
+  id                String              @id @default(cuid())
+  name              String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  accountNumber     String?
+  balance           Decimal             @default(0) @db.Decimal(20, 2)
+  ownerName         String?
+  bankName          String?
+  validatedBalance  Decimal             @default(0) @db.Decimal(20, 2)
+  reports           ConsignmentReport[]
+  labelPrints       LabelPrint[]
   labelPrintHistory LabelPrintHistory[]
+  products          Product[]
+  payouts           SupplierPayout[]
+  users             User[]
 }
 
 model LabelPrintHistory {
-  id         String   @id @default(cuid())
-  supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
-  itemCount  Int      @default(0)
-  totalQty   Int      @default(0)
-  items      Json     @default("[]") // Array of {name, code, qty}
+  id          String   @id @default(cuid())
+  supplierId  String
+  itemCount   Int      @default(0)
+  totalQty    Int      @default(0)
+  items       Json     @default("[]")
   completedAt DateTime @default(now())
-  createdAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
 
   @@index([supplierId])
   @@index([completedAt])
@@ -42,13 +42,13 @@ model LabelPrintHistory {
 model LabelPrint {
   id         String   @id @default(cuid())
   supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
   name       String
   code       String?
   qty        Int      @default(1)
-  status     String   @default("PENDING") // PENDING, DONE
+  status     String   @default("PENDING")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
 
   @@index([supplierId])
   @@index([status])
@@ -60,9 +60,9 @@ model SupplierPayout {
   date       DateTime @default(now())
   notes      String?
   supplierId String
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
 
   @@index([supplierId])
 }
@@ -91,9 +91,9 @@ model ConsignmentReport {
   tabungan            Decimal?  @default(0) @db.Decimal(20, 2)
   noteNumber          String?
   notes               String?
+  items               Json?     @default("[]")
   deductionDate       DateTime?
   deductionNoteNumber String?
-  items               Json?     @default("[]")
   isValidated         Boolean   @default(false)
   supplier            Supplier  @relation(fields: [supplierId], references: [id])
 
@@ -109,13 +109,13 @@ model User {
   username             String    @unique
   password             String
   name                 String?
-  role                 String    @default("ADMIN") // "ADMIN", "CASHIER", "SUPPLIER"
-  permissions          Json?     @default("[]")    // Array of allowed menu paths
-  supplierId           String?
-  supplier             Supplier? @relation(fields: [supplierId], references: [id])
-  isCredentialsChanged Boolean   @default(false)
+  role                 String    @default("ADMIN")
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
+  supplierId           String?
+  isCredentialsChanged Boolean   @default(false)
+  permissions          Json?     @default("[]")
+  supplier             Supplier? @relation(fields: [supplierId], references: [id])
 
   @@index([supplierId])
 }
@@ -124,10 +124,10 @@ model Product {
   id         String    @id @default(cuid())
   name       String
   code       String?
-  supplierId String?
-  supplier   Supplier? @relation(fields: [supplierId], references: [id])
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
 
   @@unique([name, supplierId])
 }

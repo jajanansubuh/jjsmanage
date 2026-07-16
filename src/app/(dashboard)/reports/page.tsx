@@ -179,7 +179,7 @@ export default function ReportsPage() {
 
       <Tabs defaultValue="transaksi" className="space-y-8" onValueChange={(val) => val && setActiveTab(val)}>
         <div className="overflow-x-auto pb-4 scrollbar-hide">
-          <TabsList className="bg-slate-900/50 border border-white/5 p-2 rounded-[2rem] h-16 md:h-20 w-max flex items-center gap-2 min-w-full">
+          <TabsList className="bg-card/50 border border-white/5 p-4 md:p-5 rounded-[2rem] h-auto w-max flex items-center gap-3 min-w-full">
             <LayoutGroup id="reports-nav">
               {[
                 { id: "transaksi", label: "Transaksi", icon: FileText, color: "#2563eb", shadow: "shadow-blue-900/50" },
@@ -191,7 +191,7 @@ export default function ReportsPage() {
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
-                  className={`relative !py-4 px-6 md:px-8 rounded-2xl font-black text-sm md:text-base transition-colors duration-200 whitespace-nowrap overflow-visible data-[state=active]:!bg-transparent data-[state=inactive]:!bg-transparent ${
+                  className={`relative !py-4.5 md:!py-5 px-6 md:px-8 rounded-2xl font-black text-sm md:text-base transition-colors duration-200 whitespace-nowrap overflow-visible data-[state=active]:!bg-transparent data-[state=inactive]:!bg-transparent ${
                     activeTab === tab.id ? "!text-white" : "text-slate-500 hover:text-slate-300"
                   }`}
                 >

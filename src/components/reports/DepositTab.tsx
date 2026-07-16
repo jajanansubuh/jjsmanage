@@ -120,12 +120,12 @@ export function DepositTab({
               setStartDate(start);
               setEndDate(end);
             }}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-2xl"
+            className="h-14 bg-card/40 border-white/5 rounded-2xl hover:border-emerald-500/30 transition-all duration-300"
           />
 
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
-            <Input placeholder="Cari mitra..." className="pl-11 pr-4 h-12 w-64 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-indigo-500/20 text-white" value={payoutSearch} onChange={(e) => setPayoutSearch(e.target.value)} />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
+            <Input placeholder="Cari mitra..." className="pl-11 pr-4 h-14 w-64 bg-card/40 border border-white/5 rounded-2xl focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-all duration-300 text-white placeholder-slate-500" value={payoutSearch} onChange={(e) => setPayoutSearch(e.target.value)} />
           </div>
         </div>
       </CardHeader>

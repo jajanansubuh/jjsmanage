@@ -232,7 +232,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+        <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
         <p className="text-slate-400 font-medium animate-pulse">Memuat pengaturan...</p>
       </div>
     );
@@ -266,10 +266,10 @@ export default function SettingsPage() {
       )}
 
       <div className="grid gap-6">
-        <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
+        <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-3xl overflow-hidden">
           <CardHeader className="border-b border-white/5 bg-white/2">
             <CardTitle className="flex items-center text-xl font-bold text-white">
-              <KeyRound className="w-6 h-6 mr-3 text-blue-500" /> Informasi Login
+              <KeyRound className="w-6 h-6 mr-3 text-emerald-500" /> Informasi Login
             </CardTitle>
             <CardDescription className="text-slate-400">Ubah username dan password akses sistem.</CardDescription>
           </CardHeader>
@@ -281,7 +281,7 @@ export default function SettingsPage() {
                 placeholder="Masukkan username baru" 
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="h-12 bg-white/5 border-white/10 text-white font-medium focus-visible:ring-blue-500/50 rounded-2xl transition-all" 
+                className="h-12 bg-card/40 border border-white/10 text-white font-medium focus-visible:ring-emerald-500/50 rounded-2xl transition-all" 
               />
             </div>
             <div className="grid gap-3">
@@ -292,13 +292,13 @@ export default function SettingsPage() {
                 placeholder="Masukkan password baru (kosongkan jika tidak ganti)" 
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="h-12 bg-white/5 border-white/10 text-white focus-visible:ring-blue-500/50 rounded-2xl transition-all" 
+                className="h-12 bg-card/40 border border-white/10 text-white focus-visible:ring-emerald-500/50 rounded-2xl transition-all" 
               />
             </div>
             <Button 
               onClick={handleSave} 
               disabled={isSaving}
-              className="w-full h-12 text-sm font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 rounded-2xl transition-all active:scale-[0.98]"
+              className="w-full h-12 text-sm font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all active:scale-[0.98]"
             >
               {isSaving ? (
                 <>
@@ -312,13 +312,13 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <div className="space-y-8">
-            <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden flex flex-col border-b-0">
+            <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden flex flex-col border-b-0">
               <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-8">
                 <div className="flex items-center justify-between gap-3">
                   <div className="space-y-1 min-w-0">
                     <CardTitle className="flex items-center text-base sm:text-2xl font-black text-white tracking-tight">
-                      <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-2.5 sm:mr-4 shrink-0">
-                        <Database className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400" />
+                      <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mr-2.5 sm:mr-4 shrink-0">
+                        <Database className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400" />
                       </div>
                       <span className="truncate">Ringkasan Aktivitas</span>
                     </CardTitle>
@@ -341,15 +341,15 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/3 border border-white/5 hover:border-blue-500/20 transition-all group">
-                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">Total Nota</p>
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/3 border border-white/5 hover:border-emerald-500/20 transition-all group">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-emerald-400 transition-colors">Total Nota</p>
                     <p className="text-2xl sm:text-4xl font-black text-white tracking-tighter">{systemStats?.reportCount || 0}</p>
                   </div>
                   
-                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/3 border border-white/5 hover:border-blue-500/20 transition-all group">
-                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-blue-400 transition-colors">Penyimpanan</p>
+                  <div className="p-4 sm:p-6 rounded-2xl sm:rounded-[2rem] bg-white/3 border border-white/5 hover:border-emerald-500/20 transition-all group">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-2 sm:mb-3 group-hover:text-emerald-400 transition-colors">Penyimpanan</p>
                     <div className="flex items-baseline gap-1">
-                      <p className="text-2xl sm:text-4xl font-black text-blue-400 tracking-tighter">{systemStats?.estimatedSizeMB || "0.00"}</p>
+                      <p className="text-2xl sm:text-4xl font-black text-emerald-400 tracking-tighter">{systemStats?.estimatedSizeMB || "0.00"}</p>
                       <span className="text-xs sm:text-sm font-bold text-slate-500">MB</span>
                     </div>
                   </div>
@@ -367,7 +367,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="relative p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] bg-linear-to-br from-blue-600/10 to-purple-600/10 border border-white/10 overflow-hidden group">
+                <div className="relative p-4 sm:p-8 rounded-2xl sm:rounded-[2.5rem] bg-linear-to-br from-emerald-600/10 to-teal-600/10 border border-white/10 overflow-hidden group">
                   <div className="absolute top-0 right-0 p-4 sm:p-8 opacity-10 group-hover:opacity-20 transition-opacity">
                     <ShieldCheck className="w-16 sm:w-24 h-16 sm:h-24 text-white" />
                   </div>
@@ -390,12 +390,12 @@ export default function SettingsPage() {
 
                     <div className="space-y-2.5 sm:space-y-3">
                       <div className="flex justify-between items-end gap-2">
-                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-blue-400">Kapasitas</p>
+                        <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-emerald-400">Kapasitas</p>
                         <p className="text-[10px] sm:text-xs font-black text-white shrink-0">{Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100).toFixed(2)}%</p>
                       </div>
-                      <div className="h-2.5 sm:h-3 w-full bg-slate-950/50 rounded-full border border-white/5 p-0.5">
+                      <div className="h-2.5 sm:h-3 w-full bg-card/40 border border-white/5 p-0.5">
                         <div 
-                          className="h-full bg-linear-to-r from-blue-500 via-blue-400 to-indigo-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out" 
+                          className="h-full bg-linear-to-r from-emerald-500 via-emerald-400 to-teal-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out" 
                           style={{ width: `${Math.max(2, Math.min(100, (Number(systemStats?.estimatedSizeMB || 0) / 1024) * 100))}%` }}
                         />
                       </div>
@@ -410,8 +410,8 @@ export default function SettingsPage() {
 
             <UserManagement />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
                 <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-6">
                   <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
                     <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-emerald-500" /> Backup Data
@@ -439,7 +439,7 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+              <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
                 <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-6">
                   <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
                     <Upload className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-purple-500" /> Import Database
@@ -474,10 +474,10 @@ export default function SettingsPage() {
                 </CardContent>
               </Card>
 
-              <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
+              <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-3xl overflow-hidden flex flex-col">
                 <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-6">
                   <CardTitle className="flex items-center text-base sm:text-lg font-bold text-white">
-                    <Database className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-blue-500" /> Restore Database
+                    <Database className="w-4 h-4 sm:w-5 sm:h-5 mr-2.5 sm:mr-3 text-emerald-500" /> Restore Database
                   </CardTitle>
                   <CardDescription className="text-slate-400 text-xs">Unggah file backup .zip langsung.</CardDescription>
                 </CardHeader>
@@ -492,7 +492,7 @@ export default function SettingsPage() {
                   <Button 
                     onClick={handleRestoreClick} 
                     disabled={isRestoring}
-                    className="w-full h-11 sm:h-12 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
+                    className="w-full h-11 sm:h-12 text-[10px] sm:text-xs font-black uppercase tracking-widest bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 rounded-2xl transition-all flex items-center justify-center gap-2"
                   >
                     {isRestoring ? (
                       <>
@@ -515,7 +515,7 @@ export default function SettingsPage() {
 
       {/* Restore Confirmation Modal */}
       <Dialog open={isRestoreModalOpen} onOpenChange={setIsRestoreModalOpen}>
-        <DialogContent className="!max-w-md !rounded-3xl !bg-slate-900 !border !border-white/10 !p-0 overflow-hidden" showCloseButton={false}>
+        <DialogContent className="!max-w-md !rounded-3xl !bg-card !border !border-white/10 !p-0 overflow-hidden" showCloseButton={false}>
           <div className="p-6 sm:p-8 space-y-6">
             <div className="flex flex-col items-center text-center space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">

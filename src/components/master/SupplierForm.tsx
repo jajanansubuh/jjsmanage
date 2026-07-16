@@ -24,7 +24,7 @@ export function SupplierAddForm({ onSave, onCancel }: SupplierAddFormProps) {
             placeholder="Contoh: Abang"
             value={data.name}
             onChange={(e) => setData({ ...data, name: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -34,7 +34,7 @@ export function SupplierAddForm({ onSave, onCancel }: SupplierAddFormProps) {
             placeholder="Contoh: Bpk. Ucup"
             value={data.ownerName}
             onChange={(e) => setData({ ...data, ownerName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -44,7 +44,7 @@ export function SupplierAddForm({ onSave, onCancel }: SupplierAddFormProps) {
             placeholder="Contoh: BCA, Mandiri, dll"
             value={data.bankName}
             onChange={(e) => setData({ ...data, bankName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -54,13 +54,13 @@ export function SupplierAddForm({ onSave, onCancel }: SupplierAddFormProps) {
             placeholder="Contoh: 1234567890"
             value={data.accountNumber}
             onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
       </div>
       <DialogFooter className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-white/10">
         <Button variant="ghost" onClick={onCancel} className="h-12 w-full sm:w-auto rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-        <Button onClick={() => onSave(data)} className="h-12 w-full sm:w-auto px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Simpan Suplier</Button>
+        <Button onClick={() => onSave(data)} className="h-12 w-full sm:w-auto px-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/20">Simpan Suplier</Button>
       </DialogFooter>
     </>
   );
@@ -124,7 +124,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
             id="edit-name"
             value={data.name}
             onChange={(e) => setData({ ...data, name: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -133,7 +133,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
             id="edit-ownerName"
             value={data.ownerName || ""}
             onChange={(e) => setData({ ...data, ownerName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -142,7 +142,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
             id="edit-bankName"
             value={data.bankName || ""}
             onChange={(e) => setData({ ...data, bankName: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
         <div className="grid gap-2.5">
@@ -151,7 +151,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
             id="edit-accountNumber"
             value={data.accountNumber || ""}
             onChange={(e) => setData({ ...data, accountNumber: e.target.value })}
-            className="h-12 bg-slate-950/50 border-white/5 rounded-xl focus:ring-blue-500/20 focus:border-blue-500/50 transition-all"
+            className="h-12 bg-card/40 border border-white/5 rounded-xl focus:ring-emerald-500/20 focus:border-emerald-500/50 transition-all"
           />
         </div>
 
@@ -159,7 +159,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
           <Button 
             type="button"
             variant="outline" 
-            className="w-full h-12 rounded-xl border-blue-500/30 text-blue-400 hover:bg-blue-500/10 font-bold transition-all"
+            className="w-full h-12 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 font-bold transition-all"
             onClick={handleCreateAccount}
           >
             Buat Akun Login
@@ -176,7 +176,7 @@ export function SupplierEditForm({ supplier, onUpdate, onDelete, onCancel }: Sup
         </Button>
         <div className="flex gap-3 w-full sm:w-auto">
           <Button variant="ghost" onClick={onCancel} className="h-12 flex-1 sm:flex-none rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold">Batal</Button>
-          <Button onClick={() => onUpdate(data)} className="h-12 flex-1 sm:flex-none px-8 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/20">Update</Button>
+          <Button onClick={() => onUpdate(data)} className="h-12 flex-1 sm:flex-none px-8 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/20">Update</Button>
         </div>
       </DialogFooter>
     </>

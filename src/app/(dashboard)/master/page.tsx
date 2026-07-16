@@ -6,15 +6,16 @@ import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Hooks
-import { useMasterData, Supplier, Cashier } from "./hooks/use-master-data";
+import { useMasterData, Supplier } from "./hooks/use-master-data";
 
 // Components
 import { MasterTabs } from "@/components/master/MasterTabs";
 import { SupplierTable } from "@/components/master/SupplierTable";
 import { CashierTable } from "@/components/master/CashierTable";
+import { MasterProductsTable } from "@/components/master/MasterProductsTable";
 import { SupplierAddForm } from "@/components/master/SupplierForm";
 import { CashierAddForm } from "@/components/master/CashierForm";
 
@@ -24,7 +25,15 @@ import { SupplierProductsDialog } from "@/components/master/SupplierProductsDial
 import { DeleteSupplierConfirmDialog } from "@/components/master/DeleteSupplierConfirmDialog";
 
 export default function MasterDataPage() {
-  const { suppliers, cashiers, loading, refresh } = useMasterData();
+  const { 
+    suppliers, 
+    cashiers, 
+    products, 
+    loading, 
+    productsLoading, 
+    refresh, 
+    refreshProducts 
+  } = useMasterData();
   
   // Search state
   const [supplierSearch, setSupplierSearch] = useState("");
@@ -43,7 +52,7 @@ export default function MasterDataPage() {
   
   // Products state
   const [supplierProducts, setSupplierProducts] = useState<any[]>([]);
-  const [productsLoading, setProductsLoading] = useState(false);
+  const [productsLoadingState, setProductsLoadingState] = useState(false);
 
   // Delete state
   const [deleteCredentials, setDeleteCredentials] = useState({ username: "", password: "" });
@@ -58,7 +67,7 @@ export default function MasterDataPage() {
   useEffect(() => {
     if (isProductsDialogOpen && selectedSupplier?.id) {
       const fetchSupplierProducts = async (supplierId: string) => {
-        setProductsLoading(true);
+        setProductsLoadingState(true);
         setSupplierProducts([]);
         try {
           const res = await fetch(`/api/products?supplierId=${supplierId}`);
@@ -67,7 +76,7 @@ export default function MasterDataPage() {
         } catch (error) {
           toast.error("Gagal mengambil daftar produk");
         } finally {
-          setProductsLoading(false);
+          setProductsLoadingState(false);
         }
       };
       fetchSupplierProducts(selectedSupplier.id);
@@ -241,7 +250,7 @@ export default function MasterDataPage() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
         <h2 className="text-3xl font-black tracking-tight text-white">Data Master</h2>
-        <p className="text-muted-foreground">Kelola data suplier dan kasir sistem Anda.</p>
+        <p className="text-muted-foreground">Kelola data suplier, kasir, dan produk sistem Anda.</p>
       </div>
 
       <MasterTabs 
@@ -333,12 +342,24 @@ export default function MasterDataPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <CashierTable 
-                filteredCashiers={filteredCashiers}
-                loading={loading}
-                cashierSearch={cashierSearch}
-                cashierSortConfig={cashierSortConfig}
-                requestCashierSort={requestCashierSort}
+              <CardContent className="p-0">
+                <CashierTable 
+                  filteredCashiers={filteredCashiers}
+                  loading={loading}
+                  cashierSearch={cashierSearch}
+                  cashierSortConfig={cashierSortConfig}
+                  requestCashierSort={requestCashierSort}
+                />
+              </CardContent>
+            </CardContent>
+          </Card>
+        }
+        productContent={
+          <Card className="overflow-hidden">
+            <CardContent className="p-0">
+              <MasterProductsTable
+                products={products}
+                loading={productsLoading}
               />
             </CardContent>
           </Card>
@@ -361,8 +382,25 @@ export default function MasterDataPage() {
         isOpen={isProductsDialogOpen}
         onOpenChange={setIsProductsDialogOpen}
         selectedSupplier={selectedSupplier}
-        productsLoading={productsLoading}
+        productsLoading={productsLoadingState}
         supplierProducts={supplierProducts}
+        onProductAdded={async () => {
+          // Re-fetch products for this supplier
+          if (selectedSupplier?.id) {
+            setProductsLoadingState(true);
+            try {
+              const res = await fetch(`/api/products?supplierId=${selectedSupplier.id}`);
+              const data = await res.json();
+              setSupplierProducts(Array.isArray(data) ? data : []);
+              // Also refresh global products tab
+              refreshProducts();
+            } catch {
+              toast.error("Gagal mengambil daftar produk");
+            } finally {
+              setProductsLoadingState(false);
+            }
+          }
+        }}
       />
 
       <DeleteSupplierConfirmDialog 

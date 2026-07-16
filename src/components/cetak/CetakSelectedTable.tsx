@@ -129,14 +129,14 @@ export function CetakSelectedTable({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {items.length === 0 ? (
-          <div className="col-span-full py-12 text-center bg-slate-900/20 rounded-2xl border border-dashed border-white/5 text-slate-500 text-sm italic">
+          <div className="col-span-full py-12 text-center bg-card/20 rounded-2xl border border-dashed border-white/5 text-slate-500 text-sm italic">
             Belum ada barang yang dipilih.
           </div>
         ) : (
           items.map((item) => (
             <Card 
               key={item.id} 
-              className="bg-slate-900/40 backdrop-blur-md border border-white/5 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 group"
+              className="bg-card/40 backdrop-blur-md border border-white/5 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 group"
             >
               <CardContent className="p-4 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">

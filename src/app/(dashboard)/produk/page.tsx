@@ -17,16 +17,13 @@ import { ProductStats } from "@/components/produk/ProductStats";
 import { ProductFilters } from "@/components/produk/ProductFilters";
 import { ProductTable } from "@/components/produk/ProductTable";
 
-// Dialogs
-import { AddProductDialog } from "@/components/produk/AddProductDialog";
-import { ImportProductDialog } from "@/components/produk/ImportProductDialog";
-import { MergeProductDialog } from "@/components/produk/MergeProductDialog";
-
 // Server actions
 import { syncProductsFromReportsAction } from "@/lib/actions/products";
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAllSelected, setIsAllSelected] = useState(false);
+  const [searchScope, setSearchScope] = useState<"all" | "name" | "supplier">("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
@@ -36,9 +33,6 @@ export default function ProductsPage() {
     };
   });
   const [sortConfig, setSortConfig] = useState<{ key: keyof AggregatedProduct; direction: "asc" | "desc" } | null>({ key: "totalJual", direction: "desc" });
-  const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isMergeOpen, setIsMergeOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
   // Auto-sync products from reports on page load
@@ -53,7 +47,9 @@ export default function ProductsPage() {
     syncOnLoad();
   }, []);
 
-  const { loading, error, products, suppliers, role, refresh } = useProductsData(dateRange);
+  // Jika user memilih "Semua Produk (Tanpa Tanggal)", kita kirim dateRange undefined ke API
+  const queryDateRange = isAllSelected ? undefined : dateRange;
+  const { loading, error, products, suppliers, role, refresh } = useProductsData(queryDateRange);
 
   const handleSort = (key: keyof AggregatedProduct) => {
     let direction: "asc" | "desc" = "asc";
@@ -71,12 +67,30 @@ export default function ProductsPage() {
 
     const result = products
       .filter((p) => !isCjrSalad(p))
-      .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      .filter((p) => {
+        if (!searchTerm.trim()) return true;
+        const query = searchTerm.toLowerCase();
+
+        if (searchScope === "name") {
+          return p.name.toLowerCase().includes(query);
+        }
+        if (searchScope === "supplier") {
+          return p.supplierName && p.supplierName.toLowerCase().includes(query);
+        }
+        
+        // Scope "all"
+        return p.name.toLowerCase().includes(query) || 
+          (p.code && p.code.toLowerCase().includes(query)) ||
+          (p.supplierName && p.supplierName.toLowerCase().includes(query));
+      });
 
     if (sortConfig) {
       result.sort((a, b) => {
         const valA = a[sortConfig.key];
         const valB = b[sortConfig.key];
+
+        if (valA === undefined || valA === null) return 1;
+        if (valB === undefined || valB === null) return -1;
 
         if (typeof valA === 'string' && typeof valB === 'string') {
           return sortConfig.direction === "asc"
@@ -85,7 +99,7 @@ export default function ProductsPage() {
         }
 
         if (typeof valA === 'number' && typeof valB === 'number') {
-          return sortConfig.direction === "asc" ? valA! - valB! : valB! - valA!;
+          return sortConfig.direction === "asc" ? valA - valB : valB - valA;
         }
 
         return 0;
@@ -93,7 +107,7 @@ export default function ProductsPage() {
     }
 
     return result;
-  }, [products, searchTerm, sortConfig]);
+  }, [products, searchTerm, searchScope, sortConfig]);
 
   const stats = useMemo(() => {
     const totalSoldRaw = products.reduce((acc, p) => acc + p.totalJual, 0);
@@ -159,8 +173,6 @@ export default function ProductsPage() {
     <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full max-w-[1800px] mx-auto pb-10 px-4">
       <ProductHeader 
         onExport={handleExport}
-        onImport={() => setIsImportOpen(true)}
-        onMerge={() => setIsMergeOpen(true)}
         isExporting={isExporting}
         userRole={role}
       />
@@ -172,35 +184,17 @@ export default function ProductsPage() {
         setSearchTerm={setSearchTerm}
         dateRange={dateRange}
         setDateRange={setDateRange}
-        onAdd={() => setIsAddOpen(true)}
-        userRole={role}
+        onShowAll={() => setIsAllSelected(prev => !prev)}
+        isAllSelected={isAllSelected}
+        searchScope={searchScope}
+        setSearchScope={setSearchScope}
       />
 
       <ProductTable 
         products={filteredProducts}
+        sortConfig={sortConfig}
         onSort={handleSort}
         isAdmin={role?.toUpperCase() === "ADMIN"}
-        suppliers={suppliers}
-        onSuccess={refresh}
-      />
-
-      <AddProductDialog 
-        isOpen={isAddOpen}
-        onOpenChange={setIsAddOpen}
-        suppliers={suppliers}
-        onSuccess={refresh}
-      />
-
-      <ImportProductDialog 
-        isOpen={isImportOpen}
-        onOpenChange={setIsImportOpen}
-        suppliers={suppliers}
-        onSuccess={() => window.location.reload()}
-      />
-
-      <MergeProductDialog
-        isOpen={isMergeOpen}
-        onOpenChange={setIsMergeOpen}
         suppliers={suppliers}
         onSuccess={refresh}
       />

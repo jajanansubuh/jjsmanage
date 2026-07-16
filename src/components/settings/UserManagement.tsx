@@ -251,7 +251,7 @@ export default function UserManagement() {
     switch (role) {
       case "ADMIN":
         return (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-[10px] font-black border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-black border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
             <Shield className="w-3 h-3" />
             ADMIN
           </div>
@@ -276,12 +276,12 @@ export default function UserManagement() {
   };
 
   return (
-    <Card className="border-white/5 bg-slate-900/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
+    <Card className="border-white/5 bg-card/40 backdrop-blur-xl shadow-2xl rounded-2xl sm:rounded-[2.5rem] overflow-hidden">
       <CardHeader className="border-b border-white/5 bg-white/2 p-4 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
         <div className="space-y-1 min-w-0">
           <CardTitle className="flex items-center text-base sm:text-2xl font-black text-white tracking-tight">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 mr-2.5 sm:mr-4 shrink-0">
-              <Users className="w-4 h-4 sm:w-6 sm:h-6 text-blue-400" />
+            <div className="p-2 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 mr-2.5 sm:mr-4 shrink-0">
+              <Users className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400" />
             </div>
             <span className="truncate">Manajemen User & Role</span>
           </CardTitle>
@@ -289,7 +289,7 @@ export default function UserManagement() {
         </div>
         <Button 
           onClick={handleOpenAdd}
-          className="h-10 sm:h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6 shadow-lg shadow-blue-600/20 transition-all active:scale-95 w-full sm:w-auto"
+          className="h-10 sm:h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl gap-2 font-black uppercase tracking-widest text-[10px] sm:text-xs px-4 sm:px-6 shadow-lg shadow-emerald-600/20 transition-all active:scale-95 w-full sm:w-auto"
         >
           <UserPlus className="w-4 h-4" />
           Tambah User
@@ -297,10 +297,10 @@ export default function UserManagement() {
       </CardHeader>
       <CardContent className="p-4 sm:p-8 space-y-5 sm:space-y-8">
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-blue-500 transition-colors" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
           <Input 
             placeholder="Cari username..." 
-            className="pl-11 sm:pl-12 h-11 sm:h-14 bg-white/5 border-white/10 text-white text-sm sm:text-lg font-medium rounded-2xl focus:ring-blue-500/50 focus:bg-white/8 transition-all"
+            className="pl-11 sm:pl-12 h-11 sm:h-14 bg-card/40 border border-white/10 text-white text-sm sm:text-lg font-medium rounded-2xl focus:ring-emerald-500/50 focus:bg-white/8 transition-all"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -308,7 +308,7 @@ export default function UserManagement() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
             <p className="text-slate-400 font-medium animate-pulse">Memuat database user...</p>
           </div>
         ) : paginatedUsers.length === 0 ? (
@@ -327,7 +327,7 @@ export default function UserManagement() {
                 <div key={user.id} className="p-4 rounded-2xl bg-white/3 border border-white/5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
                         <UserIcon className="w-5 h-5" />
                       </div>
                       <div className="min-w-0">
@@ -336,7 +336,7 @@ export default function UserManagement() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-blue-500/20 rounded-lg" onClick={() => handleOpenEdit(user)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white hover:bg-emerald-500/20 rounded-lg" onClick={() => handleOpenEdit(user)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg" onClick={() => handleDelete(user.id)}>
@@ -374,7 +374,7 @@ export default function UserManagement() {
                       <TableRow key={user.id} className="border-white/5 hover:bg-white/3 transition-colors group">
                         <TableCell className="px-6 py-4">
                           <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+                            <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-emerald-500/20 to-teal-500/20 border border-white/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
                               <UserIcon className="w-6 h-6" />
                             </div>
                             <div>
@@ -396,7 +396,7 @@ export default function UserManagement() {
                         </TableCell>
                         <TableCell className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 border border-transparent rounded-xl transition-all" onClick={() => handleOpenEdit(user)}>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-white hover:bg-emerald-500/20 hover:border-emerald-500/30 border border-transparent rounded-xl transition-all" onClick={() => handleOpenEdit(user)}>
                               <Pencil className="w-4 h-4" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-10 w-10 text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/30 border border-transparent rounded-xl transition-all" onClick={() => handleDelete(user.id)}>
@@ -444,12 +444,12 @@ export default function UserManagement() {
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         {/* Force a larger width and prevent squishing with min-width on desktop */}
-        <DialogContent className="bg-slate-950 border-white/10 text-white rounded-2xl sm:rounded-[2.5rem] p-0 overflow-hidden sm:max-w-[850px] w-[95vw] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh]">
+        <DialogContent className="bg-card border-white/10 text-white rounded-2xl sm:rounded-[2.5rem] p-0 overflow-hidden sm:max-w-[850px] w-[95vw] shadow-2xl flex flex-col max-h-[85vh] sm:max-h-[90vh]">
           {/* Header Section */}
           <div className="p-4 sm:p-8 border-b border-white/5 bg-white/1 shrink-0">
             <div className="flex items-center gap-3 sm:gap-5">
-              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-blue-500/10 border border-blue-500/20 shadow-lg shadow-blue-500/5 shrink-0">
-                {editingUser ? <Pencil className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" /> : <UserPlus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-400" />}
+              <div className="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-lg shadow-emerald-500/5 shrink-0">
+                {editingUser ? <Pencil className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400" /> : <UserPlus className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400" />}
               </div>
               <div className="space-y-0.5 sm:space-y-1 min-w-0">
                 <DialogTitle className="text-lg sm:text-2xl font-black tracking-tight text-white uppercase italic">
@@ -470,8 +470,8 @@ export default function UserManagement() {
               <div className="w-full lg:w-[340px] space-y-6 sm:space-y-8 shrink-0">
                 <div className="space-y-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-1.5 h-4 bg-blue-500 rounded-full" />
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-blue-400">Identitas Login</h4>
+                    <div className="w-1.5 h-4 bg-emerald-500 rounded-full" />
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-400">Identitas Login</h4>
                   </div>
                   
                   <div className="space-y-5">
@@ -481,7 +481,7 @@ export default function UserManagement() {
                         value={formData.username}
                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                         placeholder="contoh: admin_toko"
-                        className="h-12 bg-white/5 border-white/10 rounded-2xl focus:bg-white/8 focus:border-blue-500/50 transition-all font-bold"
+                        className="h-12 bg-card/40 border border-white/10 rounded-2xl focus:bg-white/8 focus:border-emerald-500/50 transition-all font-bold"
                       />
                     </div>
 
@@ -512,14 +512,14 @@ export default function UserManagement() {
                         value={formData.role} 
                         onValueChange={(val) => setFormData({ ...formData, role: val || "ADMIN", supplierId: (val === "SUPPLIER") ? formData.supplierId : "" })}
                       >
-                        <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl focus:border-blue-500/50">
+                        <SelectTrigger className="h-12 bg-card/40 border border-white/10 rounded-2xl focus:border-emerald-500/50">
                           <SelectValue placeholder="Pilih Role" />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 text-white rounded-2xl shadow-2xl p-1.5 min-w-[200px]">
-                          <SelectItem value="ADMIN" className="rounded-xl focus:bg-blue-500/20 focus:text-blue-400 cursor-pointer py-3 transition-colors group">
+                        <SelectContent className="bg-card/95 backdrop-blur-xl border-white/10 text-white rounded-2xl shadow-2xl p-1.5 min-w-[200px]">
+                          <SelectItem value="ADMIN" className="rounded-xl focus:bg-emerald-500/20 focus:text-emerald-400 cursor-pointer py-3 transition-colors group">
                             <div className="flex items-center gap-3">
-                              <div className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">
-                                <Shield className="w-3.5 h-3.5 text-blue-400" />
+                              <div className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                                <Shield className="w-3.5 h-3.5 text-emerald-400" />
                               </div>
                               <div className="flex flex-col">
                                 <span className="text-sm font-black tracking-tight">ADMIN</span>
@@ -560,10 +560,10 @@ export default function UserManagement() {
                           value={formData.supplierId} 
                           onValueChange={(val) => setFormData({ ...formData, supplierId: val || "" })}
                         >
-                          <SelectTrigger className="h-12 bg-white/5 border-white/10 rounded-2xl">
+                          <SelectTrigger className="h-12 bg-card/40 border border-white/10 rounded-2xl">
                             <SelectValue placeholder="Pilih Suplier" />
                           </SelectTrigger>
-                          <SelectContent className="bg-slate-900 border-white/10 text-white rounded-2xl">
+                          <SelectContent className="bg-card border-white/10 text-white rounded-2xl">
                             {suppliers.map(s => (
                               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                             ))}
@@ -636,7 +636,7 @@ export default function UserManagement() {
             <Button 
               onClick={handleSave}
               disabled={isSaving}
-              className="h-10 sm:h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 sm:px-12 shadow-xl shadow-blue-600/20 transition-all active:scale-95 disabled:opacity-50"
+              className="h-10 sm:h-12 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] px-8 sm:px-12 shadow-xl shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {isSaving ? (
                 <div className="flex items-center gap-2">

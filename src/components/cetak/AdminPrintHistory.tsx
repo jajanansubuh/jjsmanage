@@ -219,8 +219,8 @@ export function AdminPrintHistory() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-lg shadow-blue-950/20 animate-in fade-in duration-300">
-            <History className="w-6 h-6 text-blue-400" />
+          <div className="p-3 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 shadow-lg shadow-emerald-950/20 animate-in fade-in duration-300">
+            <History className="w-6 h-6 text-emerald-400" />
           </div>
           <div>
             <h3 className="text-xl font-black text-white tracking-tight">
@@ -234,10 +234,10 @@ export function AdminPrintHistory() {
 
         <div className="flex items-center gap-2">
           <div className="relative w-full sm:w-64 group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
             <Input
               placeholder="Cari suplier atau barang..."
-              className="pl-10 pr-4 h-11 bg-slate-900/40 border border-white/5 rounded-xl focus:border-blue-500/30 focus:ring-4 focus:ring-blue-500/10 focus:shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all duration-300 font-medium text-white text-xs placeholder-slate-500"
+              className="pl-10 pr-4 h-11 bg-card/40 border border-white/5 rounded-xl focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10 focus:shadow-[0_0_15px_rgba(16,185,129,0.1)] transition-all duration-300 font-medium text-white text-xs placeholder-slate-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -246,11 +246,11 @@ export function AdminPrintHistory() {
             variant="outline"
             size="icon"
             onClick={fetchHistory}
-            className="h-11 w-11 bg-slate-900/40 border border-white/5 hover:border-blue-500/30 text-slate-400 hover:text-white rounded-xl transition-all duration-200"
+            className="h-11 w-11 bg-card/40 border border-white/5 hover:border-emerald-500/30 text-slate-400 hover:text-white rounded-xl transition-all duration-200"
             disabled={loading}
           >
             <RefreshCw
-              className={`w-4 h-4 ${loading ? "animate-spin text-blue-400" : ""}`}
+              className={`w-4 h-4 ${loading ? "animate-spin text-emerald-400" : ""}`}
             />
           </Button>
         </div>
@@ -259,9 +259,9 @@ export function AdminPrintHistory() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Supplier Stat Card */}
-        <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-blue-500/20 hover:shadow-[0_0_20px_rgba(59,130,246,0.05)] hover:-translate-y-0.5 group">
-          <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/15 group-hover:scale-105 transition-transform duration-300">
-            <Users className="w-5 h-5 text-blue-400" />
+        <div className="bg-card/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.05)] hover:-translate-y-0.5 group">
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/15 group-hover:scale-105 transition-transform duration-300">
+            <Users className="w-5 h-5 text-emerald-400" />
           </div>
           <div>
             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">
@@ -274,7 +274,7 @@ export function AdminPrintHistory() {
         </div>
 
         {/* Sessions Stat Card */}
-        <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:-translate-y-0.5 group">
+        <div className="bg-card/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-purple-500/20 hover:shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:-translate-y-0.5 group">
           <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/15 group-hover:scale-105 transition-transform duration-300">
             <Printer className="w-5 h-5 text-purple-400" />
           </div>
@@ -289,7 +289,7 @@ export function AdminPrintHistory() {
         </div>
 
         {/* Total Items Stat Card */}
-        <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.05)] hover:-translate-y-0.5 group">
+        <div className="bg-card/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-emerald-500/20 hover:shadow-[0_0_20px_rgba(16,185,129,0.05)] hover:-translate-y-0.5 group">
           <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/15 group-hover:scale-105 transition-transform duration-300">
             <Package className="w-5 h-5 text-emerald-400" />
           </div>
@@ -304,7 +304,7 @@ export function AdminPrintHistory() {
         </div>
 
         {/* Total Qty Stat Card */}
-        <div className="bg-slate-900/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-amber-500/20 hover:shadow-[0_0_20px_rgba(245,158,11,0.05)] hover:-translate-y-0.5 group">
+        <div className="bg-card/40 border border-white/5 rounded-2xl p-4 flex items-center gap-4 transition-all duration-300 hover:border-amber-500/20 hover:shadow-[0_0_20px_rgba(245,158,11,0.05)] hover:-translate-y-0.5 group">
           <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/15 group-hover:scale-105 transition-transform duration-300">
             <Calendar className="w-5 h-5 text-amber-400" />
           </div>
@@ -320,11 +320,11 @@ export function AdminPrintHistory() {
       </div>
 
       {/* History List */}
-      <Card className="border border-white/5 bg-slate-900/40 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl">
+      <Card className="border border-white/5 bg-card/40 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl">
         <CardContent className="p-0">
           {loading ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20">
-              <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
               <span className="text-xs text-slate-500 font-medium">
                 Memuat riwayat...
               </span>
@@ -344,10 +344,10 @@ export function AdminPrintHistory() {
                     {/* Date Section Header Button */}
                     <button
                       onClick={() => handleOpenDateModal(dateKey, formattedDate, records)}
-                      className="w-full bg-slate-950/45 px-6 py-3 border-y border-white/5 first:border-t-0 flex items-center justify-between group hover:bg-slate-950/70 transition-colors cursor-pointer"
+                      className="w-full bg-card/45 px-6 py-3 border-y border-white/5 first:border-t-0 flex items-center justify-between group hover:bg-card/70 transition-colors cursor-pointer"
                     >
                       <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-blue-400 group-hover:scale-105 transition-transform" />
+                        <Calendar className="w-4 h-4 text-emerald-400 group-hover:scale-105 transition-transform" />
                         <span className="text-xs font-black uppercase tracking-wider text-slate-300 group-hover:text-white transition-colors">
                           {formattedDate}
                         </span>
@@ -369,12 +369,12 @@ export function AdminPrintHistory() {
 
       {/* Detail Dialog Modal */}
       <Dialog open={selectedDateGroup !== null} onOpenChange={(open) => { if (!open) setSelectedDateGroup(null); }}>
-        <DialogContent className="sm:max-w-4xl w-[90vw] bg-slate-950 border-white/10 text-white shadow-2xl overflow-hidden rounded-3xl flex flex-col max-h-[85vh] p-0">
+        <DialogContent className="sm:max-w-4xl w-[90vw] bg-card border-white/10 text-white shadow-2xl overflow-hidden rounded-3xl flex flex-col max-h-[85vh] p-0">
           {/* Header */}
           <div className="p-6 md:p-8 border-b border-white/10 bg-white/2">
             <DialogHeader className="space-y-1">
               <DialogTitle className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
-                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
+                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                 {selectedDateGroup?.formattedDate}
               </DialogTitle>
               <DialogDescription className="text-slate-400 text-sm font-medium mt-2">
@@ -384,15 +384,15 @@ export function AdminPrintHistory() {
           </div>
 
           {/* Sub-header with Search Filter */}
-          <div className="px-6 md:px-8 py-4 border-b border-white/5 bg-slate-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="px-6 md:px-8 py-4 border-b border-white/5 bg-card/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
               Daftar Sesi Cetak
             </span>
             <div className="relative w-full sm:w-80 group shrink-0">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-emerald-400 transition-colors" />
               <Input
                 placeholder="Cari suplier atau barang..."
-                className="pl-10 pr-12 h-10 bg-slate-900/40 border border-white/10 rounded-xl focus:border-blue-500/30 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-white text-xs placeholder-slate-500"
+                className="pl-10 pr-12 h-10 bg-card/40 border border-white/10 rounded-xl focus:border-emerald-500/30 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium text-white text-xs placeholder-slate-500"
                 value={modalSearchTerm}
                 onChange={(e) => setModalSearchTerm(e.target.value)}
               />
@@ -418,7 +418,7 @@ export function AdminPrintHistory() {
                 <div key={session.id} className="space-y-3">
                   {/* Session Heading */}
                   <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                    <span className="text-xs font-black text-blue-400 tracking-wider uppercase">
+                    <span className="text-xs font-black text-emerald-400 tracking-wider uppercase">
                       Sesi {session.sessionNumber}
                     </span>
                     <span className="text-[10px] text-slate-500 font-bold">
@@ -460,7 +460,7 @@ export function AdminPrintHistory() {
                               </div>
                               <div className="min-w-0 flex flex-col gap-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <p className="font-black text-white text-sm truncate group-hover:text-blue-400 transition-colors uppercase leading-none font-bold">
+                                  <p className="font-black text-white text-sm truncate group-hover:text-emerald-400 transition-colors uppercase leading-none font-bold">
                                     {record.supplier.name}
                                   </p>
                                 </div>
@@ -472,7 +472,7 @@ export function AdminPrintHistory() {
 
                             <div className="flex items-center gap-4">
                               <div className="hidden sm:flex items-center gap-3">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 uppercase">
                                   <Package className="w-3 h-3" />
                                   {record.itemCount} barang
                                 </span>
@@ -491,7 +491,7 @@ export function AdminPrintHistory() {
                           {/* Session Detail (Items) */}
                           {showItems && (
                             <div className="px-6 pb-5 animate-in slide-in-from-top-2 duration-300">
-                              <div className="bg-slate-950/60 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-inner">
+                              <div className="bg-card/60 backdrop-blur-md rounded-2xl border border-white/5 overflow-hidden shadow-inner">
                                 <div className="grid grid-cols-[1fr_120px_60px] gap-4 px-5 py-3 bg-white/[0.01] border-b border-white/5">
                                   <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-500">
                                     Nama Barang

@@ -48,9 +48,9 @@ export function CetakHeader({
             <Button
               onClick={() => document.getElementById("admin-print-history")?.scrollIntoView({ behavior: "smooth" })}
               variant="outline"
-              className="h-12 px-6 bg-slate-900/40 border border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.15)] hover:-translate-y-0.5 active:translate-y-0"
+              className="h-12 px-6 bg-slate-900/40 border border-white/5 rounded-2xl hover:bg-white/5 text-white gap-2 transition-all duration-300 hover:border-emerald-500/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:-translate-y-0.5 active:translate-y-0"
             >
-              <History className="w-4 h-4 text-blue-400" />
+              <History className="w-4 h-4 text-emerald-400" />
               <span>Riwayat</span>
             </Button>
             <Button

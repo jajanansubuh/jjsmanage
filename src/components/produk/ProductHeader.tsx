@@ -1,18 +1,14 @@
-import { Download, Upload, GitMerge } from "lucide-react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ProductHeaderProps {
   onExport: () => void;
-  onImport: () => void;
-  onMerge?: () => void;
   isExporting: boolean;
   userRole?: string | null;
 }
 
 export function ProductHeader({
   onExport,
-  onImport,
-  onMerge,
   isExporting,
   userRole
 }: ProductHeaderProps) {
@@ -36,24 +32,6 @@ export function ProductHeader({
             <Download className="w-4 h-4 mr-2" />
             <span>{isExporting ? "..." : "Export"}</span>
           </Button>
-          <Button
-            variant="outline"
-            className="shrink-0 whitespace-nowrap"
-            onClick={onImport}
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            <span>Import</span>
-          </Button>
-          {onMerge && (
-            <Button
-              variant="outline"
-              className="shrink-0 whitespace-nowrap"
-              onClick={onMerge}
-            >
-              <GitMerge className="w-4 h-4 mr-2" />
-              <span>Gabung Produk</span>
-            </Button>
-          )}
         </div>
       )}
     </div>

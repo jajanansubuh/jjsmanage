@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowUpDown, History, Edit2 } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, History, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AggregatedProduct } from "@/app/(dashboard)/produk/hooks/use-products-data";
@@ -8,14 +8,27 @@ import { EditProductCodeDialog } from "./EditProductCodeDialog";
 
 interface ProductTableProps {
   products: AggregatedProduct[];
+  sortConfig: { key: keyof AggregatedProduct; direction: "asc" | "desc" } | null;
   onSort: (key: keyof AggregatedProduct) => void;
   isAdmin?: boolean;
   suppliers?: { id: string; name: string }[];
   onSuccess?: () => void;
 }
 
-export function ProductTable({ products, onSort, isAdmin, suppliers, onSuccess }: ProductTableProps) {
+export function ProductTable({ products, sortConfig, onSort, isAdmin, suppliers, onSuccess }: ProductTableProps) {
   const [editingProduct, setEditingProduct] = useState<AggregatedProduct | null>(null);
+
+  const getSortIcon = (key: keyof AggregatedProduct) => {
+    if (!sortConfig || sortConfig.key !== key) {
+      return <ArrowUpDown className="ml-2 h-3.5 w-3.5 inline-block text-slate-600" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp className="ml-2 h-3.5 w-3.5 inline-block text-blue-400" />
+    ) : (
+      <ArrowDown className="ml-2 h-3.5 w-3.5 inline-block text-blue-400" />
+    );
+  };
+
   return (
     <div className="space-y-4 px-4 md:px-0">
       <div className="flex items-center gap-3">
@@ -31,24 +44,36 @@ export function ProductTable({ products, onSort, isAdmin, suppliers, onSuccess }
           <TableHeader>
             <TableRow className="border-border hover:bg-transparent">
               <TableHead className="w-12 text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">No</TableHead>
-              <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Kode</TableHead>
               <TableHead className="py-5">
-                <Button variant="ghost" onClick={() => onSort("name")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center gap-2">
-                  Nama Barang <ArrowUpDown className="w-3 h-3" />
+                <Button variant="ghost" onClick={() => onSort("code")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center">
+                  Kode {getSortIcon("code")}
                 </Button>
               </TableHead>
-              <TableHead className="py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Suplier</TableHead>
+              <TableHead className="py-5">
+                <Button variant="ghost" onClick={() => onSort("name")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center">
+                  Nama Barang {getSortIcon("name")}
+                </Button>
+              </TableHead>
+              <TableHead className="py-5">
+                <Button variant="ghost" onClick={() => onSort("supplierName")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center">
+                  Suplier {getSortIcon("supplierName")}
+                </Button>
+              </TableHead>
               <TableHead className="text-center py-5">
-                <Button variant="ghost" onClick={() => onSort("totalBeli")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center gap-2 mx-auto">
-                  Total Beli <ArrowUpDown className="w-3 h-3" />
+                <Button variant="ghost" onClick={() => onSort("totalBeli")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center mx-auto">
+                  Total Beli {getSortIcon("totalBeli")}
                 </Button>
               </TableHead>
               <TableHead className="text-center py-5">
-                <Button variant="ghost" onClick={() => onSort("totalJual")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center gap-2 mx-auto">
-                  Total Jual <ArrowUpDown className="w-3 h-3" />
+                <Button variant="ghost" onClick={() => onSort("totalJual")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center mx-auto">
+                  Total Jual {getSortIcon("totalJual")}
                 </Button>
               </TableHead>
-              <TableHead className="text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Reture</TableHead>
+              <TableHead className="text-center py-5">
+                <Button variant="ghost" onClick={() => onSort("totalRetureJual")} className="p-0 h-auto font-black text-[10px] uppercase tracking-widest text-slate-500 hover:bg-transparent hover:text-white flex items-center mx-auto">
+                  Retur {getSortIcon("totalRetureJual")}
+                </Button>
+              </TableHead>
               <TableHead className="text-right px-8 py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Rasio</TableHead>
               {isAdmin && <TableHead className="text-center py-5 font-black text-[10px] uppercase tracking-widest text-slate-500">Aksi</TableHead>}
             </TableRow>

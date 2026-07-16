@@ -95,36 +95,38 @@ export async function PUT(req: Request) {
         select: { name: true, code: true, qty: true, supplierId: true }
       });
 
-      const updated = await prisma.labelPrint.updateMany({
-        where,
-        data: { status: "DONE" }
-      });
-
-      // Record history grouped by supplier
-      if (pendingItems.length > 0) {
-        const grouped = new Map<string, { name: string; code: string | null; qty: number }[]>();
-        for (const item of pendingItems) {
-          const sid = item.supplierId;
-          if (!grouped.has(sid)) grouped.set(sid, []);
-          grouped.get(sid)!.push({ name: item.name, code: item.code, qty: item.qty });
-        }
-
-        const historyCreates = Array.from(grouped.entries()).map(([supplierId, items]) => {
-          const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
-          return prisma.labelPrintHistory.create({
-            data: {
-              supplierId,
-              itemCount: items.length,
-              totalQty,
-              items: items as any,
-            }
-          });
+      const count = await prisma.$transaction(async (tx) => {
+        const updated = await tx.labelPrint.updateMany({
+          where,
+          data: { status: "DONE" }
         });
 
-        await prisma.$transaction(historyCreates);
-      }
+        // Record history grouped by supplier
+        if (pendingItems.length > 0) {
+          const grouped = new Map<string, { name: string; code: string | null; qty: number }[]>();
+          for (const item of pendingItems) {
+            const sid = item.supplierId;
+            if (!grouped.has(sid)) grouped.set(sid, []);
+            grouped.get(sid)!.push({ name: item.name, code: item.code, qty: item.qty });
+          }
 
-      return NextResponse.json({ message: "All items marked as done", count: updated.count });
+          for (const [supplierId, items] of grouped.entries()) {
+            const totalQty = items.reduce((sum, i) => sum + i.qty, 0);
+            await tx.labelPrintHistory.create({
+              data: {
+                supplierId,
+                itemCount: items.length,
+                totalQty,
+                items: items as any,
+              }
+            });
+          }
+        }
+
+        return updated.count;
+      });
+
+      return NextResponse.json({ message: "All items marked as done", count });
     }
 
     // Single item update
