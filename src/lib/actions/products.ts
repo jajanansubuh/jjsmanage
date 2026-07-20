@@ -7,7 +7,7 @@ const normalizeProductName = (val: string | null | undefined) =>
   String(val || "")
     .trim()
     .toUpperCase()
-    .replace(/[.,\s]+$/, "")
+    .replace(/[.,\-\s]+$/, "")
     .replace(/\s+/g, " ");
 
 export async function mergeProductsAction(data: {

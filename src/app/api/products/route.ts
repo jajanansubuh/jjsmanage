@@ -8,7 +8,7 @@ const normalizeProductName = (val: string | null | undefined) =>
   String(val || "")
     .trim()
     .toUpperCase()
-    .replace(/[.,\s]+$/, "")
+    .replace(/[.,\-\s]+$/, "")
     .replace(/\s+/g, " ");
 
 export async function GET(req: Request) {
@@ -36,7 +36,7 @@ export async function GET(req: Request) {
 
     // Global name lookup (restricted fields)
     if (targetName) {
-      const normalized = targetName.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
+      const normalized = targetName.trim().toUpperCase().replace(/[.,\-\s]+$/, "").replace(/\s+/g, " ");
       const product = await prisma.product.findFirst({
         where: {
           name: { equals: normalized, mode: "insensitive" },
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
     // Import logic: array of { name, code, supplierId? }
     if (Array.isArray(payload)) {
       const results: Array<Awaited<ReturnType<typeof prisma.product.create>> | Awaited<ReturnType<typeof prisma.product.update>>> = [];
-      const normalize = (val: string | null | undefined) => String(val || "").trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
+      const normalize = (val: string | null | undefined) => String(val || "").trim().toUpperCase().replace(/[.,\-\s]+$/, "").replace(/\s+/g, " ");
 
       try {
         for (const item of payload as ProductImportItem[]) {
@@ -135,7 +135,7 @@ export async function POST(req: Request) {
     const { name, code, supplierId } = payload as ProductCreateBody;
     if (!name) return NextResponse.json({ error: "Nama barang wajib diisi" }, { status: 400 });
 
-    const normalizedName = name.trim().toUpperCase().replace(/[.,\s]+$/, "").replace(/\s+/g, " ");
+    const normalizedName = name.trim().toUpperCase().replace(/[.,\-\s]+$/, "").replace(/\s+/g, " ");
 
     const product = await prisma.product.create({
       data: {

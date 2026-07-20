@@ -9,7 +9,7 @@ const normalizeProductName = (val: string | null | undefined) =>
   String(val || "")
     .trim()
     .toUpperCase()
-    .replace(/[.,\s]+$/, "")
+    .replace(/[.,\-\s]+$/, "")
     .replace(/\s+/g, " ");
 
 // Helper: Auto-sync products from report items to Product master
