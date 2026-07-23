@@ -60,26 +60,28 @@ export default async function middleware(req: NextRequest) {
     path.startsWith("/_next") ||
     /\.(?:png|jpg|jpeg|gif|svg|ico|webp|json|webmanifest|js|css|map)$/.test(path);
 
-  if (!isBypass) {
-    const maintenance = await fetchMaintenanceStatus(req.url);
+  if (isBypass) {
+    return NextResponse.next();
+  }
 
-    if (maintenance.enabled) {
-      const cookie = req.cookies.get("session")?.value;
-      const session = cookie ? await decrypt(cookie).catch(() => null) : null;
-      const isAdmin = session?.user?.role?.toUpperCase() === "ADMIN";
+  const maintenance = await fetchMaintenanceStatus(req.url);
 
-      if (!isAdmin) {
-        if (path.startsWith("/api")) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: maintenance.message || "System is under maintenance.",
-            },
-            { status: 503 }
-          );
-        }
-        return NextResponse.redirect(new URL("/maintenance", req.nextUrl));
+  if (maintenance.enabled) {
+    const cookie = req.cookies.get("session")?.value;
+    const session = cookie ? await decrypt(cookie).catch(() => null) : null;
+    const isAdmin = session?.user?.role?.toUpperCase() === "ADMIN";
+
+    if (!isAdmin) {
+      if (path.startsWith("/api")) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: maintenance.message || "System is under maintenance.",
+          },
+          { status: 503 }
+        );
       }
+      return NextResponse.redirect(new URL("/maintenance", req.nextUrl));
     }
   }
 
