@@ -131,3 +131,23 @@ model Product {
 
   @@unique([name, supplierId])
 }
+
+model MaintenanceSetting {
+  id              String    @id @default("singleton")
+  enabled         Boolean   @default(false)
+  message         String    @default("System is under maintenance.")
+  estimatedFinish DateTime?
+  updatedBy       String    @default("SYSTEM")
+  updatedAt       DateTime  @updatedAt
+}
+
+model MaintenanceLog {
+  id             String    @id @default(cuid())
+  action         String
+  enabled        Boolean
+  message        String
+  eta            DateTime?
+  telegramUserId String?
+  timestamp      DateTime  @default(now())
+}
+
