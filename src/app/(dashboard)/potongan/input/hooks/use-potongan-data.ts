@@ -17,8 +17,18 @@ export interface DeductionRow {
 export function usePotonganData(startDate: string, endDate: string, editNote: string | null, isMounted: boolean) {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<DeductionRow[]>([]);
-  const [deductionDate, setDeductionDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [deductionNoteNumber, setDeductionNoteNumber] = useState(`POT-${format(new Date(), "ddMMyy")}001`);
+  const [deductionDate, setDeductionDate] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("jjs-potongan-deductionDate") || format(new Date(), "yyyy-MM-dd");
+    }
+    return format(new Date(), "yyyy-MM-dd");
+  });
+  const [deductionNoteNumber, setDeductionNoteNumber] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("jjs-potongan-noteNumber") || `POT-${format(new Date(), "ddMMyy")}001`;
+    }
+    return `POT-${format(new Date(), "ddMMyy")}001`;
+  });
   const [actualStartDate, setActualStartDate] = useState(startDate);
   const [actualEndDate, setActualEndDate] = useState(endDate);
 

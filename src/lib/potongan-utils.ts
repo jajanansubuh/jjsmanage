@@ -1,6 +1,9 @@
 import { format } from "date-fns";
 
 export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const logoUrl = `${origin}/logojjsmanage.png`;
+
   const rowsHtml = [...savedNoteInfo.details]
     .sort((a, b) => a.supplierName.localeCompare(b.supplierName))
     .filter((r) => r.serviceCharge > 0 || r.kukuluban > 0 || r.tabungan > 0)
@@ -9,7 +12,7 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
       return `
       <tr>
         <td>${index + 1}</td>
-        <td>${r.supplierName}</td>
+        <td class="col-supplier">${r.supplierName}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.serviceCharge)}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.kukuluban)}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.tabungan)}</td>
@@ -20,33 +23,43 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
     .join("");
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8">
         <title>Nota Potongan - ${savedNoteInfo.noteNumber}</title>
+        ${origin ? `<base href="${origin}/">` : ''}
         <style>
-          @page { size: portrait; margin: 0; }
+          @page { size: portrait; margin: 10mm 12mm; }
+          * { box-sizing: border-box; }
           body { 
-            font-family: sans-serif; 
-            color: #333; 
-            line-height: 1.4; 
-            padding: 15mm; 
-            font-size: 12px;
+            font-family: Arial, Helvetica, sans-serif; 
+            color: #111; 
+            line-height: 1.3; 
+            margin: 0;
+            padding: 0;
           }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #222; padding-bottom: 12px; }
+          .logo-container { margin-bottom: 8px; text-align: center; }
+          .logo { height: 55px; width: auto; max-width: 220px; object-fit: contain; display: inline-block; }
+          h1 { margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
           .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
           .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
+          .meta-label { font-weight: bold; color: #555; display: inline-block; width: 80px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+          th { background: #f1f5f9; padding: 8px 6px; text-align: left; border: 1px solid #cbd5e1; text-transform: uppercase; white-space: nowrap; font-weight: bold; }
+          td { padding: 6px; border: 1px solid #e2e8f0; vertical-align: middle; }
+          .col-supplier { white-space: nowrap; font-weight: bold; min-width: 150px; }
+          .total-row td { background: #f8fafc; font-weight: bold; border-top: 2px solid #334155; }
+          .footer-sig { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+          .sig { border-top: 1px solid #333; width: 180px; text-align: center; padding-top: 6px; margin-top: 50px; font-size: 12px; font-weight: bold; }
         </style>
       </head>
       <body>
         <div class="header">
+          <div class="logo-container">
+            <img src="${logoUrl}" alt="Logo JJS" class="logo" />
+          </div>
           <h1>Nota Potongan Mitra Jjs - Jajanan Subuh</h1>
         </div>
         
@@ -59,8 +72,8 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
         <table>
           <thead>
             <tr>
-              <th>No</th>
-              <th width="150">Suplier</th>
+              <th width="30">No</th>
+              <th class="col-supplier">Suplier</th>
               <th align="right">S.Charge</th>
               <th align="right">Kukuluban</th>
               <th align="right">Tabungan</th>

@@ -1,87 +1,29 @@
-"use server";
-
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { requireAuth } from "@/lib/api-auth";
 import { revalidatePath } from "next/cache";
 
-export async function updateDeductionsAction(data: { id: string, serviceCharge: number, kukuluban: number, tabungan: number }[]) {
+export async function POST(req: Request) {
   try {
-    await prisma.$transaction(async (tx) => {
-      for (const item of data) {
-        // Get old report to calculate balance adjustment
-        const oldReport = await tx.consignmentReport.findUnique({
-          where: { id: item.id },
-          select: { profit80: true, supplierId: true, cost: true, barcode: true, isValidated: true }
-        });
+    const { session, response } = await requireAuth();
+    if (response) return response;
 
-        if (!oldReport) continue;
+    const body = await req.json();
+    const data: {
+      supplierId: string;
+      startDate: string;
+      endDate: string;
+      serviceCharge: number;
+      kukuluban: number;
+      tabungan: number;
+      deductionDate?: string;
+      deductionNoteNumber?: string;
+    }[] = body.data;
 
-        // Calculate new profit80
-        // New Profit80 = Cost - (Barcode + SC + Kukuluban + Tabungan)
-        const cost = Number(oldReport.cost);
-        const barcode = Number(oldReport.barcode);
-        const oldProfit80 = Number(oldReport.profit80);
-        
-        const newProfit80 = cost - (barcode + item.serviceCharge + item.kukuluban + item.tabungan);
+    if (!Array.isArray(data) || data.length === 0) {
+      return NextResponse.json({ error: "Data potongan kosong" }, { status: 400 });
+    }
 
-        // Adjustment to supplier balance
-        const adjustment = newProfit80 - oldProfit80;
-
-        // Update report
-        await tx.consignmentReport.update({
-          where: { id: item.id },
-          data: {
-            serviceCharge: item.serviceCharge,
-            kukuluban: item.kukuluban,
-            tabungan: item.tabungan,
-            profit80: newProfit80
-          }
-        });
-
-        // Update supplier balance
-        if (adjustment !== 0) {
-          const supplierDataToUpdate: any = {
-            balance: { increment: adjustment }
-          };
-          if (oldReport.isValidated) {
-            supplierDataToUpdate.validatedBalance = { increment: adjustment };
-          }
-          await tx.supplier.update({
-            where: { id: oldReport.supplierId },
-            data: supplierDataToUpdate
-          });
-        }
-      }
-    }, {
-      timeout: 30000
-    });
-
-    revalidatePath("/potongan");
-    revalidatePath("/reports");
-    revalidatePath("/deposits");
-    revalidatePath("/savings");
-    revalidatePath("/");
-
-    return { success: true };
-  } catch (error) {
-    console.error("updateDeductionsAction error:", error);
-    return {
-      error: "Gagal memperbarui potongan",
-      details: error instanceof Error ? error.message : String(error)
-    };
-  }
-}
-
-export async function updateAggregatedDeductionsAction(data: {
-  supplierId: string,
-  startDate: string,
-  endDate: string,
-  serviceCharge: number,
-  kukuluban: number,
-  tabungan: number,
-  deductionDate?: string,
-  deductionNoteNumber?: string
-}[]) {
-  try {
     await prisma.$transaction(async (tx) => {
       for (const item of data) {
         // 1. Find all reports for this supplier in the range
@@ -165,12 +107,12 @@ export async function updateAggregatedDeductionsAction(data: {
     revalidatePath("/master");
     revalidatePath("/");
 
-    return { success: true };
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("updateAggregatedDeductionsAction error:", error);
-    return {
+    console.error("POST /api/deductions/save error:", error);
+    return NextResponse.json({
       error: "Gagal memperbarui potongan",
       details: error instanceof Error ? error.message : String(error)
-    };
+    }, { status: 500 });
   }
 }

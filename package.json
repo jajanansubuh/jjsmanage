@@ -45,7 +45,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.6",
+    "mssql": "^12.7.0",
     "tailwindcss": "^4.2.4",
+    "tedious": "^20.0.0",
     "typescript": "^5"
   }
 }

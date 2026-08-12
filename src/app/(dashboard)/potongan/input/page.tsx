@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { updateAggregatedDeductionsAction } from "@/lib/actions/deductions";
 
 // Hooks
 import { usePotonganData, DeductionRow } from "./hooks/use-potongan-data";
@@ -25,8 +24,18 @@ function PotonganPageContent() {
   const searchParams = useSearchParams();
   const editNote = searchParams.get("edit");
 
-  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [startDate, setStartDate] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("jjs-potongan-startDate") || format(new Date(), "yyyy-MM-dd");
+    }
+    return format(new Date(), "yyyy-MM-dd");
+  });
+  const [endDate, setEndDate] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("jjs-potongan-endDate") || format(new Date(), "yyyy-MM-dd");
+    }
+    return format(new Date(), "yyyy-MM-dd");
+  });
   const [searchTerm, setSearchTerm] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -102,8 +111,8 @@ function PotonganPageContent() {
     if (rows.length === 0) return;
     setIsSaving(true);
     try {
-      const result = await updateAggregatedDeductionsAction(
-        rows.map((r) => ({
+      const payload = {
+        data: rows.map((r) => ({
           supplierId: r.supplierId,
           startDate: actualStartDate,
           endDate: actualEndDate,
@@ -113,9 +122,17 @@ function PotonganPageContent() {
           deductionDate: deductionDate,
           deductionNoteNumber: deductionNoteNumber,
         }))
-      );
+      };
 
-      if (result.success) {
+      const res = await fetch("/api/deductions/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
         setSavedNoteInfo({
           noteNumber: deductionNoteNumber,
           date: deductionDate,
@@ -126,15 +143,21 @@ function PotonganPageContent() {
         });
         setIsSaveSuccessModalOpen(true);
 
+        // Only clear localStorage after confirmed successful save
         localStorage.removeItem("jjs-potongan-rows");
+        localStorage.removeItem("jjs-potongan-deductionDate");
+        localStorage.removeItem("jjs-potongan-noteNumber");
+        localStorage.removeItem("jjs-potongan-startDate");
+        localStorage.removeItem("jjs-potongan-endDate");
         const nextNum = Math.floor(Math.random() * 900) + 100;
         setDeductionNoteNumber(`POT-${format(new Date(), "ddMMyy")}${nextNum}`);
         setRows([]);
       } else {
-        toast.error(result.error || "Gagal menyimpan potongan");
+        toast.error(result.details ? `${result.error}: ${result.details}` : (result.error || "Gagal menyimpan potongan"));
       }
     } catch (error) {
-      toast.error("Terjadi kesalahan sistem");
+      console.error("handleSave error:", error);
+      toast.error("Gagal menyimpan: koneksi ke server gagal. Data input Anda tersimpan di browser dan tidak akan hilang.");
     } finally {
       setIsSaving(false);
     }

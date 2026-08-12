@@ -23,7 +23,7 @@ async function fetchMaintenanceStatus(requestUrl: string): Promise<MaintenanceSt
   try {
     const url = new URL("/api/maintenance/status", requestUrl);
     const res = await fetch(url.toString(), {
-      cache: "no-store", // disable CDN caching to ensure real-time toggle
+      cache: "no-store",
     });
 
     if (res.ok) {
@@ -33,7 +33,7 @@ async function fetchMaintenanceStatus(requestUrl: string): Promise<MaintenanceSt
       return data;
     }
   } catch (err) {
-    console.error("Middleware failed to fetch maintenance status:", err);
+    // Silent fallback when fetching maintenance status fails (e.g. self-signed SSL in dev)
   }
 
   // Safe fallback if the status API fails or db is down

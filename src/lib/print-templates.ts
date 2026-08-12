@@ -1,5 +1,46 @@
 import { format } from "date-fns";
 
+const getHeaderHtml = (title: string) => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const logoUrl = `${origin}/logojjsmanage.png`;
+  return `
+    <div class="header">
+      <div class="logo-container">
+        <img src="${logoUrl}" alt="Logo JJS" class="logo" />
+      </div>
+      <h1>${title}</h1>
+    </div>
+  `;
+};
+
+const getHeadTagHtml = (titleText: string) => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  return `
+    <meta charset="utf-8">
+    <title>${titleText}</title>
+    ${origin ? `<base href="${origin}/">` : ''}
+    <style>
+      @page { size: portrait; margin: 10mm 12mm; }
+      * { box-sizing: border-box; }
+      body { font-family: Arial, Helvetica, sans-serif; color: #111; line-height: 1.3; margin: 0; padding: 0; }
+      .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #222; padding-bottom: 12px; }
+      .logo-container { margin-bottom: 8px; text-align: center; }
+      .logo { height: 55px; width: auto; max-width: 220px; object-fit: contain; display: inline-block; }
+      h1 { margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+      .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+      .meta-item { margin-bottom: 3px; }
+      .meta-label { font-weight: bold; color: #555; display: inline-block; width: 80px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+      th { background: #f1f5f9; padding: 8px 6px; text-align: left; border: 1px solid #cbd5e1; text-transform: uppercase; white-space: nowrap; font-weight: bold; }
+      td { padding: 6px; border: 1px solid #e2e8f0; vertical-align: middle; }
+      .col-supplier { white-space: nowrap; font-weight: bold; min-width: 150px; }
+      .total-row td { background: #f8fafc; font-weight: bold; border-top: 2px solid #334155; }
+      .footer-sig { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+      .sig { border-top: 1px solid #333; width: 180px; text-align: center; padding-top: 6px; margin-top: 50px; font-size: 12px; font-weight: bold; }
+    </style>
+  `;
+};
+
 export const getTransactionPrintTemplate = (selectedNote: string, reportDate: string | Date, noteDetails: any[]) => {
   const first = noteDetails[0];
   const rowsHtml = [...noteDetails]
@@ -7,7 +48,7 @@ export const getTransactionPrintTemplate = (selectedNote: string, reportDate: st
     .map((row, index) => `
     <tr>
       <td>${index + 1}</td>
-      <td>${row.supplier?.name || "-"}</td>
+      <td class="col-supplier">${row.supplier?.name || "-"}</td>
       <td align="right">${new Intl.NumberFormat('id-ID').format(row.revenue)}</td>
       <td align="right">${new Intl.NumberFormat('id-ID').format(row.cost)}</td>
       <td align="right">${new Intl.NumberFormat('id-ID').format(row.barcode)}</td>
@@ -25,27 +66,13 @@ export const getTransactionPrintTemplate = (selectedNote: string, reportDate: st
   };
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Cetak Ulang - ${selectedNote}</title>
-        <style>
-          @page { size: portrait; margin: 0; }
-          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-          .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-        </style>
+        ${getHeadTagHtml(`Cetak Ulang - ${selectedNote}`)}
       </head>
       <body>
-        <div class="header"><h1>Transaksi Mitra Jjs - Jajanan Subuh</h1></div>
+        ${getHeaderHtml("Transaksi Mitra Jjs - Jajanan Subuh")}
         <div class="meta-grid">
           <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedNote}</strong></div>
           <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(reportDate), "dd MMMM yyyy")}</div>
@@ -53,7 +80,7 @@ export const getTransactionPrintTemplate = (selectedNote: string, reportDate: st
         ${first.notes ? `<div style="margin: 15px 0; padding: 10px; border: 1px dashed #ccc; font-style: italic; font-size: 12px;"><strong>Catatan:</strong> "${first.notes}"</div>` : ''}
         <table>
           <thead>
-            <tr><th>No</th><th width="150">Suplier</th><th align="right">Pendapatan</th><th align="right">Cost</th><th align="right">Barcode</th><th align="right">Mitra Jjs</th><th align="right">Toko</th></tr>
+            <tr><th width="30">No</th><th class="col-supplier">Suplier</th><th align="right">Pendapatan</th><th align="right">Cost</th><th align="right">Barcode</th><th align="right">Mitra Jjs</th><th align="right">Toko</th></tr>
           </thead>
           <tbody>
             ${rowsHtml}
@@ -92,7 +119,7 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
       return `
       <tr>
         <td>${index + 1}</td>
-        <td>${r.supplier?.name || "Unknown"}</td>
+        <td class="col-supplier">${r.supplier?.name || "Unknown"}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.serviceCharge || 0)}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.kukuluban || 0)}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(r.tabungan || 0)}</td>
@@ -110,27 +137,13 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
   };
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Cetak Ulang - ${selectedNote}</title>
-        <style>
-          @page { size: portrait; margin: 0; }
-          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-          .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-        </style>
+        ${getHeadTagHtml(`Cetak Ulang - ${selectedNote}`)}
       </head>
       <body>
-        <div class="header"><h1>Nota Potongan Mitra Jjs - Jajanan Subuh</h1></div>
+        ${getHeaderHtml("Nota Potongan Mitra Jjs - Jajanan Subuh")}
         <div class="meta-grid">
           <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedNote}</strong></div>
           <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(reportDate), "dd MMMM yyyy")}</div>
@@ -138,7 +151,7 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
         </div>
         <table>
           <thead>
-            <tr><th>No</th><th width="150">Suplier</th><th align="right">S.Charge</th><th align="right">Kukuluban</th><th align="right">Tabungan</th><th align="right">Total Pot.</th></tr>
+            <tr><th width="30">No</th><th class="col-supplier">Suplier</th><th align="right">S.Charge</th><th align="right">Kukuluban</th><th align="right">Tabungan</th><th align="right">Total Pot.</th></tr>
           </thead>
           <tbody>
             ${rowsHtml}
@@ -169,7 +182,7 @@ export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
     .map((s, index) => `
       <tr>
         <td>${index + 1}</td>
-        <td>${s.name}</td>
+        <td class="col-supplier">${s.name}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(s.revenue)}</td>
         <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(s.tabungan)}</strong></td>
       </tr>
@@ -179,34 +192,20 @@ export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
   const totalTabungan = selectedTabunganNote.suppliers.reduce((sum: number, s: any) => sum + s.tabungan, 0);
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Nota Tabungan - ${selectedTabunganNote.noteNumber}</title>
-        <style>
-          @page { size: portrait; margin: 0; }
-          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-          .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-        </style>
+        ${getHeadTagHtml(`Nota Tabungan - ${selectedTabunganNote.noteNumber}`)}
       </head>
       <body>
-        <div class="header"><h1>Laporan Tabungan Mitra Jjs - Jajanan Subuh</h1></div>
+        ${getHeaderHtml("Laporan Tabungan Mitra Jjs - Jajanan Subuh")}
         <div class="meta-grid">
           <div class="meta-item"><span class="meta-label">No Nota:</span> <strong>${selectedTabunganNote.noteNumber}</strong></div>
           <div class="meta-item"><span class="meta-label">Tanggal:</span> ${format(new Date(selectedTabunganNote.date), "dd MMMM yyyy")}</div>
         </div>
         <table>
           <thead>
-            <tr><th>No</th><th width="250">Nama Suplier</th><th align="right">Omzet</th><th align="right">Potongan Tabungan</th></tr>
+            <tr><th width="30">No</th><th class="col-supplier">Nama Suplier</th><th align="right">Omzet</th><th align="right">Potongan Tabungan</th></tr>
           </thead>
           <tbody>
             ${rowsHtml}
@@ -235,7 +234,7 @@ export const getSavingsSummaryPrintTemplate = (data: any[], startDate?: string, 
         <td>${index + 1}</td>
         <td>${format(new Date(s.date), "dd/MM/yyyy")}</td>
         <td>${s.noteNumber}</td>
-        <td>${s.supplierNames.join(", ") || "-"}</td>
+        <td class="col-supplier">${s.supplierNames.join(", ") || "-"}</td>
         <td align="right">${new Intl.NumberFormat("id-ID").format(s.totalRevenue)}</td>
         <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(s.totalTabungan)}</strong></td>
       </tr>
@@ -252,37 +251,23 @@ export const getSavingsSummaryPrintTemplate = (data: any[], startDate?: string, 
     : "Semua Periode";
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Laporan Ringkasan Tabungan</title>
-        <style>
-          @page { size: portrait; margin: 0; }
-          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-          .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-        </style>
+        ${getHeadTagHtml("Laporan Ringkasan Tabungan")}
       </head>
       <body>
-        <div class="header"><h1>Laporan Ringkasan Tabungan Mitra</h1></div>
+        ${getHeaderHtml("Laporan Ringkasan Tabungan Mitra")}
         <div class="meta-grid">
           <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
         </div>
         <table>
           <thead>
             <tr>
-              <th>No</th>
+              <th width="30">No</th>
               <th>Tanggal</th>
               <th>No. Nota</th>
-              <th>Suplier</th>
+              <th class="col-supplier">Suplier</th>
               <th align="right">Total Omzet</th>
               <th align="right">Total Tabungan</th>
             </tr>
@@ -317,7 +302,7 @@ export const getDeductionsSummaryPrintTemplate = (data: any[], startDate?: strin
           <td>${index + 1}</td>
           <td>${format(new Date(d.deductionDate || d.date || d.createdAt), "dd/MM/yyyy")}</td>
           <td>${d.deductionNoteNumber || d.noteNumber || "-"}</td>
-          <td>${d.supplierNames.join(", ") || "-"}</td>
+          <td class="col-supplier">${d.supplierNames.join(", ") || "-"}</td>
           <td align="right">${new Intl.NumberFormat("id-ID").format(d.serviceCharge || 0)}</td>
           <td align="right">${new Intl.NumberFormat("id-ID").format(d.kukuluban || 0)}</td>
           <td align="right">${new Intl.NumberFormat("id-ID").format(d.tabungan || 0)}</td>
@@ -339,37 +324,23 @@ export const getDeductionsSummaryPrintTemplate = (data: any[], startDate?: strin
     : "Semua Periode";
 
   return `
+    <!DOCTYPE html>
     <html>
       <head>
-        <title>Laporan Ringkasan Potongan</title>
-        <style>
-          @page { size: portrait; margin: 0; }
-          body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-          h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-          .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-          .meta-item { margin-bottom: 3px; }
-          .meta-label { font-weight: bold; color: #666; display: inline-block; width: 80px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-          th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-          td { padding: 6px 5px; border: 1px solid #ddd; }
-          .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-        </style>
+        ${getHeadTagHtml("Laporan Ringkasan Potongan")}
       </head>
       <body>
-        <div class="header"><h1>Laporan Ringkasan Potongan Mitra</h1></div>
+        ${getHeaderHtml("Laporan Ringkasan Potongan Mitra")}
         <div class="meta-grid">
           <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
         </div>
         <table>
           <thead>
             <tr>
-              <th>No</th>
+              <th width="30">No</th>
               <th>Tanggal</th>
               <th>No. Nota</th>
-              <th>Suplier</th>
+              <th class="col-supplier">Suplier</th>
               <th align="right">S.Charge</th>
               <th align="right">Kukuluban</th>
               <th align="right">Tabungan</th>

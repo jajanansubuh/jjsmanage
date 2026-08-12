@@ -4,8 +4,8 @@ import { DateRange } from "react-day-picker";
 import { DepositItem } from "@/app/(dashboard)/deposits/hooks/use-deposits-data";
 
 export function handlePrintDeposits(
-  filteredAndSortedData: DepositItem[], 
-  dateRange: DateRange | undefined, 
+  filteredAndSortedData: DepositItem[],
+  dateRange: DateRange | undefined,
   role: string | null,
   bankFilter: string
 ) {
@@ -22,7 +22,10 @@ export function handlePrintDeposits(
   );
 
   const totalPayout = dataToPrint.reduce((sum, item) => sum + item.dailyProfit, 0);
-  const totalMines = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
+  const totalMinus = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const logoUrl = `${origin}/logojjsmanage.png`;
 
   const tableRows = dataToPrint.map((item, i) => {
     const isMinus = item.dailyProfit < 0;
@@ -44,52 +47,139 @@ export function handlePrintDeposits(
   `}).join('');
 
   printWindow.document.write(`
+    <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="utf-8">
         <title>Daftar Penyetoran - ${rangeText}</title>
+        ${origin ? `<base href="${origin}/">` : ''}
         <style>
-          @page { size: portrait; margin: 0; }
-          body { 
-            font-family: sans-serif; 
-            color: #333; 
-            line-height: 1.4; 
-            padding: 20mm;
+          @page { 
+            size: portrait; 
+            margin: 10mm 12mm; 
           }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
-          h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
-          .meta { margin-top: 10px; font-weight: bold; color: #666; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
-          th { background: #f5f5f5; padding: 12px 10px; text-align: left; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #ddd; white-space: nowrap; }
-          td { padding: 10px; border-bottom: 1px solid #eee; }
-          .col-no { text-align: center; width: 40px; }
-          .col-umkm { font-weight: bold; white-space: nowrap; }
-          .col-pemilik { word-break: break-word; }
-          .col-bank { font-weight: bold; white-space: nowrap; }
-          .col-rek { font-family: monospace; white-space: nowrap; }
-          .col-total { font-weight: bold; white-space: nowrap; width: 120px; }
-          .total { margin-top: 30px; border-top: 2px solid #333; padding-top: 15px; }
-          .total-container { display: flex; justify-content: flex-end; font-size: 16px; font-weight: bold; align-items: center; }
+          * {
+            box-sizing: border-box;
+          }
+          body { 
+            font-family: Arial, Helvetica, sans-serif; 
+            color: #111; 
+            line-height: 1.3; 
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 2px solid #222; 
+            padding-bottom: 12px; 
+          }
+          .logo-container {
+            margin-bottom: 8px;
+            text-align: center;
+          }
+          .logo { 
+            height: 60px; 
+            width: auto; 
+            max-width: 220px;
+            object-fit: contain; 
+            display: inline-block; 
+          }
+          h1 { 
+            margin: 0; 
+            font-size: 20px; 
+            font-weight: 800;
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            color: #111;
+          }
+          .meta { 
+            margin-top: 6px; 
+            font-weight: 600; 
+            color: #444; 
+            font-size: 13px; 
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+            font-size: 12px; 
+          }
+          th { 
+            background: #f1f5f9; 
+            padding: 8px 6px; 
+            text-align: left; 
+            font-size: 11px; 
+            font-weight: 700;
+            text-transform: uppercase; 
+            border-top: 1px solid #cbd5e1;
+            border-bottom: 2px solid #475569; 
+            white-space: nowrap; 
+            color: #1e293b;
+          }
+          td { 
+            padding: 7px 6px; 
+            border-bottom: 1px solid #e2e8f0; 
+            vertical-align: middle; 
+          }
+          .col-no { text-align: center; width: 35px; white-space: nowrap; }
+          .col-umkm { font-weight: bold; white-space: nowrap; min-width: 80px; }
+          .col-pemilik { white-space: nowrap; min-width: 170px; width: 32%; }
+          .col-bank { font-weight: bold; white-space: nowrap; min-width: 80px; }
+          .col-rek { font-family: monospace, Courier, monospace; white-space: nowrap; min-width: 140px; }
+          .col-total { font-weight: bold; white-space: nowrap; min-width: 120px; text-align: right; }
+          
+          .total { 
+            margin-top: 20px; 
+            border-top: 2px solid #222; 
+            padding-top: 12px; 
+          }
+          .total-container { 
+            display: flex; 
+            justify-content: flex-end; 
+            font-size: 14px; 
+            font-weight: bold; 
+            align-items: center; 
+          }
           .total-label { margin-right: 20px; text-transform: uppercase; }
-          .total-value { width: 150px; display: flex; justify-content: space-between; font-size: 18px; }
-          .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-          .sig { border-top: 1px solid #333; width: 200px; text-align: center; padding-top: 10px; margin-top: 80px; font-weight: bold; }
+          .total-value { width: 160px; display: flex; justify-content: space-between; font-size: 15px; }
+          .footer-sig { 
+            margin-top: 35px; 
+            display: flex; 
+            justify-content: space-between; 
+            page-break-inside: avoid; 
+          }
+          .sig { 
+            border-top: 1px solid #333; 
+            width: 180px; 
+            text-align: center; 
+            padding-top: 6px; 
+            margin-top: 50px; 
+            font-weight: bold; 
+            font-size: 12px;
+          }
         </style>
       </head>
       <body>
         <div class="header">
+          <div class="logo-container">
+            <img src="${logoUrl}" alt="Logo JJS" class="logo" />
+          </div>
           <h1>${role === "SUPPLIER" ? "Laporan Saldo Mitra Jjs" : "Laporan Penyetoran Mitra Jjs"}</h1>
           <div class="meta">Periode: ${rangeText}</div>
-          ${bankFilter !== "ALL" ? `<div class="meta" style="margin-top: 5px;">Filter: ${bankFilter}</div>` : ""}
+          ${bankFilter !== "ALL" ? `<div class="meta" style="margin-top: 4px;">Filter: ${bankFilter}</div>` : ""}
         </div>
         <table>
           <thead>
             <tr>
               <th class="col-no">No</th>
-              <th>Nama UMKM</th>
-              <th>Pemilik</th>
-              <th>Bank</th>
-              <th>No Rekening</th>
-              <th style="text-align:right">Total Setor</th>
+              <th class="col-umkm">Nama UMKM</th>
+              <th class="col-pemilik">Pemilik</th>
+              <th class="col-bank">Bank</th>
+              <th class="col-rek">No Rekening</th>
+              <th class="col-total" style="text-align:right">Total Setor</th>
             </tr>
           </thead>
           <tbody>
@@ -97,11 +187,11 @@ export function handlePrintDeposits(
           </tbody>
         </table>
         <div class="total">
-          <div class="total-container" style="margin-bottom: 10px;">
-            <div class="total-label">Total Mines</div>
+          <div class="total-container" style="margin-bottom: 8px;">
+            <div class="total-label">Total Minus</div>
             <div class="total-value" style="color: red;">
               <span>Rp</span>
-              <span>${new Intl.NumberFormat('id-ID').format(totalMines)}</span>
+              <span>${new Intl.NumberFormat('id-ID').format(totalMinus)}</span>
             </div>
           </div>
           <div class="total-container">
@@ -120,5 +210,10 @@ export function handlePrintDeposits(
     </html>
   `);
   printWindow.document.close();
-  setTimeout(() => printWindow.print(), 500);
+
+  // Print after small delay to ensure styles and images render
+  setTimeout(() => {
+    printWindow.focus();
+    printWindow.print();
+  }, 400);
 }

@@ -152,6 +152,40 @@ export default function SavingsPage() {
       ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
       : "Semua Periode";
 
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const logoUrl = `${origin}/logojjsmanage.png`;
+
+    const getHeader = (title: string) => `
+      <div class="header">
+        <div class="logo-container" style="margin-bottom: 8px; text-align: center;">
+          <img src="${logoUrl}" alt="Logo JJS" style="height: 55px; width: auto; max-width: 220px; object-fit: contain; display: inline-block;" />
+        </div>
+        <h1 style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase;">${title}</h1>
+      </div>
+    `;
+
+    const getHeadStyle = (titleText: string) => `
+      <meta charset="utf-8">
+      <title>${titleText}</title>
+      ${origin ? `<base href="${origin}/">` : ''}
+      <style>
+        @page { size: portrait; margin: 10mm 12mm; }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; color: #111; line-height: 1.3; margin: 0; padding: 0; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #222; padding-bottom: 12px; }
+        .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
+        .meta-item { margin-bottom: 3px; }
+        .meta-label { font-weight: bold; color: #555; display: inline-block; width: 100px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th { background: #f1f5f9; padding: 8px 6px; text-align: left; border: 1px solid #cbd5e1; text-transform: uppercase; white-space: nowrap; font-weight: bold; }
+        td { padding: 6px; border: 1px solid #e2e8f0; vertical-align: middle; }
+        .col-nowrap { white-space: nowrap; font-weight: bold; min-width: 140px; }
+        .total-row td { background: #f8fafc; font-weight: bold; border-top: 2px solid #334155; }
+        .footer-sig { margin-top: 40px; display: flex; justify-content: space-between; page-break-inside: avoid; }
+        .sig { border-top: 1px solid #333; width: 180px; text-align: center; padding-top: 6px; margin-top: 50px; font-size: 12px; font-weight: bold; }
+      </style>
+    `;
+
     let content = "";
     if (role === "SUPPLIER") {
       const rowsHtml = (supplierData?.history || []).map((item, index) => `
@@ -165,27 +199,13 @@ export default function SavingsPage() {
       `).join("");
 
       content = `
+        <!DOCTYPE html>
         <html>
           <head>
-            <title>Laporan Tabungan - ${user?.name}</title>
-            <style>
-              @page { size: portrait; margin: 0; }
-              body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-              .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-              h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-              .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-              .meta-item { margin-bottom: 3px; }
-              .meta-label { font-weight: bold; color: #666; display: inline-block; width: 100px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-              th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-              td { padding: 6px 5px; border: 1px solid #ddd; }
-              .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-              .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-              .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-            </style>
+            ${getHeadStyle(`Laporan Tabungan - ${user?.name}`)}
           </head>
           <body>
-            <div class="header"><h1>Laporan Tabungan Mitra</h1></div>
+            ${getHeader("Laporan Tabungan Mitra")}
             <div class="meta-grid">
               <div class="meta-item"><span class="meta-label">Mitra:</span> <strong>${user?.name || "-"}</strong></div>
               <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
@@ -193,7 +213,7 @@ export default function SavingsPage() {
             <table>
               <thead>
                 <tr>
-                  <th>No</th>
+                  <th width="30">No</th>
                   <th>Tanggal</th>
                   <th>No. Nota</th>
                   <th align="right">Omzet</th>
@@ -219,8 +239,8 @@ export default function SavingsPage() {
       const rowsHtml = filteredAdminData.map((item, index) => `
         <tr>
           <td>${index + 1}</td>
-          <td>${item.name}</td>
-          <td>${item.ownerName}</td>
+          <td class="col-nowrap">${item.name}</td>
+          <td class="col-nowrap">${item.ownerName}</td>
           <td align="right">${new Intl.NumberFormat("id-ID").format(item.totalSavings)}</td>
         </tr>
       `).join("");
@@ -228,36 +248,22 @@ export default function SavingsPage() {
       const grandTotal = filteredAdminData.reduce((sum, item) => sum + item.totalSavings, 0);
 
       content = `
+        <!DOCTYPE html>
         <html>
           <head>
-            <title>Laporan Tabungan Mitra</title>
-            <style>
-              @page { size: portrait; margin: 0; }
-              body { font-family: sans-serif; color: #333; line-height: 1.4; padding: 15mm; font-size: 12px; }
-              .header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #333; padding-bottom: 15px; }
-              h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
-              .meta-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; }
-              .meta-item { margin-bottom: 3px; }
-              .meta-label { font-weight: bold; color: #666; display: inline-block; width: 100px; }
-              table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-              th { background: #f0f0f0; padding: 8px 5px; text-align: left; border: 1px solid #ddd; text-transform: uppercase; }
-              td { padding: 6px 5px; border: 1px solid #ddd; }
-              .total-row td { background: #f9f9f9; font-weight: bold; border-top: 2px solid #333; }
-              .footer-sig { margin-top: 50px; display: flex; justify-content: space-between; }
-              .sig { border-top: 1px solid #333; width: 160px; text-align: center; padding-top: 8px; margin-top: 60px; font-size: 11px; font-weight: bold; }
-            </style>
+            ${getHeadStyle("Laporan Tabungan Mitra")}
           </head>
           <body>
-            <div class="header"><h1>Laporan Akumulasi Tabungan Mitra</h1></div>
+            ${getHeader("Laporan Akumulasi Tabungan Mitra")}
             <div class="meta-grid">
               <div class="meta-item"><span class="meta-label">Periode:</span> ${periodText}</div>
             </div>
             <table>
               <thead>
                 <tr>
-                  <th>No</th>
-                  <th>Nama Mitra</th>
-                  <th>Pemilik</th>
+                  <th width="30">No</th>
+                  <th class="col-nowrap">Nama Mitra</th>
+                  <th class="col-nowrap">Pemilik</th>
                   <th align="right">Total Tabungan</th>
                 </tr>
               </thead>
@@ -280,11 +286,10 @@ export default function SavingsPage() {
 
     printWindow.document.write(content);
     printWindow.document.close();
-    printWindow.focus();
     setTimeout(() => {
+      printWindow.focus();
       printWindow.print();
-      printWindow.close();
-    }, 250);
+    }, 400);
   };
 
   const filteredAdminData = useMemo(() => {
