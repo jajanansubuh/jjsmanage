@@ -20,7 +20,7 @@ export function PotonganSaveSuccessDialog({
 }: PotonganSaveSuccessDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950/90 backdrop-blur-xl border-white/10 rounded-[2.5rem] shadow-2xl max-w-md p-0 overflow-hidden">
+      <DialogContent className="bg-zinc-950/90 backdrop-blur-xl border-zinc-800 rounded-[2.5rem] shadow-2xl max-w-md p-0 overflow-hidden">
         <div className="p-10 space-y-8 text-center">
           <div className="flex justify-center">
             <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 animate-bounce">

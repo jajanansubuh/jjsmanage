@@ -27,7 +27,7 @@ export function DeleteSupplierConfirmDialog({
 }: DeleteSupplierConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950 border-white/10 rounded-3xl shadow-2xl max-w-md p-0 overflow-hidden">
+      <DialogContent className="bg-zinc-950 border-zinc-800 rounded-3xl shadow-2xl max-w-md p-0 overflow-hidden">
         <div className="p-8 space-y-6">
           <div className="flex flex-col items-center text-center space-y-3">
             <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
@@ -35,7 +35,7 @@ export function DeleteSupplierConfirmDialog({
             </div>
             <DialogHeader>
               <DialogTitle className="text-xl font-black text-white uppercase tracking-tight text-center">Hapus Suplier?</DialogTitle>
-              <DialogDescription className="text-slate-400 font-medium pt-2 text-center">
+              <DialogDescription className="text-zinc-400 font-medium pt-2 text-center">
                 Anda akan menghapus suplier <span className="text-white font-bold">{selectedSupplier?.name}</span>. Semua data laporan terkait suplier ini juga akan dihapus secara permanen.
               </DialogDescription>
             </DialogHeader>

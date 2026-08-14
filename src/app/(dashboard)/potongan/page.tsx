@@ -22,6 +22,7 @@ import {
   Download
 } from "lucide-react";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -67,6 +68,31 @@ export default function PotonganSummaryPage() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierDeduction | null>(null);
+  const [supplierHistoryData, setSupplierHistoryData] = useState<{ totalDeduction: number; history: DeductionDetail[]; supplier?: any } | null>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const handleOpenSupplierHistory = async (supplier: SupplierDeduction) => {
+    setSelectedSupplier(supplier);
+    setLoadingHistory(true);
+    setSupplierHistoryData(null);
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("supplierId", supplier.id);
+      if (startDate) queryParams.append("startDate", startDate);
+      if (endDate) queryParams.append("endDate", endDate);
+      const res = await fetch(`/api/deductions/summary?${queryParams.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSupplierHistoryData(data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat riwayat potongan supplier:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   useEffect(() => {
     setHistoryPage(1);
@@ -370,6 +396,22 @@ export default function PotonganSummaryPage() {
     return Math.max(1, Math.ceil(filteredAdminData.length / adminPerPage));
   }, [filteredAdminData]);
 
+  const adminTotals = useMemo(() => {
+    if (!Array.isArray(filteredAdminData)) {
+      return { totalBarcode: 0, totalServiceCharge: 0, totalKukuluban: 0, totalDeduction: 0, supplierCount: 0 };
+    }
+    return filteredAdminData.reduce(
+      (acc, s) => ({
+        totalBarcode: acc.totalBarcode + (Number(s.totalBarcode) || 0),
+        totalServiceCharge: acc.totalServiceCharge + (Number(s.totalServiceCharge) || 0),
+        totalKukuluban: acc.totalKukuluban + (Number(s.totalKukuluban) || 0),
+        totalDeduction: acc.totalDeduction + (Number(s.totalDeduction) || 0),
+        supplierCount: acc.supplierCount + 1,
+      }),
+      { totalBarcode: 0, totalServiceCharge: 0, totalKukuluban: 0, totalDeduction: 0, supplierCount: 0 }
+    );
+  }, [filteredAdminData]);
+
   const paginatedHistory = useMemo(() => {
     if (!supplierData?.history) return [];
     const start = (historyPage - 1) * historyPerPage;
@@ -416,7 +458,7 @@ export default function PotonganSummaryPage() {
           <p className="text-muted-foreground text-sm md:text-base font-medium">Akumulasi potongan (Barcode, S.Charge, Kukuluban) dari transaksi.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full md:w-auto">
           <DateRangePicker
             startDate={startDate}
             endDate={endDate}
@@ -424,34 +466,36 @@ export default function PotonganSummaryPage() {
               setStartDate(start);
               setEndDate(end);
             }}
-            className="w-full sm:w-72 h-12 bg-slate-950/40"
+            className="w-full sm:w-auto h-12 bg-slate-950/40"
           />
 
           {role !== "SUPPLIER" && (
-            <div className="relative group w-full sm:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <div className="relative group w-full sm:w-64">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-500 group-focus-within:text-rose-400 transition-colors" />
               <Input
                 placeholder="Cari Mitra / Pemilik..."
-                className="pl-11 pr-4"
+                className="pl-11 pr-4 h-12 bg-slate-950/50 border-white/5 rounded-2xl focus:ring-rose-500/20 focus:border-rose-500/50 transition-all font-medium text-white w-full"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           )}
 
-          <Button
-            onClick={handlePrint}
-            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95 w-full sm:w-auto"
-          >
-            <Printer className="w-4 h-4 text-rose-400" /> Cetak
-          </Button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Button
+              onClick={handlePrint}
+              className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none"
+            >
+              <Printer className="w-4 h-4 text-rose-400" /> Cetak
+            </Button>
 
-          <Button
-            onClick={handleExport}
-            className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center gap-2 transition-all active:scale-95 w-full sm:w-auto"
-          >
-            <Download className="w-4 h-4 text-blue-400" /> Export
-          </Button>
+            <Button
+              onClick={handleExport}
+              className="h-12 bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 rounded-2xl px-4 flex items-center justify-center gap-2 transition-all active:scale-95 flex-1 sm:flex-none"
+            >
+              <Download className="w-4 h-4 text-blue-400" /> Export
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -711,42 +755,84 @@ export default function PotonganSummaryPage() {
           </div>
         )
       ) : (
-        /* Admin View */
-        <div className="px-4 md:px-0 space-y-4">
-          <Card className="overflow-hidden shadow-sm">
+        <div className="px-4 md:px-0 space-y-6">
+          {/* Summary Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-zinc-950/80 border border-white/10 rounded-2xl p-5 shadow-md flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Total Potongan</span>
+                <span className="text-xl md:text-2xl font-extrabold text-white tracking-tight tabular-nums block mt-1.5">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(adminTotals.totalDeduction)}
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium block mt-1">{adminTotals.supplierCount} Supplier</span>
+              </div>
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 shrink-0">
+                <Scissors className="w-5 h-5" />
+              </div>
+            </div>
+
+            <div className="bg-zinc-950/80 border border-white/10 rounded-2xl p-5 shadow-md flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Total Barcode</span>
+                <span className="text-xl md:text-2xl font-extrabold text-rose-300 tracking-tight tabular-nums block mt-1.5">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(adminTotals.totalBarcode)}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-zinc-950/80 border border-white/10 rounded-2xl p-5 shadow-md flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Total S.Charge</span>
+                <span className="text-xl md:text-2xl font-extrabold text-amber-300 tracking-tight tabular-nums block mt-1.5">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(adminTotals.totalServiceCharge)}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-zinc-950/80 border border-white/10 rounded-2xl p-5 shadow-md flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Total Kukuluban</span>
+                <span className="text-xl md:text-2xl font-extrabold text-purple-300 tracking-tight tabular-nums block mt-1.5">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(adminTotals.totalKukuluban)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <Card className="border-white/10 bg-zinc-950 rounded-2xl overflow-hidden shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader className="bg-white/2">
-                    <TableRow className="border-white/5 hover:bg-transparent">
-                      <TableHead className="py-6 px-8 cursor-pointer group" onClick={() => handleSort("name")}>
-                        <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          Nama Mitra <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                  <TableHeader className="bg-zinc-900/90 border-b border-white/10">
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="py-4 px-6 cursor-pointer group" onClick={() => handleSort("name")}>
+                        <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          Nama Mitra <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
-                      <TableHead className="py-6 cursor-pointer group" onClick={() => handleSort("ownerName")}>
-                        <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          Pemilik <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                      <TableHead className="py-4 cursor-pointer group" onClick={() => handleSort("ownerName")}>
+                        <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          Pemilik <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
-                      <TableHead className="py-6 text-right cursor-pointer group" onClick={() => handleSort("totalBarcode")}>
-                        <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          Barcode <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                      <TableHead className="py-4 text-right cursor-pointer group" onClick={() => handleSort("totalBarcode")}>
+                        <div className="flex items-center justify-end gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          Barcode <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
-                      <TableHead className="py-6 text-right cursor-pointer group" onClick={() => handleSort("totalServiceCharge")}>
-                        <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          S.Charge <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                      <TableHead className="py-4 text-right cursor-pointer group" onClick={() => handleSort("totalServiceCharge")}>
+                        <div className="flex items-center justify-end gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          S.Charge <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
-                      <TableHead className="py-6 text-right cursor-pointer group" onClick={() => handleSort("totalKukuluban")}>
-                        <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          Kukuluban <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                      <TableHead className="py-4 text-right cursor-pointer group" onClick={() => handleSort("totalKukuluban")}>
+                        <div className="flex items-center justify-end gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          Kukuluban <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
-                      <TableHead className="py-6 px-8 text-right cursor-pointer group" onClick={() => handleSort("totalDeduction")}>
-                        <div className="flex items-center justify-end gap-2 font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 group-hover:text-white transition-colors">
-                          Total Potongan <ArrowUpDown className="w-3 h-3 text-slate-600 group-hover:text-rose-400 transition-colors" />
+                      <TableHead className="py-4 px-6 text-right cursor-pointer group" onClick={() => handleSort("totalDeduction")}>
+                        <div className="flex items-center justify-end gap-2 font-bold text-xs uppercase tracking-wider text-slate-400 group-hover:text-white transition-colors">
+                          Total Potongan <ArrowUpDown className="w-3 h-3 text-slate-500 group-hover:text-rose-400 transition-colors" />
                         </div>
                       </TableHead>
                     </TableRow>
@@ -760,50 +846,32 @@ export default function PotonganSummaryPage() {
                       </TableRow>
                     ) : (
                       paginatedAdminData.map((item) => (
-                        <TableRow key={item.id} className="border-white/5 hover:bg-white/2 transition-all duration-300 group">
-                          <TableCell className="py-6 px-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <UserIcon className="w-5 h-5 text-rose-400" />
-                              </div>
-                              <span className="font-black text-lg text-white tracking-tight group-hover:text-rose-400 transition-colors uppercase">
-                                {item.name}
-                              </span>
-                            </div>
+                        <TableRow 
+                          key={item.id} 
+                          className="border-b border-white/5 hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer"
+                          onClick={() => handleOpenSupplierHistory(item)}
+                        >
+                          <TableCell className="py-4 px-6 font-bold text-white text-sm uppercase">
+                            {item.name}
                           </TableCell>
-                          <TableCell>
-                            <span className="font-bold text-slate-400 group-hover:text-slate-200 transition-colors">
-                              {item.ownerName}
-                            </span>
+                          <TableCell className="py-4 font-medium text-slate-300 text-sm">
+                            {item.ownerName}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <span className="font-medium text-slate-300">
-                              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalBarcode)}
-                            </span>
+                          <TableCell className="py-4 text-right font-medium text-slate-300 text-sm tabular-nums">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalBarcode)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <span className="font-medium text-slate-300">
-                              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalServiceCharge)}
-                            </span>
+                          <TableCell className="py-4 text-right font-medium text-slate-300 text-sm tabular-nums">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalServiceCharge)}
                           </TableCell>
-                          <TableCell className="text-right">
-                            <span className="font-medium text-slate-300">
-                              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalKukuluban)}
-                            </span>
+                          <TableCell className="py-4 text-right font-medium text-slate-300 text-sm tabular-nums">
+                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.totalKukuluban)}
                           </TableCell>
-                          <TableCell className="text-right px-8">
-                            <div className="flex flex-col items-end">
-                              <span className="font-black text-xl tracking-tighter text-rose-400 transition-all duration-300 group-hover:scale-105 inline-block origin-right">
-                                {new Intl.NumberFormat("id-ID", {
-                                  style: "currency",
-                                  currency: "IDR",
-                                  minimumFractionDigits: 0
-                                }).format(item.totalDeduction)}
-                              </span>
-                              <div className="flex items-center gap-1 text-[10px] font-black text-slate-500 uppercase tracking-widest mt-1">
-                                Accumulated <TrendingUp size={10} className="text-rose-500" />
-                              </div>
-                            </div>
+                          <TableCell className="py-4 px-6 text-right font-black text-rose-400 text-base tabular-nums">
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                              maximumFractionDigits: 0
+                            }).format(item.totalDeduction)}
                           </TableCell>
                         </TableRow>
                       ))
@@ -843,6 +911,92 @@ export default function PotonganSummaryPage() {
           )}
         </div>
       )}
+
+      {/* Supplier History Dialog for Admin */}
+      <Dialog open={!!selectedSupplier} onOpenChange={(open) => { if (!open) setSelectedSupplier(null); }}>
+        <DialogContent className="sm:max-w-5xl max-w-5xl w-[95vw] bg-zinc-950 border border-white/10 p-6 md:p-8 rounded-3xl text-white shadow-2xl">
+          <DialogHeader className="border-b border-white/10 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                  <Scissors className="w-6 h-6" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-white uppercase">
+                    Riwayat Potongan: {selectedSupplier?.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-slate-400 text-xs mt-0.5 font-medium">
+                    Pemilik: {selectedSupplier?.ownerName || "-"}
+                  </DialogDescription>
+                </div>
+              </div>
+              <div className="text-left sm:text-right bg-rose-500/10 border border-rose-500/20 px-4 py-2 rounded-2xl shrink-0">
+                <span className="text-[10px] font-black uppercase text-rose-400 tracking-wider block">Total Potongan</span>
+                <span className="text-lg font-black text-white tabular-nums">
+                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(selectedSupplier?.totalDeduction || 0)}
+                </span>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="py-4">
+            {loadingHistory ? (
+              <div className="py-12 text-center text-slate-400">
+                <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-xs font-medium">Memuat riwayat potongan supplier...</p>
+              </div>
+            ) : !supplierHistoryData?.history || supplierHistoryData.history.length === 0 ? (
+              <div className="py-12 text-center text-slate-500 italic font-medium">
+                Tidak ada riwayat potongan untuk supplier ini.
+              </div>
+            ) : (
+              <div className="overflow-x-auto max-h-[60vh]">
+                <Table>
+                  <TableHeader className="bg-zinc-900/80 sticky top-0 backdrop-blur-md">
+                    <TableRow className="border-white/10">
+                      <TableHead className="py-3 text-xs font-bold uppercase tracking-wider text-slate-400">Tanggal</TableHead>
+                      <TableHead className="py-3 text-xs font-bold uppercase tracking-wider text-slate-400">No. Nota</TableHead>
+                      <TableHead className="py-3 text-right text-xs font-bold uppercase tracking-wider text-rose-400">Barcode</TableHead>
+                      <TableHead className="py-3 text-right text-xs font-bold uppercase tracking-wider text-amber-400">S.Charge</TableHead>
+                      <TableHead className="py-3 text-right text-xs font-bold uppercase tracking-wider text-purple-400">Kukuluban</TableHead>
+                      <TableHead className="py-3 text-right px-6 text-xs font-bold uppercase tracking-wider text-white">Total Potongan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {supplierHistoryData.history.map((h) => {
+                      const totalRow = (h.barcode || 0) + (h.serviceCharge || 0) + (h.kukuluban || 0);
+                      return (
+                        <TableRow key={h.id} className="border-b border-white/5 hover:bg-white/[0.04] transition-colors">
+                          <TableCell className="py-3.5 font-semibold text-white text-xs whitespace-nowrap">
+                            {format(new Date(h.date), "dd MMM yyyy", { locale: localeId })}
+                          </TableCell>
+                          <TableCell className="py-3.5">
+                            <span className="font-mono text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-lg inline-block">
+                              {h.noteNumber || "-"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-3.5 text-right text-xs text-rose-300 font-medium tabular-nums">
+                            {new Intl.NumberFormat("id-ID").format(h.barcode || 0)}
+                          </TableCell>
+                          <TableCell className="py-3.5 text-right text-xs text-amber-300 font-medium tabular-nums">
+                            {new Intl.NumberFormat("id-ID").format(h.serviceCharge || 0)}
+                          </TableCell>
+                          <TableCell className="py-3.5 text-right text-xs text-purple-300 font-medium tabular-nums">
+                            {new Intl.NumberFormat("id-ID").format(h.kukuluban || 0)}
+                          </TableCell>
+                          <TableCell className="py-3.5 text-right px-6 font-black text-white text-sm tabular-nums">
+                            {new Intl.NumberFormat("id-ID").format(totalRow)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -23,15 +23,18 @@ export async function GET(req: Request) {
       };
     }
 
-    if (userRole === "SUPPLIER") {
-      const supplierId = session.user.supplierId;
-      if (!supplierId) {
-        return NextResponse.json({ error: "ID Supplier tidak ditemukan dalam sesi" }, { status: 400 });
-      }
+    const querySupplierId = searchParams.get("supplierId");
+    const targetSupplierId = userRole === "SUPPLIER" ? session?.user?.supplierId : querySupplierId;
+
+    if (targetSupplierId) {
+      const supplierInfo = await prisma.supplier.findUnique({
+        where: { id: targetSupplierId },
+        select: { id: true, name: true, ownerName: true }
+      });
 
       const aggregate = await prisma.consignmentReport.aggregate({
         where: { 
-          supplierId,
+          supplierId: targetSupplierId,
           ...(dateFilter ? { date: dateFilter } : {})
         },
         _sum: {
@@ -43,7 +46,7 @@ export async function GET(req: Request) {
 
       const history = await prisma.consignmentReport.findMany({
         where: {
-          supplierId,
+          supplierId: targetSupplierId,
           ...(dateFilter ? { date: dateFilter } : {}),
           OR: [
             { barcode: { gt: 0 } },
@@ -76,6 +79,7 @@ export async function GET(req: Request) {
       }));
 
       return NextResponse.json({
+        supplier: supplierInfo,
         totalBarcode: Number(aggregate._sum.barcode || 0),
         totalServiceCharge: Number(aggregate._sum.serviceCharge || 0),
         totalKukuluban: Number(aggregate._sum.kukuluban || 0),

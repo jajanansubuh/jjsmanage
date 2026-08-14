@@ -26,7 +26,7 @@ export function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-950 border-white/10 rounded-3xl max-w-md">
+      <DialogContent className="bg-zinc-950 border-zinc-800 rounded-3xl max-w-md">
         <div className="p-8 space-y-6">
           <div className="flex flex-col items-center text-center gap-3">
             <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20"><ShieldAlert className="w-8 h-8 text-red-500" /></div>

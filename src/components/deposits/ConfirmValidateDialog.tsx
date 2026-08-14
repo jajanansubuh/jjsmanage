@@ -19,7 +19,7 @@ export function ConfirmValidateDialog({
 }: ConfirmValidateDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isValidatingAll && onOpenChange(open)}>
-      <DialogContent className="sm:max-w-[425px] bg-slate-900 border-white/10 text-white shadow-2xl">
+      <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-white shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-indigo-400">
             <AlertCircle className="w-5 h-5" /> Konfirmasi Validasi Massal

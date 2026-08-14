@@ -115,7 +115,7 @@ export function PotonganTable({ loading, rows, onUpdateField }: PotonganTablePro
             <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-500">Total Cost</TableHead>
             <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-rose-400">S.Charge</TableHead>
             <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-orange-400">Kukuluban</TableHead>
-            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-purple-400">Tabungan</TableHead>
+            <TableHead className="py-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-blue-400">Tabungan</TableHead>
             <TableHead className="py-6 px-8 text-right font-black text-[10px] uppercase tracking-[0.2em] text-emerald-400">Net Mitra</TableHead>
           </TableRow>
         </TableHeader>

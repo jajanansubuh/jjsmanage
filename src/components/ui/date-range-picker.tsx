@@ -1,12 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { format, startOfDay, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns";
+import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
@@ -16,7 +14,7 @@ interface DateRangePickerProps {
   endDate?: string;
   onChange?: (start: string, end: string) => void;
 
-  // Object-based range (for Deposits Filters)
+  // Object-based range (for Deposits / Potongan Filters)
   dateRange?: DateRange;
   onDateRangeChange?: (range: DateRange | undefined) => void;
 
@@ -31,274 +29,107 @@ export function DateRangePicker({
   onDateRangeChange,
   className
 }: DateRangePickerProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<"from" | "to">("from");
-  const [isMobile, setIsMobile] = React.useState(false);
+  const [isStartOpen, setIsStartOpen] = React.useState(false);
+  const [isEndOpen, setIsEndOpen] = React.useState(false);
 
-  // Detect mobile viewport size
-  React.useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const fromDate = dateRange?.from || (startDate ? new Date(startDate) : undefined);
+  const toDate = dateRange?.to || (endDate ? new Date(endDate) : undefined);
 
-  // Initialize local states
-  const [localStart, setLocalStart] = React.useState<Date | undefined>(undefined);
-  const [localEnd, setLocalEnd] = React.useState<Date | undefined>(undefined);
-
-  // Sync with parent props when opened or when parents update
-  React.useEffect(() => {
-    if (dateRange) {
-      setLocalStart(dateRange.from);
-      setLocalEnd(dateRange.to);
-    } else {
-      setLocalStart(startDate ? new Date(startDate) : undefined);
-      setLocalEnd(endDate ? new Date(endDate) : undefined);
-    }
-  }, [isOpen, startDate, endDate, dateRange]);
-
-  const handleApply = () => {
+  const handleSelectFrom = (date: Date | undefined) => {
+    const newFrom = date;
+    const newTo = toDate;
     if (onDateRangeChange) {
-      onDateRangeChange({ from: localStart, to: localEnd });
-    } else if (onChange) {
-      const startStr = localStart ? format(localStart, "yyyy-MM-dd") : "";
-      const endStr = localEnd ? format(localEnd, "yyyy-MM-dd") : "";
+      onDateRangeChange({ from: newFrom, to: newTo });
+    }
+    if (onChange) {
+      const startStr = newFrom ? format(newFrom, "yyyy-MM-dd") : "";
+      const endStr = newTo ? format(newTo, "yyyy-MM-dd") : "";
       onChange(startStr, endStr);
     }
-    setIsOpen(false);
+    setIsStartOpen(false);
   };
 
-  // Helper to format date for display
-  const formatDateDisplay = (date: Date | undefined) => {
-    if (!date) return "Pilih Tanggal";
-    return format(date, "dd MMM yyyy", { locale: localeId });
+  const handleSelectTo = (date: Date | undefined) => {
+    const newFrom = fromDate;
+    const newTo = date;
+    if (onDateRangeChange) {
+      onDateRangeChange({ from: newFrom, to: newTo });
+    }
+    if (onChange) {
+      const startStr = newFrom ? format(newFrom, "yyyy-MM-dd") : "";
+      const endStr = newTo ? format(newTo, "yyyy-MM-dd") : "";
+      onChange(startStr, endStr);
+    }
+    setIsEndOpen(false);
   };
-
-  // Short format for mobile trigger
-  const formatDateShort = (date: Date | undefined) => {
-    if (!date) return "Pilih";
-    return format(date, "dd/MM/yy");
-  };
-
-  const applyPreset = (getRange: () => { from: Date; to: Date }) => {
-    const range = getRange();
-    setLocalStart(range.from);
-    setLocalEnd(range.to);
-  };
-
-  const displayStart = localStart || dateRange?.from || (startDate ? new Date(startDate) : undefined);
-  const displayEnd = localEnd || dateRange?.to || (endDate ? new Date(endDate) : undefined);
-
-  const pickerContent = (
-    <div className="flex flex-col sm:flex-row">
-      {/* Preset Shortcuts */}
-      <div className="flex sm:flex-col gap-1 p-3 sm:p-4 border-b sm:border-b-0 sm:border-r border-border overflow-x-auto sm:overflow-x-visible shrink-0 bg-muted/20">
-        <span className="hidden sm:block text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2 px-3">
-          PILIH CEPAT
-        </span>
-        {[
-          { label: "Hari Ini", getRange: () => ({ from: startOfDay(new Date()), to: new Date() }) },
-          { label: "7 Hari", getRange: () => ({ from: subDays(new Date(), 6), to: new Date() }) },
-          { label: "Bulan Ini", getRange: () => ({ from: startOfMonth(new Date()), to: new Date() }) },
-          { label: "Bulan Lalu", getRange: () => { const prev = subMonths(new Date(), 1); return { from: startOfMonth(prev), to: endOfMonth(prev) }; } },
-        ].map((preset) => (
-          <button
-            key={preset.label}
-            type="button"
-            onClick={() => applyPreset(preset.getRange)}
-            className="whitespace-nowrap text-left text-[11px] sm:text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-2 sm:py-2.5 rounded-xl transition-all"
-          >
-            {preset.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Calendar Picker Panel */}
-      <div className="flex flex-col flex-1 min-w-0">
-        {/* Mobile: Tab switcher between Dari/Hingga */}
-        <div className="flex sm:hidden border-b border-border">
-          <button
-            type="button"
-            onClick={() => setActiveTab("from")}
-            className={cn(
-              "flex-1 py-3 text-xs font-black uppercase tracking-wider text-center transition-all",
-              activeTab === "from"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-muted-foreground"
-            )}
-          >
-            DARI {localStart ? format(localStart, "dd/MM", { locale: localeId }) : ""}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("to")}
-            className={cn(
-              "flex-1 py-3 text-xs font-black uppercase tracking-wider text-center transition-all",
-              activeTab === "to"
-                ? "text-primary border-b-2 border-primary bg-primary/5"
-                : "text-muted-foreground"
-            )}
-          >
-            HINGGA {localEnd ? format(localEnd, "dd/MM", { locale: localeId }) : ""}
-          </button>
-        </div>
-
-        {/* Mobile: Single calendar with tab switching */}
-        <div className="sm:hidden p-1 flex justify-center bg-transparent">
-          {activeTab === "from" ? (
-            <Calendar
-              mode="single"
-              selected={localStart}
-              onSelect={(d) => {
-                setLocalStart(d);
-                // Auto-switch to "to" tab after selecting start
-                setTimeout(() => setActiveTab("to"), 200);
-              }}
-              className="text-foreground"
-            />
-          ) : (
-            <Calendar
-              mode="single"
-              selected={localEnd}
-              onSelect={setLocalEnd}
-              className="text-foreground"
-            />
-          )}
-        </div>
-
-        {/* Desktop: Side-by-side calendars */}
-        <div className="hidden sm:flex gap-2 p-4">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-primary tracking-wider mb-1 px-3">TANGGAL MULAI</span>
-            <Calendar
-              mode="single"
-              selected={localStart}
-              onSelect={setLocalStart}
-              className="text-foreground bg-card rounded-xl border border-border"
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-muted-foreground tracking-wider mb-1 px-3">TANGGAL AKHIR</span>
-            <Calendar
-              mode="single"
-              selected={localEnd}
-              onSelect={setLocalEnd}
-              className="text-foreground bg-card rounded-xl border border-border"
-            />
-          </div>
-        </div>
-
-        {/* Confirmation Footer */}
-        <div className="p-3 sm:p-4 border-t border-border flex justify-end bg-muted/20 gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(false)}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent font-bold px-4 rounded-xl"
-          >
-            Batal
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleApply}
-            className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 rounded-xl shadow-lg shadow-primary/20"
-          >
-            OK
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  if (isMobile) {
-    return (
-      <>
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className={cn(
-            "flex items-center bg-background border border-border hover:border-primary/50 transition-all text-left h-12 rounded-lg overflow-hidden cursor-pointer shrink-0 select-none group w-full",
-            className
-          )}
-        >
-          {/* Dari Field */}
-          <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
-              DARI
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
-              <span className="hidden sm:inline">{formatDateDisplay(displayStart)}</span>
-              <span className="sm:hidden">{formatDateShort(displayStart)}</span>
-            </span>
-          </div>
-
-          {/* Vertical Divider */}
-          <div className="h-8 w-[1px] bg-white/10 shrink-0 self-center" />
-
-          {/* Hingga Field */}
-          <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
-              HINGGA
-            </span>
-            <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
-              <span className="hidden sm:inline">{formatDateDisplay(displayEnd)}</span>
-              <span className="sm:hidden">{formatDateShort(displayEnd)}</span>
-            </span>
-          </div>
-        </button>
-
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent 
-            showCloseButton={false}
-            className="p-0 bg-popover border border-border shadow-2xl rounded-2xl overflow-hidden w-[calc(100vw-2rem)] max-w-sm outline-none"
-          >
-            {pickerContent}
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  }
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger
-        className={cn(
-          "flex items-center bg-background border border-border hover:border-primary/50 transition-all text-left h-12 rounded-lg overflow-hidden cursor-pointer shrink-0 select-none group w-full",
-          className
-        )}
-      >
-        {/* Dari Field */}
-        <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
+    <div className={cn("flex items-center gap-2", className)}>
+      {/* DARI (Start Date) */}
+      <Popover open={isStartOpen} onOpenChange={setIsStartOpen}>
+        <PopoverTrigger className="flex flex-col justify-center px-3.5 py-1.5 h-12 bg-card/40 border border-white/5 hover:border-emerald-500/30 rounded-2xl transition-all duration-300 text-left min-w-[130px] group cursor-pointer select-none outline-none">
+          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1 group-hover:text-emerald-400 transition-colors">
             DARI
           </span>
-          <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
-            <span className="hidden sm:inline">{formatDateDisplay(displayStart)}</span>
-            <span className="sm:hidden">{formatDateShort(displayStart)}</span>
+          <span className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors truncate">
+            {fromDate ? format(fromDate, "dd MMM yyyy", { locale: localeId }) : "Pilih Tanggal"}
           </span>
-        </div>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-3 bg-zinc-950 border border-white/10 shadow-2xl rounded-2xl" align="start">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10 px-2">
+            <span className="text-xs font-bold text-white">Tanggal Mulai</span>
+            {fromDate && (
+              <button
+                type="button"
+                onClick={() => handleSelectFrom(undefined)}
+                className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+              >
+                Hapus
+              </button>
+            )}
+          </div>
+          <Calendar
+            mode="single"
+            selected={fromDate}
+            onSelect={handleSelectFrom}
+            className="text-foreground"
+          />
+        </PopoverContent>
+      </Popover>
 
-        {/* Vertical Divider */}
-        <div className="h-8 w-[1px] bg-white/10 shrink-0 self-center" />
+      <span className="text-slate-600 font-bold text-sm">-</span>
 
-        {/* Hingga Field */}
-        <div className="flex-1 py-1 px-3 sm:px-4 flex flex-col justify-center min-w-0">
-          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-0.5 group-hover:text-primary transition-colors">
+      {/* HINGGA (End Date) */}
+      <Popover open={isEndOpen} onOpenChange={setIsEndOpen}>
+        <PopoverTrigger className="flex flex-col justify-center px-3.5 py-1.5 h-12 bg-card/40 border border-white/5 hover:border-emerald-500/30 rounded-2xl transition-all duration-300 text-left min-w-[130px] group cursor-pointer select-none outline-none">
+          <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1 group-hover:text-emerald-400 transition-colors">
             HINGGA
           </span>
-          <span className="text-xs sm:text-sm font-bold text-slate-300 truncate group-hover:text-white transition-colors">
-            <span className="hidden sm:inline">{formatDateDisplay(displayEnd)}</span>
-            <span className="sm:hidden">{formatDateShort(displayEnd)}</span>
+          <span className="text-xs font-bold text-slate-200 group-hover:text-white transition-colors truncate">
+            {toDate ? format(toDate, "dd MMM yyyy", { locale: localeId }) : "Pilih Tanggal"}
           </span>
-        </div>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 bg-popover border border-border shadow-2xl rounded-2xl overflow-hidden" align="start">
-        {pickerContent}
-      </PopoverContent>
-    </Popover>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-3 bg-zinc-950 border border-white/10 shadow-2xl rounded-2xl" align="end">
+          <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/10 px-2">
+            <span className="text-xs font-bold text-white">Tanggal Akhir</span>
+            {toDate && (
+              <button
+                type="button"
+                onClick={() => handleSelectTo(undefined)}
+                className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+              >
+                Hapus
+              </button>
+            )}
+          </div>
+          <Calendar
+            mode="single"
+            selected={toDate}
+            onSelect={handleSelectTo}
+            className="text-foreground"
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
-

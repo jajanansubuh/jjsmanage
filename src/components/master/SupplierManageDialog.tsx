@@ -18,10 +18,10 @@ export function SupplierManageDialog({
 }: SupplierManageDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-md">
+      <DialogContent className="bg-zinc-950/95 backdrop-blur-xl border-zinc-800 rounded-3xl shadow-2xl max-w-md">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black text-white">Kelola Suplier</DialogTitle>
-          <DialogDescription className="text-slate-400 font-medium">Ubah atau hapus data suplier ini.</DialogDescription>
+          <DialogDescription className="text-zinc-400 font-medium">Ubah atau hapus data suplier ini.</DialogDescription>
         </DialogHeader>
         {selectedSupplier && (
           <SupplierEditForm

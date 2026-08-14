@@ -19,7 +19,7 @@ export function SaveSuccessDialog({
 }: SaveSuccessDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-white/10 text-white rounded-3xl max-w-md p-8 shadow-2xl overflow-hidden">
+      <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-3xl max-w-md p-8 shadow-2xl overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/10 to-transparent pointer-events-none" />
         <div className="relative flex flex-col items-center text-center space-y-6">
           <div className="w-20 h-20 rounded-[2rem] bg-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/40 animate-bounce">

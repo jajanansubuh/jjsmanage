@@ -255,27 +255,27 @@ export default function MasterDataPage() {
 
       <MasterTabs 
         supplierContent={
-          <Card className="overflow-hidden">
-            <CardHeader className="flex flex-col sm:flex-row items-center justify-between border-b border-border bg-muted/30 py-5 px-6 gap-4">
-              <div className="text-center sm:text-left">
-                <CardTitle className="text-xl font-bold text-foreground">Daftar Suplier</CardTitle>
-                <CardDescription className="text-muted-foreground">Kelola informasi UMKM, pemilik, dan Pendapatan bagi hasil.</CardDescription>
+          <Card className="overflow-hidden border border-white/10 bg-zinc-950 rounded-2xl shadow-sm">
+            <CardHeader className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-white/10 bg-zinc-900/50 p-4 sm:p-6 gap-4">
+              <div>
+                <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Daftar Suplier</CardTitle>
+                <CardDescription className="text-muted-foreground text-xs sm:text-sm mt-0.5">Kelola informasi UMKM, pemilik, dan Pendapatan bagi hasil.</CardDescription>
               </div>
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 <div className="relative w-full sm:w-64 group">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input 
                     placeholder="Cari suplier..." 
                     value={supplierSearch}
                     onChange={(e) => setSupplierSearch(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 w-full h-10"
                   />
                 </div>
-                <Button onClick={() => setIsSupplierDialogOpen(true)}>
+                <Button onClick={() => setIsSupplierDialogOpen(true)} className="w-full sm:w-auto h-10 shrink-0">
                   <Plus className="w-4 h-4 mr-2" /> Tambah Suplier
                 </Button>
                 <Dialog open={isSupplierDialogOpen} onOpenChange={setIsSupplierDialogOpen}>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className="max-w-md w-[95vw]">
                     <DialogHeader>
                       <DialogTitle>Tambah Suplier</DialogTitle>
                       <DialogDescription>Masukkan detail suplier untuk disimpan ke sistem.</DialogDescription>
@@ -288,7 +288,7 @@ export default function MasterDataPage() {
                 </Dialog>
               </div>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className="p-0 overflow-x-auto">
               <SupplierTable 
                 filteredSuppliers={filteredSuppliers}
                 loading={loading}
@@ -308,27 +308,27 @@ export default function MasterDataPage() {
           </Card>
         }
         cashierContent={
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+          <Card className="overflow-hidden border border-white/10 bg-zinc-950 rounded-2xl shadow-sm">
+            <CardHeader className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between border-b border-white/10 bg-zinc-900/50 p-4 sm:p-6 gap-4">
               <div>
-                <CardTitle>Daftar Kasir</CardTitle>
-                <CardDescription>Daftar kasir yang memiliki akses ke sistem.</CardDescription>
+                <CardTitle className="text-lg sm:text-xl font-bold text-foreground">Daftar Kasir</CardTitle>
+                <CardDescription className="text-muted-foreground text-xs sm:text-sm mt-0.5">Daftar kasir yang memiliki akses ke sistem.</CardDescription>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="relative group">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-64 group">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-purple-400 transition-colors" />
                   <Input 
                     placeholder="Cari kasir..." 
                     value={cashierSearch}
                     onChange={(e) => setCashierSearch(e.target.value)}
-                    className="pl-9 h-10 bg-white/5 border-white/5 rounded-lg focus:ring-purple-500/20 focus:border-purple-500/50 transition-all"
+                    className="pl-9 h-10 w-full"
                   />
                 </div>
-                <Button onClick={() => setIsCashierDialogOpen(true)}>
+                <Button onClick={() => setIsCashierDialogOpen(true)} className="w-full sm:w-auto h-10 shrink-0">
                   <Plus className="w-4 h-4 mr-2" /> Tambah Kasir
                 </Button>
                 <Dialog open={isCashierDialogOpen} onOpenChange={setIsCashierDialogOpen}>
-                  <DialogContent>
+                  <DialogContent className="max-w-md w-[95vw]">
                     <DialogHeader>
                       <DialogTitle>Tambah Kasir Baru</DialogTitle>
                       <DialogDescription>Masukkan detail kasir untuk disimpan ke sistem.</DialogDescription>
@@ -341,16 +341,14 @@ export default function MasterDataPage() {
                 </Dialog>
               </div>
             </CardHeader>
-            <CardContent>
-              <CardContent className="p-0">
-                <CashierTable 
-                  filteredCashiers={filteredCashiers}
-                  loading={loading}
-                  cashierSearch={cashierSearch}
-                  cashierSortConfig={cashierSortConfig}
-                  requestCashierSort={requestCashierSort}
-                />
-              </CardContent>
+            <CardContent className="p-0 overflow-x-auto">
+              <CashierTable 
+                filteredCashiers={filteredCashiers}
+                loading={loading}
+                cashierSearch={cashierSearch}
+                cashierSortConfig={cashierSortConfig}
+                requestCashierSort={requestCashierSort}
+              />
             </CardContent>
           </Card>
         }
@@ -360,6 +358,7 @@ export default function MasterDataPage() {
               <MasterProductsTable
                 products={products}
                 loading={productsLoading}
+                onSuccess={refreshProducts}
               />
             </CardContent>
           </Card>

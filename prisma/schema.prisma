@@ -32,7 +32,7 @@ model LabelPrintHistory {
   items       Json     @default("[]")
   completedAt DateTime @default(now())
   createdAt   DateTime @default(now())
-  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  supplier    Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   @@index([supplierId])
   @@index([completedAt])
@@ -48,7 +48,7 @@ model LabelPrint {
   status     String   @default("PENDING")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   @@index([supplierId])
   @@index([status])
@@ -62,7 +62,7 @@ model SupplierPayout {
   supplierId String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  supplier   Supplier @relation(fields: [supplierId], references: [id])
+  supplier   Supplier @relation(fields: [supplierId], references: [id], onDelete: Restrict)
 
   @@index([supplierId])
 }
@@ -95,7 +95,7 @@ model ConsignmentReport {
   deductionDate       DateTime?
   deductionNoteNumber String?
   isValidated         Boolean   @default(false)
-  supplier            Supplier  @relation(fields: [supplierId], references: [id])
+  supplier            Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
 
   @@index([supplierId])
   @@index([date])
@@ -115,7 +115,7 @@ model User {
   supplierId           String?
   isCredentialsChanged Boolean   @default(false)
   permissions          Json?     @default("[]")
-  supplier             Supplier? @relation(fields: [supplierId], references: [id])
+  supplier             Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
 
   @@index([supplierId])
 }
@@ -127,7 +127,7 @@ model Product {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   supplierId String?
-  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   @@unique([name, supplierId])
 }
@@ -150,4 +150,6 @@ model MaintenanceLog {
   telegramUserId String?
   timestamp      DateTime  @default(now())
 }
+
+
 

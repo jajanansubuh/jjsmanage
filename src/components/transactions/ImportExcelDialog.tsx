@@ -18,7 +18,7 @@ export function ImportExcelDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900 border-white/10 text-white rounded-3xl max-w-md p-8 shadow-2xl">
+      <DialogContent className="bg-zinc-950 border-zinc-800 text-white rounded-3xl max-w-md p-8 shadow-2xl">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
             <Upload className="w-10 h-10 text-emerald-400" />

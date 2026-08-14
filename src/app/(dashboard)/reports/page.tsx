@@ -184,7 +184,7 @@ export default function ReportsPage() {
               {[
                 { id: "transaksi", label: "Transaksi", icon: FileText, color: "#2563eb", shadow: "shadow-blue-900/50" },
                 { id: "setoran", label: "Setoran", icon: Wallet, color: "#4f46e5", shadow: "shadow-indigo-900/50" },
-                { id: "tabungan", label: "Tabungan", icon: Coins, color: "#9333ea", shadow: "shadow-purple-900/50" },
+                { id: "tabungan", label: "Tabungan", icon: Coins, color: "#2563eb", shadow: "shadow-blue-900/50" },
                 { id: "potongan", label: "Potongan", icon: History, color: "#e11d48", shadow: "shadow-rose-900/50" },
                 { id: "produk", label: "Produk", icon: Package, color: "#059669", shadow: "shadow-emerald-900/50" },
               ].map((tab) => (

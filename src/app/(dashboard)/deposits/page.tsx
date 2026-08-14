@@ -26,7 +26,7 @@ export default function DepositsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [bankFilter, setBankFilter] = useState<string>("ALL");
   const [sortConfig, setSortConfig] = useState<{ key: keyof DepositItem; direction: "asc" | "desc" } | null>({ key: "dailyProfit", direction: "desc" });
-  
+
   // Modals state
   const [selectedSupplier, setSelectedSupplier] = useState<{ id: string, name: string } | null>(null);
   const [isConfirmAllOpen, setIsConfirmAllOpen] = useState(false);
@@ -159,7 +159,7 @@ export default function DepositsPage() {
     const formattedFrom = dateRange?.from ? format(dateRange.from, "dd MMM yyyy", { locale: localeId }) : "";
     const formattedTo = dateRange?.to ? format(dateRange.to, "dd MMM yyyy", { locale: localeId }) : "";
     const rangeText = formattedFrom === formattedTo ? formattedFrom : `${formattedFrom} - ${formattedTo}`;
-    
+
     const titleText = role === "SUPPLIER" ? "LAPORAN SALDO MITRA JJS" : "LAPORAN PENYETORAN MITRA JJS";
 
     const dataToPrint = [...filteredAndSortedData].sort((a, b) =>
@@ -188,8 +188,8 @@ export default function DepositsPage() {
     XLSX.utils.sheet_add_json(worksheet, exportData, { origin: "A4" });
 
     const totalPayout = dataToPrint.reduce((sum, item) => sum + item.dailyProfit, 0);
-    const totalMines = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
-    
+    const totalMinus = dataToPrint.reduce((sum, item) => item.dailyProfit < 0 ? sum + item.dailyProfit : sum, 0);
+
     // Add Totals
     XLSX.utils.sheet_add_json(worksheet, [
       {
@@ -197,8 +197,8 @@ export default function DepositsPage() {
         "NAMA UMKM": "",
         "PEMILIK": "",
         "BANK": "",
-        "NO REKENING": "Total Mines",
-        "TOTAL SETOR": totalMines
+        "NO REKENING": "Total Minus",
+        "TOTAL SETOR": totalMinus
       },
       {
         "NO": "",
@@ -218,7 +218,7 @@ export default function DepositsPage() {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-0 md:px-0">
-      
+
       {/* Modals */}
       <ConfirmValidateDialog
         isOpen={isConfirmAllOpen}
@@ -245,7 +245,7 @@ export default function DepositsPage() {
         )}
 
         {/* Filters & Controls */}
-        <DepositsFilters 
+        <DepositsFilters
           role={role}
           dateRange={dateRange}
           setDateRange={setDateRange}
@@ -261,7 +261,7 @@ export default function DepositsPage() {
       </div>
 
       {/* Main Content Table */}
-      <DepositsTable 
+      <DepositsTable
         filteredAndSortedData={filteredAndSortedData}
         loading={loading}
         role={role}

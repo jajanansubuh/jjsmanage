@@ -23,16 +23,19 @@ export async function GET(req: Request) {
       };
     }
 
-    if (userRole === "SUPPLIER") {
-      const supplierId = session.user.supplierId;
-      if (!supplierId) {
-        return NextResponse.json({ error: "ID Supplier tidak ditemukan dalam sesi" }, { status: 400 });
-      }
+    const querySupplierId = searchParams.get("supplierId");
+    const targetSupplierId = userRole === "SUPPLIER" ? session?.user?.supplierId : querySupplierId;
+
+    if (targetSupplierId) {
+      const supplierInfo = await prisma.supplier.findUnique({
+        where: { id: targetSupplierId },
+        select: { id: true, name: true, ownerName: true }
+      });
 
       // Get savings total for a specific supplier
       const aggregate = await prisma.consignmentReport.aggregate({
         where: { 
-          supplierId,
+          supplierId: targetSupplierId,
           ...(dateFilter ? { date: dateFilter } : {})
         },
         _sum: {
@@ -43,7 +46,7 @@ export async function GET(req: Request) {
       // Get history of savings deductions
       const history = await prisma.consignmentReport.findMany({
         where: {
-          supplierId,
+          supplierId: targetSupplierId,
           tabungan: { gt: 0 },
           ...(dateFilter ? { date: dateFilter } : {})
         },
@@ -59,6 +62,7 @@ export async function GET(req: Request) {
       });
 
       return NextResponse.json({
+        supplier: supplierInfo,
         total: Number(aggregate._sum.tabungan || 0),
         history
       });

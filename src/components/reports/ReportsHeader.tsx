@@ -12,7 +12,7 @@ export function ReportsHeader({ onExport }: ReportsHeaderProps) {
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white">
           Arsip JjsManage
         </h2>
-        <p className="text-slate-400 font-medium text-sm md:text-base">Riwayat lengkap transaksi harian, setoran tunai, dan akumulasi tabungan mitra.</p>
+        <p className="text-slate-400 font-medium text-sm md:text-base">Riwayat lengkap transaksi harian, setoran tunai, dan akumulasi tabungan supplier.</p>
       </div>
       <div className="shrink-0">
         <Button onClick={onExport} className="h-12 w-full sm:w-auto px-6 rounded-2xl bg-white/5 hover:bg-white/10 text-white font-bold border border-white/10 shadow-xl transition-all active:scale-95">

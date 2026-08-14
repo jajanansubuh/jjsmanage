@@ -324,7 +324,7 @@ export function SupplierCompletedHistory() {
 
       {/* Detail Dialog Modal */}
       <Dialog open={selectedDateGroup !== null} onOpenChange={(open) => { if (!open) setSelectedDateGroup(null); }}>
-        <DialogContent className="sm:max-w-4xl w-[90vw] bg-slate-950 border-white/10 text-white shadow-2xl overflow-hidden rounded-3xl flex flex-col max-h-[85vh] p-0">
+        <DialogContent className="sm:max-w-4xl w-[90vw] bg-zinc-950 border-zinc-800 text-white shadow-2xl overflow-hidden rounded-3xl flex flex-col max-h-[85vh] p-0">
           {/* Header */}
           <div className="p-6 md:p-8 border-b border-white/10 bg-white/2">
             <DialogHeader className="space-y-1">

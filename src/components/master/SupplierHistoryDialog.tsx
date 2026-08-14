@@ -22,14 +22,14 @@ export function SupplierHistoryDialog({
 }: SupplierHistoryDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl w-[95vw] sm:max-w-[1200px] sm:ml-32 max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="bg-zinc-950/95 backdrop-blur-xl border-zinc-800 rounded-3xl shadow-2xl w-[95vw] sm:max-w-[1200px] sm:ml-32 max-h-[90vh] overflow-hidden flex flex-col p-0">
         <div className="p-8 border-b border-white/5">
           <DialogHeader>
             <DialogTitle className="text-2xl font-black text-white flex items-center gap-3">
               <History className="w-6 h-6 text-blue-400" />
               Riwayat Transaksi: {selectedSupplier?.name}
             </DialogTitle>
-            <DialogDescription className="text-slate-400 font-medium">Daftar transaksi bagi hasil yang telah tercatat.</DialogDescription>
+            <DialogDescription className="text-zinc-400 font-medium">Daftar transaksi bagi hasil yang telah tercatat.</DialogDescription>
           </DialogHeader>
         </div>
         

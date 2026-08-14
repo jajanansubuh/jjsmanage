@@ -61,7 +61,7 @@ export const TransactionRow = memo(({
                     {currentSupplier.name}
                     <Plus className="w-3 h-3 text-white/20 group-hover/text:text-blue-400 transition-colors" />
                   </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-white/10 text-white max-w-2xl p-0 overflow-hidden rounded-3xl shadow-2xl">
+                  <DialogContent className="bg-zinc-950 border-zinc-800 text-white max-w-2xl p-0 overflow-hidden rounded-3xl shadow-2xl">
                     <div className="p-8 bg-gradient-to-br from-blue-600/20 to-transparent border-b border-white/5">
                       <div className="flex items-center gap-4 mb-2">
                         <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
@@ -69,7 +69,7 @@ export const TransactionRow = memo(({
                         </div>
                         <div>
                           <DialogTitle className="text-2xl font-black tracking-tight">Rincian Produk</DialogTitle>
-                          <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Suplier: {currentSupplier.name}</p>
+                          <p className="text-zinc-400 text-sm font-medium uppercase tracking-widest">Suplier: {currentSupplier.name}</p>
                         </div>
                       </div>
                     </div>
@@ -77,7 +77,7 @@ export const TransactionRow = memo(({
                       <div className="bg-black/20 rounded-2xl border border-white/5 overflow-hidden">
                         <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
                           <Table>
-                            <TableHeader className="sticky top-0 bg-slate-900 z-10">
+                            <TableHeader className="sticky top-0 bg-zinc-950 z-10">
                               <TableRow className="border-white/5 bg-white/5">
                                 <TableHead className="text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Nama Barang</TableHead>
                                 <TableHead className="text-center text-[10px] font-black uppercase text-slate-500 tracking-widest py-4">Qty Beli</TableHead>

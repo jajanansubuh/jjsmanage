@@ -22,7 +22,6 @@ import { AdminPrintHistory } from "@/components/cetak/AdminPrintHistory";
 import { ClearQueueDialog } from "@/components/cetak/ClearQueueDialog";
 import { ConfirmDoneDialog } from "@/components/cetak/ConfirmDoneDialog";
 import { normalizeName } from "@/app/(dashboard)/produk/hooks/use-products-data";
-import { Product } from "@/types/cetak";
 
 export default function CetakLabelPage() {
   const { 
@@ -199,30 +198,6 @@ export default function CetakLabelPage() {
     }
   };
 
-  const handleAdminAddItem = async (product: Product) => {
-    try {
-      const res = await fetch("/api/print-queue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([{
-          name: product.name,
-          code: product.code,
-          qty: 1,
-          supplierId: product.supplierId
-        }])
-      });
-      if (res.ok) {
-        toast.success(`Berhasil menambahkan ${product.name}`);
-        setSearchTerm("");
-        fetchQueue();
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Gagal menambahkan");
-      }
-    } catch {
-      toast.error("Terjadi kesalahan jaringan");
-    }
-  };
 
   const handleMarkAsDone = async (id: string) => {
     try {
@@ -289,13 +264,15 @@ export default function CetakLabelPage() {
         hasQueue={queueItems.length > 0}
       />
 
-      <CetakProductSearch 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filteredProducts={filteredProducts}
-        onAddItem={userRole === "ADMIN" ? handleAdminAddItem : addItem}
-        placeholder={userRole === "ADMIN" ? "Cari barang tambahan..." : "Cari barang yang ingin dicetak..."}
-      />
+      {userRole === "SUPPLIER" && (
+        <CetakProductSearch 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filteredProducts={filteredProducts}
+          onAddItem={addItem}
+          placeholder="Cari barang yang ingin dicetak..."
+        />
+      )}
 
       {userRole === "ADMIN" && (
         <CetakQueueList 

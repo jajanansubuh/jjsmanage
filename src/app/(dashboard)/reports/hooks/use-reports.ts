@@ -181,7 +181,13 @@ export function useReports() {
   const groupedSavingsByNote = useMemo(() => {
     const groups: Record<string, any> = {};
 
-    reports.forEach(r => {
+    // Combine reports and rawDeductions to capture all savings records (including deduction entries)
+    const allItemsMap = new Map<string, any>();
+    reports.forEach(r => { if (r.id) allItemsMap.set(r.id, r); });
+    rawDeductions.forEach(r => { if (r.id) allItemsMap.set(r.id, r); });
+    const allItems = Array.from(allItemsMap.values());
+
+    allItems.forEach(r => {
       if ((r.tabungan || 0) <= 0) return;
 
       const relevantDate = new Date(r.deductionDate || r.date || r.createdAt);
@@ -215,8 +221,8 @@ export function useReports() {
         };
       }
 
-      groups[key].totalRevenue += r.revenue;
-      groups[key].totalTabungan += r.tabungan;
+      groups[key].totalRevenue += (r.revenue || 0);
+      groups[key].totalTabungan += (r.tabungan || 0);
 
       if (r.supplier?.name) {
         if (!groups[key].supplierNames.includes(r.supplier.name)) {
@@ -225,14 +231,14 @@ export function useReports() {
         const suppMap = groups[key].suppliers;
         if (suppMap.has(r.supplier.id)) {
             const existing = suppMap.get(r.supplier.id);
-            existing.revenue += r.revenue;
-            existing.tabungan += r.tabungan;
+            existing.revenue += (r.revenue || 0);
+            existing.tabungan += (r.tabungan || 0);
         } else {
             suppMap.set(r.supplier.id, {
                 id: r.supplier.id,
                 name: r.supplier.name,
-                revenue: r.revenue,
-                tabungan: r.tabungan
+                revenue: (r.revenue || 0),
+                tabungan: (r.tabungan || 0)
             });
         }
       }
@@ -244,13 +250,13 @@ export function useReports() {
                (g.supplierNames.some((s: string) => s.toLowerCase().includes(savingsSearch.toLowerCase())));
       })
       .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [reports, savingsSearch, startDate, endDate]);
+  }, [reports, rawDeductions, savingsSearch, startDate, endDate]);
 
   const filteredDeductions = useMemo(() => {
     const groups: Record<string, any> = {};
 
     rawDeductions.forEach(r => {
-      const hasDeduction = (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0 || (r.tabungan || 0) > 0;
+      const hasDeduction = (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0;
       if (!hasDeduction) return;
 
       const dateKey = r.deductionDate ? new Date(r.deductionDate).toISOString().split('T')[0] : null;

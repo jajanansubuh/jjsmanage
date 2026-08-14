@@ -17,16 +17,16 @@ export function PotonganFooter({ totals, onSave, isSaving, hasRows }: PotonganFo
   return (
     <div className="flex flex-col lg:flex-row gap-6 items-stretch">
       <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-white/5 shadow-xl">
+        <div className="bg-zinc-950/80 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl">
           <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Total S.Charge</p>
           <p className="text-xl font-black text-white">{new Intl.NumberFormat("id-ID").format(totals.serviceCharge)}</p>
         </div>
-        <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-white/5 shadow-xl">
+        <div className="bg-zinc-950/80 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl">
           <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Total Kukuluban</p>
           <p className="text-xl font-black text-white">{new Intl.NumberFormat("id-ID").format(totals.kukuluban)}</p>
         </div>
-        <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-white/5 shadow-xl">
-          <p className="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Total Tabungan</p>
+        <div className="bg-zinc-950/80 backdrop-blur-xl p-6 rounded-[2rem] border border-white/10 shadow-xl">
+          <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Total Tabungan</p>
           <p className="text-xl font-black text-white">{new Intl.NumberFormat("id-ID").format(totals.tabungan)}</p>
         </div>
         <div className="bg-slate-900/60 backdrop-blur-xl p-6 rounded-[2rem] border border-emerald-500/20 shadow-xl bg-emerald-500/5">

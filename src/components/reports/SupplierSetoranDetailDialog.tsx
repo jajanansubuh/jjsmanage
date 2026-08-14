@@ -17,7 +17,7 @@ export function SupplierSetoranDetailDialog({
 }: SupplierSetoranDetailDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-2xl text-white">
+      <DialogContent className="bg-zinc-950/95 backdrop-blur-xl border-zinc-800 rounded-3xl shadow-2xl max-w-2xl text-white">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black text-white flex items-center gap-3">
             <History className="w-6 h-6 text-indigo-400" />

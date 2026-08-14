@@ -119,7 +119,7 @@ export function PayoutHistoryModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-white/10 rounded-3xl shadow-2xl max-w-3xl p-0 overflow-hidden text-white flex flex-col max-h-[90vh]">
+      <DialogContent className="bg-zinc-950/95 backdrop-blur-xl border-zinc-800 rounded-3xl shadow-2xl max-w-3xl p-0 overflow-hidden text-white flex flex-col max-h-[90vh]">
         <div className="p-6 md:p-8 border-b border-white/5 bg-white/2">
           <DialogHeader>
             <DialogTitle className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
