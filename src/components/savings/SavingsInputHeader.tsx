@@ -8,30 +8,29 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 
-interface PotonganHeaderProps {
-  deductionNoteNumber: string;
-  setDeductionNoteNumber?: (val: string) => void;
-  deductionDate: string;
-  setDeductionDate: (val: string) => void;
+interface SavingsInputHeaderProps {
+  savingsNoteNumber: string;
+  savingsDate: string;
+  setSavingsDate: (val: string) => void;
   startDate: string;
-  setStartDate: (val: string) => void;
   endDate: string;
+  setStartDate: (val: string) => void;
   setEndDate: (val: string) => void;
   searchTerm: string;
   setSearchTerm: (val: string) => void;
 }
 
-export function PotonganHeader({
-  deductionNoteNumber,
-  deductionDate,
-  setDeductionDate,
+export function SavingsInputHeader({
+  savingsNoteNumber,
+  savingsDate,
+  setSavingsDate,
   startDate,
   endDate,
   setStartDate,
   setEndDate,
   searchTerm,
   setSearchTerm,
-}: PotonganHeaderProps) {
+}: SavingsInputHeaderProps) {
   return (
     <div className="space-y-6">
       {/* Top Header Section */}
@@ -44,10 +43,10 @@ export function PotonganHeader({
           Kembali ke Input Transaksi
         </Link>
         <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
-          Input Potongan
+          Input Tabungan
         </h2>
         <p className="text-muted-foreground font-medium text-sm md:text-base">
-          Penginputan potongan secara kolektif per suplier untuk rentang waktu terpilih.
+          Penginputan tabungan mitra secara kolektif per suplier untuk rentang waktu terpilih.
         </p>
       </div>
 
@@ -55,39 +54,39 @@ export function PotonganHeader({
       <Card className="border border-border/80 bg-card/60 backdrop-blur-xl shadow-lg rounded-2xl overflow-hidden">
         <CardContent className="p-5 md:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-5 items-end">
-            {/* 1. No. Nota Potongan */}
+            {/* 1. No. Nota Tabungan */}
             <div className="lg:col-span-3 flex flex-col gap-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-                No. Nota Potongan
+                No. Nota Tabungan
               </Label>
               <div 
                 className="flex items-center px-4 h-12 bg-muted/40 rounded-xl border border-border/80 select-none cursor-default shadow-inner"
-                title="Nomor nota otomatis mengikuti tanggal nota potongan"
+                title="Nomor nota otomatis mengikuti tanggal nota tabungan"
               >
-                <span className="font-mono text-sm font-black text-rose-400 tracking-wider">
-                  {deductionNoteNumber}
+                <span className="font-mono text-sm font-black text-blue-400 tracking-wider">
+                  {savingsNoteNumber}
                 </span>
               </div>
             </div>
 
-            {/* 2. Tgl. Nota Potongan */}
+            {/* 2. Tgl. Nota Tabungan */}
             <div className="lg:col-span-2 flex flex-col gap-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-                Tgl. Nota Potongan
+                Tgl. Nota Tabungan
               </Label>
               <Popover>
                 <PopoverTrigger className="flex items-center justify-between px-4 h-12 bg-muted/40 hover:bg-muted/70 rounded-xl border border-border/80 text-sm font-bold text-foreground transition-all cursor-pointer select-none">
-                  <span>{format(new Date(deductionDate), "dd/MM/yyyy")}</span>
+                  <span>{format(new Date(savingsDate), "dd/MM/yyyy")}</span>
                   <CalendarIcon className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-popover border-border shadow-2xl rounded-2xl" align="start">
                   <Calendar 
                     mode="single" 
-                    selected={new Date(deductionDate)} 
+                    selected={new Date(savingsDate)} 
                     onSelect={(d) => {
                       if (d) {
                         const formatted = format(d, "yyyy-MM-dd");
-                        setDeductionDate(formatted);
+                        setSavingsDate(formatted);
                       }
                     }} 
                     initialFocus 
@@ -116,7 +115,7 @@ export function PotonganHeader({
             {/* 4. Cari Suplier */}
             <div className="lg:col-span-3 flex flex-col gap-2">
               <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
-                Cari Suplier
+                Cari Mitra / Suplier
               </Label>
               <div className="relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

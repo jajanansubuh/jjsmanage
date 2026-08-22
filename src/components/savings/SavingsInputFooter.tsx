@@ -2,64 +2,64 @@ import { Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-interface PotonganFooterProps {
+interface SavingsInputFooterProps {
   totals: {
-    serviceCharge: number;
-    kukuluban: number;
-    grandTotal: number;
+    tabungan: number;
+    saversCount: number;
+    totalSuppliers: number;
   };
   onSave: () => void;
   isSaving: boolean;
   hasRows: boolean;
 }
 
-export function PotonganFooter({ totals, onSave, isSaving, hasRows }: PotonganFooterProps) {
+export function SavingsInputFooter({ totals, onSave, isSaving, hasRows }: SavingsInputFooterProps) {
   const formatRupiah = (val: number) => new Intl.NumberFormat("id-ID").format(val);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-      {/* 1. Total S.Charge Card */}
+      {/* 1. Total Mitra Card */}
       <Card className="border border-border bg-card shadow-sm">
         <CardContent className="p-4 flex flex-col justify-between h-full">
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Total S.Charge
+            Total Mitra Terdaftar
           </p>
           <p className="text-xl font-bold text-foreground mt-2">
-            Rp {formatRupiah(totals.serviceCharge)}
+            {totals.totalSuppliers} Mitra
           </p>
         </CardContent>
       </Card>
 
-      {/* 2. Total Kukuluban Card */}
+      {/* 2. Total Mitra Menabung Card */}
       <Card className="border border-border bg-card shadow-sm">
         <CardContent className="p-4 flex flex-col justify-between h-full">
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-            Total Kukuluban
+            Mitra Menabung
           </p>
-          <p className="text-xl font-bold text-foreground mt-2">
-            Rp {formatRupiah(totals.kukuluban)}
+          <p className="text-xl font-bold text-blue-400 mt-2">
+            {totals.saversCount} Mitra
           </p>
         </CardContent>
       </Card>
 
-      {/* 3. Grand Total Potongan Card */}
-      <Card className="border border-rose-500/30 bg-rose-500/5 shadow-sm">
+      {/* 3. Grand Total Tabungan Card */}
+      <Card className="border border-blue-500/30 bg-blue-500/5 shadow-sm">
         <CardContent className="p-4 flex flex-col justify-between h-full">
-          <p className="text-[11px] font-bold text-rose-500 uppercase tracking-wider">
-            Grand Total Potongan
+          <p className="text-[11px] font-bold text-blue-500 uppercase tracking-wider">
+            Total Tabungan Terkumpul
           </p>
-          <p className="text-2xl font-black text-rose-400 mt-1">
-            Rp {formatRupiah(totals.grandTotal)}
+          <p className="text-2xl font-black text-blue-400 mt-1">
+            Rp {formatRupiah(totals.tabungan)}
           </p>
         </CardContent>
       </Card>
 
-      {/* 4. Simpan Semua Action Button */}
+      {/* 4. Simpan Tabungan Action Button */}
       <Button
         type="button"
         disabled={!hasRows || isSaving}
         onClick={onSave}
-        className="h-full min-h-[72px] px-6 rounded-xl font-bold text-base shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white"
+        className="h-full min-h-[72px] px-6 rounded-xl font-bold text-base shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
       >
         {isSaving ? (
           <>
@@ -69,7 +69,7 @@ export function PotonganFooter({ totals, onSave, isSaving, hasRows }: PotonganFo
         ) : (
           <>
             <Save className="w-5 h-5" />
-            <span>Simpan Potongan</span>
+            <span>Simpan Tabungan</span>
           </>
         )}
       </Button>

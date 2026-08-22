@@ -178,6 +178,32 @@ export function useReports() {
       .filter((d: any) => d.supplierName.toLowerCase().includes(payoutSearch.toLowerCase()));
   }, [reports, payoutSearch]);
 
+// Helper to parse date safely from note number or ISO string without timezone shift
+function parseSafeReportDate(noteNumber?: string | null, dateVal?: string | Date | null): Date {
+  if (noteNumber) {
+    const match = noteNumber.match(/^(?:POT|TAB|NOT)?-?(\d{2})(\d{2})(\d{2})/i);
+    if (match) {
+      const day = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const year = 2000 + parseInt(match[3], 10);
+      if (day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+        return new Date(year, month, day, 12, 0, 0);
+      }
+    }
+  }
+  if (dateVal) {
+    if (typeof dateVal === "string" && dateVal.includes("T")) {
+      const parts = dateVal.split("T")[0].split("-").map(Number);
+      if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
+        return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+      }
+    }
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) return d;
+  }
+  return new Date();
+}
+
   const groupedSavingsByNote = useMemo(() => {
     const groups: Record<string, any> = {};
 
@@ -190,7 +216,9 @@ export function useReports() {
     allItems.forEach(r => {
       if ((r.tabungan || 0) <= 0) return;
 
-      const relevantDate = new Date(r.deductionDate || r.date || r.createdAt);
+      const noteNum = r.savingsNoteNumber || r.deductionNoteNumber || r.noteNumber;
+      const relevantDate = parseSafeReportDate(noteNum, r.savingsDate || r.deductionDate || r.date || r.createdAt);
+      
       let matchDate = true;
       if (startDate || endDate) {
         if (startDate) {
@@ -206,13 +234,13 @@ export function useReports() {
       }
       if (!matchDate) return;
 
-      const dateKey = r.deductionDate ? new Date(r.deductionDate).toISOString().split('T')[0] : null;
-      const key = r.deductionNoteNumber || (dateKey ? `DATE-${dateKey}` : r.noteNumber) || `TAB-${r.id}`;
+      const dateKey = format(relevantDate, "yyyy-MM-dd");
+      const key = r.savingsNoteNumber || r.deductionNoteNumber || (dateKey ? `DATE-${dateKey}` : r.noteNumber) || `TAB-${r.id}`;
 
       if (!groups[key]) {
         groups[key] = {
           id: key,
-          noteNumber: r.deductionNoteNumber || (r.deductionDate ? `POT-${format(new Date(r.deductionDate), "ddMMyy")}` : r.noteNumber || "-"),
+          noteNumber: r.savingsNoteNumber || r.deductionNoteNumber || (r.deductionDate ? `POT-${format(new Date(r.deductionDate), "ddMMyy")}` : r.noteNumber || "-"),
           date: relevantDate,
           totalRevenue: 0,
           totalTabungan: 0,
@@ -259,7 +287,9 @@ export function useReports() {
       const hasDeduction = (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0;
       if (!hasDeduction) return;
 
-      const dateKey = r.deductionDate ? new Date(r.deductionDate).toISOString().split('T')[0] : null;
+      const noteNum = r.deductionNoteNumber || r.noteNumber;
+      const relevantDate = parseSafeReportDate(noteNum, r.deductionDate || r.date || r.createdAt);
+      const dateKey = format(relevantDate, "yyyy-MM-dd");
       const key = r.deductionNoteNumber || (dateKey ? `DATE-${dateKey}` : r.noteNumber) || `DED-${r.id}`;
 
       if (!groups[key]) {
@@ -267,8 +297,8 @@ export function useReports() {
           id: r.id,
           deductionNoteNumber: r.deductionNoteNumber,
           noteNumber: r.noteNumber,
-          deductionDate: r.deductionDate || r.date || r.createdAt,
-          date: r.date || r.createdAt,
+          deductionDate: relevantDate,
+          date: relevantDate,
           serviceCharge: 0,
           kukuluban: 0,
           tabungan: 0,

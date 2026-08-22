@@ -2,63 +2,62 @@ import { useState, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
-export interface DeductionRow {
+export interface SavingsRow {
   supplierId: string;
   supplierName: string;
   noteNumbers: string[];
   totalCost: number;
   totalBarcode: number;
-  existingServiceCharge: number;
-  existingKukuluban: number;
   serviceCharge: number;
   kukuluban: number;
+  existingSavings: number;
   tabungan: number;
   baseProfit80: number;
 }
 
-export function syncNoteNumberWithDate(dateStr: string, currentNote: string): string {
+export function syncSavingsNoteNumberWithDate(dateStr: string, currentNote: string): string {
   try {
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return currentNote;
     const dateFormatted = format(d, "ddMMyy");
     
-    // Match POT-ddMMyy(suffix) e.g. POT-200826001 -> prefix POT-, 6 digits date, suffix 001
-    const match = currentNote.match(/^POT-(\d{6})(.*)$/);
+    // Match TAB-ddMMyy(suffix) e.g. TAB-200826001 -> prefix TAB-, 6 digits date, suffix 001
+    const match = currentNote.match(/^TAB-(\d{6})(.*)$/);
     if (match) {
       const suffix = match[2] || "001";
-      return `POT-${dateFormatted}${suffix}`;
-    } else if (currentNote.startsWith("POT-")) {
-      const suffix = currentNote.replace(/^POT-/, "");
-      return `POT-${dateFormatted}${suffix || "001"}`;
+      return `TAB-${dateFormatted}${suffix}`;
+    } else if (currentNote.startsWith("TAB-")) {
+      const suffix = currentNote.replace(/^TAB-/, "");
+      return `TAB-${dateFormatted}${suffix || "001"}`;
     }
-    return `POT-${dateFormatted}001`;
+    return `TAB-${dateFormatted}001`;
   } catch {
     return currentNote;
   }
 }
 
-export function usePotonganData(startDate: string, endDate: string, editNote: string | null, isMounted: boolean) {
+export function useSavingsData(startDate: string, endDate: string, editNote: string | null, isMounted: boolean) {
   const [loading, setLoading] = useState(false);
-  const [rows, setRows] = useState<DeductionRow[]>([]);
+  const [rows, setRows] = useState<SavingsRow[]>([]);
   
-  const [deductionDate, setDeductionDateState] = useState(() => {
+  const [savingsDate, setSavingsDateState] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("jjs-potongan-deductionDate") || format(new Date(), "yyyy-MM-dd");
+      return localStorage.getItem("jjs-savings-date") || format(new Date(), "yyyy-MM-dd");
     }
     return format(new Date(), "yyyy-MM-dd");
   });
 
-  const [deductionNoteNumber, setDeductionNoteNumber] = useState(() => {
+  const [savingsNoteNumber, setSavingsNoteNumber] = useState(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("jjs-potongan-noteNumber");
+      const saved = localStorage.getItem("jjs-savings-noteNumber");
       if (saved) return saved;
     }
-    return `POT-${format(new Date(), "ddMMyy")}001`;
+    return `TAB-${format(new Date(), "ddMMyy")}001`;
   });
 
-  const setDeductionDate = useCallback((newDate: string) => {
-    setDeductionDateState(newDate);
-    setDeductionNoteNumber((prevNote) => syncNoteNumberWithDate(newDate, prevNote));
+  const setSavingsDate = useCallback((newDate: string) => {
+    setSavingsDateState(newDate);
+    setSavingsNoteNumber((prevNote) => syncSavingsNoteNumberWithDate(newDate, prevNote));
   }, []);
 
   const [actualStartDate, setActualStartDate] = useState(startDate);
@@ -73,9 +72,10 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
       const data = await res.json();
       const reports = Array.isArray(data) ? data : data.reports || [];
 
-      const groups: Record<string, DeductionRow> = {};
+      const groups: Record<string, SavingsRow> = {};
       reports.forEach((r: any) => {
-        if (r.deductionNoteNumber) return;
+        // Skip transactions that have already been saved for savings (or saved in legacy deduction notes)
+        if (r.savingsNoteNumber || (r.deductionNoteNumber && Number(r.tabungan || 0) > 0)) return;
 
         const sId = r.supplierId;
         if (!groups[sId]) {
@@ -85,11 +85,10 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
             noteNumbers: [],
             totalCost: 0,
             totalBarcode: 0,
-            existingServiceCharge: 0,
-            existingKukuluban: 0,
-            serviceCharge: 0, // Default 0 for fresh input
-            kukuluban: 0, // Default 0 for fresh input
-            tabungan: 0,
+            serviceCharge: 0,
+            kukuluban: 0,
+            existingSavings: 0,
+            tabungan: 0, // Default input 0
             baseProfit80: 0,
           };
         }
@@ -100,21 +99,21 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
 
         groups[sId].totalCost += r.cost || 0;
         groups[sId].totalBarcode += r.barcode || 0;
-        groups[sId].existingServiceCharge += r.serviceCharge || 0;
-        groups[sId].existingKukuluban += r.kukuluban || 0;
-        groups[sId].tabungan += r.tabungan || 0;
+        groups[sId].serviceCharge += r.serviceCharge || 0;
+        groups[sId].kukuluban += r.kukuluban || 0;
+        groups[sId].existingSavings += r.tabungan || 0;
         groups[sId].baseProfit80 += (r.cost || 0) - (r.barcode || 0);
       });
 
       const aggregatedRows = Object.values(groups).sort((a, b) => a.supplierName.localeCompare(b.supplierName));
       
-      const savedRowsStr = localStorage.getItem("jjs-potongan-rows");
+      const savedRowsStr = localStorage.getItem("jjs-savings-rows");
       if (savedRowsStr) {
         try {
-          const savedRows = JSON.parse(savedRowsStr) as DeductionRow[];
+          const savedRows = JSON.parse(savedRowsStr) as SavingsRow[];
           const mergedRows = aggregatedRows.map(row => {
             const saved = savedRows.find(s => s.supplierId === row.supplierId);
-            return saved ? { ...row, serviceCharge: saved.serviceCharge || 0, kukuluban: saved.kukuluban || 0 } : row;
+            return saved ? { ...row, tabungan: saved.tabungan || 0 } : row;
           });
           setRows(mergedRows);
         } catch {
@@ -130,24 +129,24 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
     }
   }, []);
 
-  const fetchDeductionForEdit = useCallback(async (noteNum: string) => {
+  const fetchSavingsForEdit = useCallback(async (noteNum: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/reports?deductionNoteNumber=${noteNum}&limit=5000`);
+      const res = await fetch(`/api/reports?savingsNoteNumber=${noteNum}&limit=5000`);
       const data = await res.json();
       const reports = Array.isArray(data) ? data : data.reports || [];
 
       if (reports.length === 0) {
-        toast.error("Nota potongan tidak ditemukan");
+        toast.error("Nota tabungan tidak ditemukan");
         return;
       }
 
       const first = reports[0];
-      if (first.deductionDate) {
-        const dDate = format(new Date(first.deductionDate), "yyyy-MM-dd");
-        setDeductionDateState(dDate);
+      if (first.savingsDate) {
+        const sDate = format(new Date(first.savingsDate), "yyyy-MM-dd");
+        setSavingsDateState(sDate);
       }
-      setDeductionNoteNumber(first.deductionNoteNumber || noteNum);
+      setSavingsNoteNumber(first.savingsNoteNumber || noteNum);
       
       const dates = reports.map((r: any) => new Date(r.date).getTime());
       const minDate = new Date(Math.min(...dates));
@@ -156,7 +155,7 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
       setActualStartDate(format(minDate, "yyyy-MM-dd"));
       setActualEndDate(format(maxDate, "yyyy-MM-dd"));
       
-      const groups: Record<string, DeductionRow> = {};
+      const groups: Record<string, SavingsRow> = {};
       reports.forEach((r: any) => {
         const sId = r.supplierId;
         if (!groups[sId]) {
@@ -166,10 +165,9 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
             noteNumbers: [],
             totalCost: 0,
             totalBarcode: 0,
-            existingServiceCharge: 0,
-            existingKukuluban: 0,
             serviceCharge: 0,
             kukuluban: 0,
+            existingSavings: 0,
             tabungan: 0,
             baseProfit80: 0,
           };
@@ -187,7 +185,7 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
 
       setRows(Object.values(groups).sort((a, b) => a.supplierName.localeCompare(b.supplierName)));
     } catch (error) {
-      toast.error("Gagal memuat data potongan");
+      toast.error("Gagal memuat data tabungan");
     } finally {
       setLoading(false);
     }
@@ -195,21 +193,21 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
 
   useEffect(() => {
     if (isMounted) {
-      if (editNote) fetchDeductionForEdit(editNote);
+      if (editNote) fetchSavingsForEdit(editNote);
       else fetchReports(startDate, endDate);
     }
-  }, [startDate, endDate, isMounted, editNote, fetchReports, fetchDeductionForEdit]);
+  }, [startDate, endDate, isMounted, editNote, fetchReports, fetchSavingsForEdit]);
 
   return { 
     loading, 
     rows, 
     setRows, 
-    deductionDate, 
-    setDeductionDate, 
-    deductionNoteNumber, 
-    setDeductionNoteNumber,
+    savingsDate, 
+    setSavingsDate, 
+    savingsNoteNumber, 
+    setSavingsNoteNumber,
     actualStartDate,
     actualEndDate,
-    refresh: () => editNote ? fetchDeductionForEdit(editNote) : fetchReports(startDate, endDate)
+    refresh: () => editNote ? fetchSavingsForEdit(editNote) : fetchReports(startDate, endDate)
   };
 }

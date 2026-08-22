@@ -1,21 +1,19 @@
 import { format } from "date-fns";
 
-export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
+export const getTabunganPrintTemplate = (savedNoteInfo: any) => {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const logoUrl = `${origin}/logojjsmanage.png`;
 
   const rowsHtml = [...savedNoteInfo.details]
     .sort((a, b) => a.supplierName.localeCompare(b.supplierName))
-    .filter((r) => r.serviceCharge > 0 || r.kukuluban > 0)
+    .filter((r) => r.tabungan > 0)
     .map((r, index) => {
-      const total = r.serviceCharge + r.kukuluban;
       return `
       <tr>
         <td>${index + 1}</td>
         <td class="col-supplier">${r.supplierName}</td>
-        <td align="right">${new Intl.NumberFormat("id-ID").format(r.serviceCharge)}</td>
-        <td align="right">${new Intl.NumberFormat("id-ID").format(r.kukuluban)}</td>
-        <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(total)}</strong></td>
+        <td align="right">${new Intl.NumberFormat("id-ID").format(r.totalCost)}</td>
+        <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(r.tabungan)}</strong></td>
       </tr>
     `;
     })
@@ -26,7 +24,7 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Nota Potongan - ${savedNoteInfo.noteNumber}</title>
+        <title>Nota Tabungan - ${savedNoteInfo.noteNumber}</title>
         ${origin ? `<base href="${origin}/">` : ''}
         <style>
           @page { size: portrait; margin: 10mm 12mm; }
@@ -59,7 +57,7 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
           <div class="logo-container">
             <img src="${logoUrl}" alt="Logo JJS" class="logo" />
           </div>
-          <h1>Nota Potongan Mitra Jjs - Jajanan Subuh</h1>
+          <h1>Nota Tabungan Mitra Jjs - Jajanan Subuh</h1>
         </div>
         
         <div class="meta-grid">
@@ -72,19 +70,16 @@ export const getPotonganPrintTemplate = (savedNoteInfo: any) => {
           <thead>
             <tr>
               <th width="30">No</th>
-              <th class="col-supplier">Suplier</th>
-              <th align="right">S.Charge</th>
-              <th align="right">Kukuluban</th>
-              <th align="right">Total Pot.</th>
+              <th class="col-supplier">Nama Mitra / Suplier</th>
+              <th align="right">Total Cost</th>
+              <th align="right">Nominal Tabungan</th>
             </tr>
           </thead>
           <tbody>
             ${rowsHtml}
             <tr class="total-row">
-              <td colspan="2" align="center">TOTAL KESELURUHAN</td>
-              <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.serviceCharge)}</td>
-              <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.kukuluban)}</td>
-              <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.grandTotal)}</td>
+              <td colspan="3" align="center">TOTAL TABUNGAN KESELURUHAN</td>
+              <td align="right">${new Intl.NumberFormat("id-ID").format(savedNoteInfo.totals.tabungan)}</td>
             </tr>
           </tbody>
         </table>

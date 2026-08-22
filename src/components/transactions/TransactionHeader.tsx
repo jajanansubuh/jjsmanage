@@ -1,4 +1,4 @@
-import { Download, Upload, ChevronDown, Check, Scissors } from "lucide-react";
+import { Download, Upload, ChevronDown, Check, Scissors, Coins } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -38,9 +38,7 @@ export function TransactionHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-
-
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0 flex-wrap sm:flex-nowrap">
         <DropdownMenu>
           <DropdownMenuTrigger className={buttonVariants({ variant: "outline", className: "shrink-0 whitespace-nowrap" })}>
             Kasir ({selectedCashiers.length}) <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
@@ -68,7 +66,6 @@ export function TransactionHeader({
           </DropdownMenuContent>
         </DropdownMenu>
 
-
         <Button onClick={onExport} variant="outline" className="shrink-0 whitespace-nowrap">
           <Download className="w-4 h-4 mr-2" /> Excel
         </Button>
@@ -80,9 +77,16 @@ export function TransactionHeader({
         <div className="h-10 w-[1px] bg-border mx-2 hidden sm:block shrink-0" />
 
         <Link href="/potongan/input" className="shrink-0">
-          <Button className="shrink-0 whitespace-nowrap">
-            <Scissors size={16} className="mr-2" />
+          <Button variant="outline" className="shrink-0 whitespace-nowrap hover:border-rose-500/50 hover:text-rose-400">
+            <Scissors size={16} className="mr-2 text-rose-400" />
             Input Potongan
+          </Button>
+        </Link>
+
+        <Link href="/savings/input" className="shrink-0">
+          <Button className="shrink-0 whitespace-nowrap bg-blue-600 hover:bg-blue-700 text-white">
+            <Coins size={16} className="mr-2" />
+            Input Tabungan
           </Button>
         </Link>
       </div>

@@ -25,6 +25,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import Link from "next/link";
 
 interface DeductionDetail {
   id: string;

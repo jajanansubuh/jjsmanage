@@ -94,6 +94,8 @@ model ConsignmentReport {
   items               Json?     @default("[]")
   deductionDate       DateTime?
   deductionNoteNumber String?
+  savingsDate         DateTime?
+  savingsNoteNumber   String?
   isValidated         Boolean   @default(false)
   supplier            Supplier  @relation(fields: [supplierId], references: [id], onDelete: Restrict)
 
@@ -102,6 +104,8 @@ model ConsignmentReport {
   @@index([supplierId, date])
   @@index([supplierId, tabungan])
   @@index([supplierId, isValidated])
+  @@index([savingsNoteNumber])
+  @@index([deductionNoteNumber])
 }
 
 model User {

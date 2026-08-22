@@ -13,15 +13,13 @@ export async function POST(req: Request) {
       supplierId: string;
       startDate: string;
       endDate: string;
-      serviceCharge: number;
-      kukuluban: number;
       tabungan: number;
-      deductionDate?: string;
-      deductionNoteNumber?: string;
+      savingsDate?: string;
+      savingsNoteNumber?: string;
     }[] = body.data;
 
     if (!Array.isArray(data) || data.length === 0) {
-      return NextResponse.json({ error: "Data potongan kosong" }, { status: 400 });
+      return NextResponse.json({ error: "Data tabungan kosong" }, { status: 400 });
     }
 
     await prisma.$transaction(async (tx) => {
@@ -45,7 +43,7 @@ export async function POST(req: Request) {
 
         if (reports.length === 0) continue;
 
-        // 2. Aggregate deductions and calculate total adjustment for the supplier
+        // 2. Aggregate savings and calculate total adjustment for the supplier
         let totalAdjustment = 0;
         let totalValidatedAdjustment = 0;
 
@@ -53,10 +51,10 @@ export async function POST(req: Request) {
           const report = reports[i];
           const isFirst = i === 0;
 
-          const sc = isFirst ? (item.serviceCharge ?? Number(report.serviceCharge || 0)) : 0;
-          const kukuluban = isFirst ? (item.kukuluban ?? Number(report.kukuluban || 0)) : 0;
-          // Preserve existing tabungan on report
-          const tabungan = Number(report.tabungan || 0);
+          // Preserve existing service charge and kukuluban
+          const sc = Number(report.serviceCharge || 0);
+          const kukuluban = Number(report.kukuluban || 0);
+          const tabungan = isFirst ? (item.tabungan ?? Number(report.tabungan || 0)) : 0;
 
           // New Profit80 calculation for this specific report
           const cost = Number(report.cost);
@@ -74,11 +72,10 @@ export async function POST(req: Request) {
           await tx.consignmentReport.update({
             where: { id: report.id },
             data: {
-              serviceCharge: sc,
-              kukuluban: kukuluban,
+              tabungan: tabungan,
               profit80: newProfit80,
-              deductionDate: item.deductionDate ? new Date(item.deductionDate) : null,
-              deductionNoteNumber: item.deductionNoteNumber || null
+              savingsDate: item.savingsDate ? new Date(item.savingsDate) : null,
+              savingsNoteNumber: item.savingsNoteNumber || null,
             }
           });
         }
@@ -99,9 +96,10 @@ export async function POST(req: Request) {
         }
       }
     }, {
-      timeout: 60000 // 60 seconds timeout for potentially large batch updates
+      timeout: 60000 // 60 seconds timeout
     });
 
+    revalidatePath("/savings");
     revalidatePath("/potongan");
     revalidatePath("/reports");
     revalidatePath("/master");
@@ -109,9 +107,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("POST /api/deductions/save error:", error);
+    console.error("POST /api/savings/save error:", error);
     return NextResponse.json({
-      error: "Gagal memperbarui potongan",
+      error: "Gagal memperbarui tabungan",
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }

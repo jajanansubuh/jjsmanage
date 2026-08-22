@@ -61,6 +61,7 @@ export async function GET(req: Request) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const deductionNoteNumber = searchParams.get('deductionNoteNumber');
+    const savingsNoteNumber = searchParams.get('savingsNoteNumber');
     
     // Check session for Role Based Access
     const { getSession } = await import("@/lib/auth-utils");
@@ -75,6 +76,7 @@ export async function GET(req: Request) {
     if (supplierId) whereClause.supplierId = supplierId;
     if (noteNumber) whereClause.noteNumber = noteNumber;
     if (deductionNoteNumber) whereClause.deductionNoteNumber = deductionNoteNumber;
+    if (savingsNoteNumber) whereClause.savingsNoteNumber = savingsNoteNumber;
 
     if (date || (startDate && endDate)) {
       const start = new Date(startDate || date!);

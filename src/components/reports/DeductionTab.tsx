@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { History, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -112,7 +113,7 @@ export function DeductionTab({
                     onClick={() => onSelectDeduction(d)}
                   >
                     <TableCell className="py-4 px-6 font-semibold text-white text-sm whitespace-nowrap">
-                      {format(new Date(d.deductionDate || d.date || d.createdAt), "dd MMM yyyy")}
+                      {format(new Date(d.deductionDate || d.date || d.createdAt), "dd MMM yyyy", { locale: id })}
                     </TableCell>
                     <TableCell className="py-4">
                       <span className="font-mono text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2.5 py-1 rounded-lg inline-block group-hover:bg-rose-500/20 transition-colors">

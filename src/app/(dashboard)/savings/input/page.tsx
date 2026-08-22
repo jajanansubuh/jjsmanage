@@ -6,34 +6,34 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 
 // Hooks
-import { usePotonganData, DeductionRow } from "./hooks/use-potongan-data";
+import { useSavingsData, SavingsRow } from "./hooks/use-savings-data";
 
 // Components
-import { PotonganHeader } from "@/components/potongan/PotonganHeader";
-import { PotonganTable } from "@/components/potongan/PotonganTable";
-import { PotonganFooter } from "@/components/potongan/PotonganFooter";
+import { SavingsInputHeader } from "@/components/savings/SavingsInputHeader";
+import { SavingsInputTable } from "@/components/savings/SavingsInputTable";
+import { SavingsInputFooter } from "@/components/savings/SavingsInputFooter";
 
 // Dialogs
-import { PotonganConfirmDialog } from "@/components/potongan/PotonganConfirmDialog";
-import { PotonganSaveSuccessDialog } from "@/components/potongan/PotonganSaveSuccessDialog";
+import { SavingsConfirmDialog } from "@/components/savings/SavingsConfirmDialog";
+import { SavingsSaveSuccessDialog } from "@/components/savings/SavingsSaveSuccessDialog";
 
 // Utils
-import { getPotonganPrintTemplate } from "@/lib/potongan-utils";
+import { getTabunganPrintTemplate } from "@/lib/savings-utils";
 
-function PotonganPageContent() {
+function SavingsInputPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editNote = searchParams.get("edit");
 
   const [startDate, setStartDate] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("jjs-potongan-startDate") || format(new Date(), "yyyy-MM-dd");
+      return localStorage.getItem("jjs-savings-startDate") || format(new Date(), "yyyy-MM-dd");
     }
     return format(new Date(), "yyyy-MM-dd");
   });
   const [endDate, setEndDate] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("jjs-potongan-endDate") || format(new Date(), "yyyy-MM-dd");
+      return localStorage.getItem("jjs-savings-endDate") || format(new Date(), "yyyy-MM-dd");
     }
     return format(new Date(), "yyyy-MM-dd");
   });
@@ -48,14 +48,14 @@ function PotonganPageContent() {
     loading,
     rows,
     setRows,
-    deductionDate,
-    setDeductionDate,
-    deductionNoteNumber,
-    setDeductionNoteNumber,
+    savingsDate,
+    setSavingsDate,
+    savingsNoteNumber,
+    setSavingsNoteNumber,
     actualStartDate,
     actualEndDate,
     refresh
-  } = usePotonganData(startDate, endDate, editNote, isMounted);
+  } = useSavingsData(startDate, endDate, editNote, isMounted);
 
   useEffect(() => {
     setIsMounted(true);
@@ -64,27 +64,27 @@ function PotonganPageContent() {
   // Save to localStorage
   useEffect(() => {
     if (isMounted && !editNote) {
-      localStorage.setItem("jjs-potongan-deductionDate", deductionDate);
-      localStorage.setItem("jjs-potongan-noteNumber", deductionNoteNumber);
-      localStorage.setItem("jjs-potongan-startDate", startDate);
-      localStorage.setItem("jjs-potongan-endDate", endDate);
-      localStorage.setItem("jjs-potongan-rows", JSON.stringify(rows));
+      localStorage.setItem("jjs-savings-date", savingsDate);
+      localStorage.setItem("jjs-savings-noteNumber", savingsNoteNumber);
+      localStorage.setItem("jjs-savings-startDate", startDate);
+      localStorage.setItem("jjs-savings-endDate", endDate);
+      localStorage.setItem("jjs-savings-rows", JSON.stringify(rows));
     }
-  }, [deductionDate, deductionNoteNumber, startDate, endDate, rows, isMounted, editNote]);
+  }, [savingsDate, savingsNoteNumber, startDate, endDate, rows, isMounted]);
 
-  const updateField = (supplierId: string, field: "serviceCharge" | "kukuluban", value: string) => {
+  const updateField = (supplierId: string, value: string) => {
     const numericValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
     setRows((prev) => prev.map((row) => {
       if (row.supplierId === supplierId) {
-        const newRow = { ...row, [field]: numericValue };
+        const newRow = { ...row, tabungan: numericValue };
         const totalPotongan = newRow.serviceCharge + newRow.kukuluban + newRow.tabungan;
 
         if (totalPotongan > row.totalCost) {
-          toast.error(`Total potongan tidak boleh melebihi total cost (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(row.totalCost)})`);
+          toast.error(`Total tabungan & potongan tidak boleh melebihi total cost (${new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(row.totalCost)})`);
 
-          const otherFieldsTotal = totalPotongan - numericValue;
+          const otherFieldsTotal = newRow.serviceCharge + newRow.kukuluban;
           const maxAllowed = Math.max(0, row.totalCost - otherFieldsTotal);
-          newRow[field] = maxAllowed;
+          newRow.tabungan = maxAllowed;
         }
         return newRow;
       }
@@ -97,17 +97,19 @@ function PotonganPageContent() {
       const removed = prev.find((r) => r.supplierId === supplierId);
       const updated = prev.filter((r) => r.supplierId !== supplierId);
       if (removed) {
-        toast.info(`${removed.supplierName} dihapus dari daftar input potongan`);
+        toast.info(`${removed.supplierName} dihapus dari daftar input tabungan`);
       }
       return updated;
     });
   }, [setRows]);
 
   const totals = useMemo(() => {
+    const totalTabungan = rows.reduce((sum, r) => sum + r.tabungan, 0);
+    const saversCount = rows.filter((r) => r.tabungan > 0).length;
     return {
-      serviceCharge: rows.reduce((sum, r) => sum + r.serviceCharge, 0),
-      kukuluban: rows.reduce((sum, r) => sum + r.kukuluban, 0),
-      grandTotal: rows.reduce((sum, r) => sum + r.serviceCharge + r.kukuluban, 0),
+      tabungan: totalTabungan,
+      saversCount,
+      totalSuppliers: rows.length,
     };
   }, [rows]);
 
@@ -136,14 +138,13 @@ function PotonganPageContent() {
           supplierId: r.supplierId,
           startDate: actualStartDate,
           endDate: actualEndDate,
-          serviceCharge: r.serviceCharge,
-          kukuluban: r.kukuluban,
-          deductionDate: deductionDate,
-          deductionNoteNumber: deductionNoteNumber,
+          tabungan: r.tabungan,
+          savingsDate: savingsDate,
+          savingsNoteNumber: savingsNoteNumber,
         }))
       };
 
-      const res = await fetch("/api/deductions/save", {
+      const res = await fetch("/api/savings/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -154,8 +155,8 @@ function PotonganPageContent() {
       if (res.ok && result.success) {
         setIsConfirmDialogOpen(false);
         setSavedNoteInfo({
-          noteNumber: deductionNoteNumber,
-          date: deductionDate,
+          noteNumber: savingsNoteNumber,
+          date: savingsDate,
           startDate: actualStartDate,
           endDate: actualEndDate,
           totals,
@@ -163,17 +164,17 @@ function PotonganPageContent() {
         });
         setIsSaveSuccessModalOpen(true);
 
-        // Only clear localStorage after confirmed successful save
-        localStorage.removeItem("jjs-potongan-rows");
-        localStorage.removeItem("jjs-potongan-deductionDate");
-        localStorage.removeItem("jjs-potongan-noteNumber");
-        localStorage.removeItem("jjs-potongan-startDate");
-        localStorage.removeItem("jjs-potongan-endDate");
+        // Clear localStorage on confirmed save
+        localStorage.removeItem("jjs-savings-rows");
+        localStorage.removeItem("jjs-savings-date");
+        localStorage.removeItem("jjs-savings-noteNumber");
+        localStorage.removeItem("jjs-savings-startDate");
+        localStorage.removeItem("jjs-savings-endDate");
         const nextNum = Math.floor(Math.random() * 900) + 100;
-        setDeductionNoteNumber(`POT-${format(new Date(), "ddMMyy")}${nextNum}`);
+        setSavingsNoteNumber(`TAB-${format(new Date(), "ddMMyy")}${nextNum}`);
         setRows([]);
       } else {
-        toast.error(result.details ? `${result.error}: ${result.details}` : (result.error || "Gagal menyimpan potongan"));
+        toast.error(result.details ? `${result.error}: ${result.details}` : (result.error || "Gagal menyimpan tabungan"));
       }
     } catch (error) {
       console.error("handleSave error:", error);
@@ -187,7 +188,7 @@ function PotonganPageContent() {
     if (!savedNoteInfo) return;
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    printWindow.document.write(getPotonganPrintTemplate(savedNoteInfo));
+    printWindow.document.write(getTabunganPrintTemplate(savedNoteInfo));
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => {
@@ -200,11 +201,10 @@ function PotonganPageContent() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto pb-10 px-4">
-      <PotonganHeader
-        deductionNoteNumber={deductionNoteNumber}
-        setDeductionNoteNumber={setDeductionNoteNumber}
-        deductionDate={deductionDate}
-        setDeductionDate={setDeductionDate}
+      <SavingsInputHeader
+        savingsNoteNumber={savingsNoteNumber}
+        savingsDate={savingsDate}
+        setSavingsDate={setSavingsDate}
         startDate={startDate}
         setStartDate={setStartDate}
         endDate={endDate}
@@ -213,14 +213,14 @@ function PotonganPageContent() {
         setSearchTerm={setSearchTerm}
       />
 
-      <PotonganTable
+      <SavingsInputTable
         loading={loading}
         rows={filteredRows}
         onUpdateField={updateField}
         onDeleteRow={handleDeleteRow}
       />
 
-      <PotonganFooter
+      <SavingsInputFooter
         totals={totals}
         onSave={handleOpenConfirm}
         isSaving={isSaving}
@@ -228,11 +228,11 @@ function PotonganPageContent() {
       />
 
       {/* Confirmation Dialog before saving */}
-      <PotonganConfirmDialog
+      <SavingsConfirmDialog
         isOpen={isConfirmDialogOpen}
         onOpenChange={setIsConfirmDialogOpen}
-        deductionNoteNumber={deductionNoteNumber}
-        deductionDate={deductionDate}
+        savingsNoteNumber={savingsNoteNumber}
+        savingsDate={savingsDate}
         startDate={actualStartDate}
         endDate={actualEndDate}
         rows={rows}
@@ -242,24 +242,24 @@ function PotonganPageContent() {
       />
 
       {/* Success Dialog after saving */}
-      <PotonganSaveSuccessDialog
+      <SavingsSaveSuccessDialog
         isOpen={isSaveSuccessModalOpen}
         onOpenChange={setIsSaveSuccessModalOpen}
         savedNoteInfo={savedNoteInfo}
         onPrint={handlePrint}
         onFinish={() => {
           setIsSaveSuccessModalOpen(false);
-          router.push("/potongan");
+          router.push("/savings");
         }}
       />
     </div>
   );
 }
 
-export default function PotonganPage() {
+export default function SavingsInputPage() {
   return (
-    <Suspense fallback={<div className="p-20 text-center text-slate-500 font-bold">Memuat Potongan...</div>}>
-      <PotonganPageContent />
+    <Suspense fallback={<div className="p-20 text-center text-slate-500 font-bold">Memuat Input Tabungan...</div>}>
+      <SavingsInputPageContent />
     </Suspense>
   );
 }
