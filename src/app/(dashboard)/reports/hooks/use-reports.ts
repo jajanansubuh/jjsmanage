@@ -214,7 +214,9 @@ function parseSafeReportDate(noteNumber?: string | null, dateVal?: string | Date
     const allItems = Array.from(allItemsMap.values());
 
     allItems.forEach(r => {
-      if ((r.tabungan || 0) <= 0) return;
+      const hasSavingsNote = !!r.savingsNoteNumber;
+      const hasSavingsValue = Number(r.tabungan || 0) > 0;
+      if (!hasSavingsNote && !hasSavingsValue) return;
 
       const noteNum = r.savingsNoteNumber || r.deductionNoteNumber || r.noteNumber;
       const relevantDate = parseSafeReportDate(noteNum, r.savingsDate || r.deductionDate || r.date || r.createdAt);
@@ -235,7 +237,7 @@ function parseSafeReportDate(noteNumber?: string | null, dateVal?: string | Date
       if (!matchDate) return;
 
       const dateKey = format(relevantDate, "yyyy-MM-dd");
-      const key = r.savingsNoteNumber || r.deductionNoteNumber || (dateKey ? `DATE-${dateKey}` : r.noteNumber) || `TAB-${r.id}`;
+      const key = r.savingsNoteNumber || (r.deductionNoteNumber && hasSavingsValue ? r.deductionNoteNumber : null) || (dateKey ? `DATE-${dateKey}` : r.noteNumber) || `TAB-${r.id}`;
 
       if (!groups[key]) {
         groups[key] = {
@@ -243,14 +245,16 @@ function parseSafeReportDate(noteNumber?: string | null, dateVal?: string | Date
           noteNumber: r.savingsNoteNumber || r.deductionNoteNumber || (r.deductionDate ? `POT-${format(new Date(r.deductionDate), "ddMMyy")}` : r.noteNumber || "-"),
           date: relevantDate,
           totalRevenue: 0,
+          totalCost: 0,
           totalTabungan: 0,
           suppliers: new Map<string, any>(),
           supplierNames: [] as string[],
         };
       }
 
-      groups[key].totalRevenue += (r.revenue || 0);
-      groups[key].totalTabungan += (r.tabungan || 0);
+      groups[key].totalRevenue += (Number(r.revenue) || 0);
+      groups[key].totalCost += (Number(r.cost) || 0);
+      groups[key].totalTabungan += (Number(r.tabungan) || 0);
 
       if (r.supplier?.name) {
         if (!groups[key].supplierNames.includes(r.supplier.name)) {
@@ -258,21 +262,42 @@ function parseSafeReportDate(noteNumber?: string | null, dateVal?: string | Date
         }
         const suppMap = groups[key].suppliers;
         if (suppMap.has(r.supplier.id)) {
-            const existing = suppMap.get(r.supplier.id);
-            existing.revenue += (r.revenue || 0);
-            existing.tabungan += (r.tabungan || 0);
+          const existing = suppMap.get(r.supplier.id);
+          existing.revenue += (Number(r.revenue) || 0);
+          existing.cost += (Number(r.cost) || 0);
+          existing.tabungan += (Number(r.tabungan) || 0);
         } else {
-            suppMap.set(r.supplier.id, {
-                id: r.supplier.id,
-                name: r.supplier.name,
-                revenue: (r.revenue || 0),
-                tabungan: (r.tabungan || 0)
-            });
+          suppMap.set(r.supplier.id, {
+            id: r.supplier.id,
+            name: r.supplier.name,
+            revenue: (Number(r.revenue) || 0),
+            cost: (Number(r.cost) || 0),
+            tabungan: (Number(r.tabungan) || 0)
+          });
         }
       }
     });
 
+    // Filter out suppliers with 0 tabungan so only savers are retained in each note
+    Object.values(groups).forEach((g: any) => {
+      const activeSuppliers = new Map<string, any>();
+      const activeNames: string[] = [];
+      
+      g.suppliers.forEach((supp: any, suppId: string) => {
+        if ((Number(supp.tabungan) || 0) > 0) {
+          activeSuppliers.set(suppId, supp);
+          if (!activeNames.includes(supp.name)) {
+            activeNames.push(supp.name);
+          }
+        }
+      });
+      
+      g.suppliers = activeSuppliers;
+      g.supplierNames = activeNames;
+    });
+
     return Object.values(groups)
+      .filter((g: any) => g.totalTabungan > 0)
       .filter((g: any) => {
         return (g.noteNumber?.toLowerCase().includes(savingsSearch.toLowerCase())) ||
                (g.supplierNames.some((s: string) => s.toLowerCase().includes(savingsSearch.toLowerCase())));

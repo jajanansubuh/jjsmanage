@@ -61,6 +61,14 @@ function PotonganPageContent() {
     setIsMounted(true);
   }, []);
 
+  // Sync dates when editing a note
+  useEffect(() => {
+    if (editNote && actualStartDate && actualEndDate) {
+      setStartDate(actualStartDate);
+      setEndDate(actualEndDate);
+    }
+  }, [editNote, actualStartDate, actualEndDate]);
+
   // Save to localStorage
   useEffect(() => {
     if (isMounted && !editNote) {

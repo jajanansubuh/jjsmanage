@@ -1,8 +1,8 @@
-import { AlertCircle, CheckCircle, Save, Users, Receipt, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
+import { Check, Loader2, Scissors } from "lucide-react";
 
 interface PotonganConfirmDialogProps {
   isOpen: boolean;
@@ -48,94 +48,94 @@ export function PotonganConfirmDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-zinc-950/95 backdrop-blur-2xl border-zinc-800 rounded-[2.5rem] shadow-2xl max-w-xl p-0 overflow-hidden text-white">
-        <div className="p-6 md:p-8 space-y-6">
-          <DialogHeader className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400">
-                <Scissors className="w-6 h-6" />
-              </div>
-              <div>
-                <DialogTitle className="text-2xl font-black tracking-tight text-white">
-                  Konfirmasi Simpan Potongan
-                </DialogTitle>
-                <DialogDescription className="text-slate-400 text-xs font-medium mt-0.5">
-                  Periksa ringkasan data potongan sebelum disimpan ke sistem.
-                </DialogDescription>
-              </div>
+      <DialogContent className="bg-zinc-950 border border-zinc-800 rounded-2xl shadow-xl max-w-md p-6 text-white sm:max-w-md">
+        <DialogHeader className="space-y-1.5 text-left">
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+              <Scissors className="w-5 h-5" />
             </div>
-          </DialogHeader>
-
-          {/* Meta Info Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 rounded-2xl bg-white/[0.03] border border-white/5 text-xs">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">No. Nota</span>
-              <span className="font-mono font-bold text-rose-400 text-sm">{deductionNoteNumber}</span>
-            </div>
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Tgl. Potongan</span>
-              <span className="font-bold text-slate-200">{formattedDeductionDate}</span>
-            </div>
-            <div className="col-span-2 sm:col-span-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Periode Transaksi</span>
-              <span className="font-bold text-slate-200">{formattedPeriod}</span>
-            </div>
+            <DialogTitle className="text-lg font-bold text-white">
+              Konfirmasi Simpan Potongan
+            </DialogTitle>
           </div>
+          <DialogDescription className="text-zinc-400 text-xs">
+            Pastikan data potongan mitra sudah sesuai sebelum disimpan ke database.
+          </DialogDescription>
+        </DialogHeader>
 
-          {/* Statistics Grid */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/5 text-center">
-              <Users className="w-4 h-4 text-slate-400 mx-auto mb-1" />
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Mitra</span>
-              <span className="text-xl font-black text-white">{rows.length}</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-center">
-              <Scissors className="w-4 h-4 text-rose-400 mx-auto mb-1" />
-              <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Mitra Terpotong</span>
-              <span className="text-xl font-black text-rose-300">{affectedSuppliers.length}</span>
-            </div>
+        {/* Ringkasan Informasi */}
+        <div className="my-4 rounded-xl bg-zinc-900/60 border border-zinc-800/80 divide-y divide-zinc-800/60 text-xs">
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">No. Nota</span>
+            <span className="font-mono font-bold text-rose-400">{deductionNoteNumber}</span>
           </div>
-
-          {/* Totals Summary Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900/90 to-zinc-950 border border-white/10 space-y-2 text-xs">
-            <div className="flex justify-between items-center text-slate-400">
-              <span>Total Service Charge:</span>
-              <span className="font-bold text-rose-400">Rp {new Intl.NumberFormat("id-ID").format(totals.serviceCharge)}</span>
-            </div>
-            <div className="flex justify-between items-center text-slate-400">
-              <span>Total Kukuluban:</span>
-              <span className="font-bold text-orange-400">Rp {new Intl.NumberFormat("id-ID").format(totals.kukuluban)}</span>
-            </div>
-            <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm font-black">
-              <span className="text-white uppercase tracking-wider">Grand Total Potongan:</span>
-              <span className="text-rose-400 text-base">Rp {new Intl.NumberFormat("id-ID").format(totals.grandTotal)}</span>
-            </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Tanggal Potongan</span>
+            <span className="font-medium text-zinc-200">{formattedDeductionDate}</span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Periode Transaksi</span>
+            <span className="font-medium text-zinc-200">{formattedPeriod}</span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Total Mitra</span>
+            <span className="font-medium text-zinc-200">{rows.length} Mitra</span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Mitra Terpotong</span>
+            <span className="font-semibold text-rose-400">{affectedSuppliers.length} Mitra</span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Service Charge</span>
+            <span className="font-medium text-zinc-200">
+              Rp {new Intl.NumberFormat("id-ID").format(totals.serviceCharge)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-2.5">
+            <span className="text-zinc-400">Kukuluban</span>
+            <span className="font-medium text-zinc-200">
+              Rp {new Intl.NumberFormat("id-ID").format(totals.kukuluban)}
+            </span>
+          </div>
+          <div className="flex justify-between items-center px-4 py-3 bg-zinc-900/90 rounded-b-xl">
+            <span className="font-bold text-zinc-200 text-xs uppercase tracking-wide">Grand Total Potongan</span>
+            <span className="text-base font-bold text-rose-400 tabular-nums">
+              Rp {new Intl.NumberFormat("id-ID").format(totals.grandTotal)}
+            </span>
           </div>
         </div>
 
-        {/* Dialog Actions */}
-        <div className="p-6 bg-white/[0.02] border-t border-white/5 flex flex-col sm:flex-row items-center justify-end gap-3">
+        {/* Tombol Aksi */}
+        <DialogFooter className="flex-row justify-end gap-2.5 sm:gap-2.5 pt-1">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSaving}
-            className="w-full sm:w-auto h-12 px-6 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 font-bold transition-all cursor-pointer"
+            className="flex-1 sm:flex-none border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl h-10 px-4 text-xs font-medium cursor-pointer"
           >
-            Batal / Periksa Kembali
+            Batal
           </Button>
 
           <Button
             type="button"
             onClick={onConfirm}
             disabled={isSaving}
-            className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-black shadow-lg shadow-rose-900/30 transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 sm:flex-none bg-rose-600 hover:bg-rose-500 text-white rounded-xl h-10 px-5 text-xs font-semibold shadow-md shadow-rose-600/20 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            <span>Ya, Simpan Potongan</span>
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Ya, Simpan</span>
+              </>
+            )}
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

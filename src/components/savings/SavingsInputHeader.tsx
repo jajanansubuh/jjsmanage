@@ -1,4 +1,4 @@
-import { Search, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
+import { Search, Calendar as CalendarIcon, ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -18,6 +18,7 @@ interface SavingsInputHeaderProps {
   setEndDate: (val: string) => void;
   searchTerm: string;
   setSearchTerm: (val: string) => void;
+  isEditMode?: boolean;
 }
 
 export function SavingsInputHeader({
@@ -30,23 +31,33 @@ export function SavingsInputHeader({
   setEndDate,
   searchTerm,
   setSearchTerm,
+  isEditMode = false,
 }: SavingsInputHeaderProps) {
   return (
     <div className="space-y-6">
       {/* Top Header Section */}
       <div className="space-y-2">
         <Link 
-          href="/transactions" 
+          href={isEditMode ? "/reports" : "/transactions"} 
           className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          Kembali ke Input Transaksi
+          {isEditMode ? "Kembali ke Arsip Laporan" : "Kembali ke Input Transaksi"}
         </Link>
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
-          Input Tabungan
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-foreground">
+            {isEditMode ? "Edit Tabungan" : "Input Tabungan"}
+          </h2>
+          {isEditMode && (
+            <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold rounded-xl flex items-center gap-1.5">
+              <Pencil className="w-3.5 h-3.5" /> Mode Edit
+            </span>
+          )}
+        </div>
         <p className="text-muted-foreground font-medium text-sm md:text-base">
-          Penginputan tabungan mitra secara kolektif per suplier untuk rentang waktu terpilih.
+          {isEditMode
+            ? `Mengubah rincian potongan tabungan mitra untuk nomor nota ${savingsNoteNumber}.`
+            : "Penginputan tabungan mitra secara kolektif per suplier untuk rentang waktu terpilih."}
         </p>
       </div>
 
@@ -61,7 +72,7 @@ export function SavingsInputHeader({
               </Label>
               <div 
                 className="flex items-center px-4 h-12 bg-muted/40 rounded-xl border border-border/80 select-none cursor-default shadow-inner"
-                title="Nomor nota otomatis mengikuti tanggal nota tabungan"
+                title="Nomor nota tabungan"
               >
                 <span className="font-mono text-sm font-black text-blue-400 tracking-wider">
                   {savingsNoteNumber}
@@ -76,13 +87,13 @@ export function SavingsInputHeader({
               </Label>
               <Popover>
                 <PopoverTrigger className="flex items-center justify-between px-4 h-12 bg-muted/40 hover:bg-muted/70 rounded-xl border border-border/80 text-sm font-bold text-foreground transition-all cursor-pointer select-none">
-                  <span>{format(new Date(savingsDate), "dd/MM/yyyy")}</span>
+                  <span>{savingsDate ? format(new Date(savingsDate), "dd/MM/yyyy") : "-"}</span>
                   <CalendarIcon className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-popover border-border shadow-2xl rounded-2xl" align="start">
                   <Calendar 
                     mode="single" 
-                    selected={new Date(savingsDate)} 
+                    selected={savingsDate ? new Date(savingsDate) : new Date()} 
                     onSelect={(d) => {
                       if (d) {
                         const formatted = format(d, "yyyy-MM-dd");

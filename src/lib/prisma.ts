@@ -21,7 +21,8 @@ declare global {
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+// In development, recreate if needed to pick up updated generated client
+const prisma = prismaClientSingleton();
 
 export default prisma;
 

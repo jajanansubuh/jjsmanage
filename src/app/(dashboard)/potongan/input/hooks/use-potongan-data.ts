@@ -149,12 +149,17 @@ export function usePotonganData(startDate: string, endDate: string, editNote: st
       }
       setDeductionNoteNumber(first.deductionNoteNumber || noteNum);
       
-      const dates = reports.map((r: any) => new Date(r.date).getTime());
-      const minDate = new Date(Math.min(...dates));
-      const maxDate = new Date(Math.max(...dates));
-      
-      setActualStartDate(format(minDate, "yyyy-MM-dd"));
-      setActualEndDate(format(maxDate, "yyyy-MM-dd"));
+      const dates = reports
+        .map((r: any) => new Date(r.date).getTime())
+        .filter((t: number) => !isNaN(t));
+
+      if (dates.length > 0) {
+        const minDate = new Date(Math.min(...dates));
+        const maxDate = new Date(Math.max(...dates));
+        
+        setActualStartDate(format(minDate, "yyyy-MM-dd"));
+        setActualEndDate(format(maxDate, "yyyy-MM-dd"));
+      }
       
       const groups: Record<string, DeductionRow> = {};
       reports.forEach((r: any) => {

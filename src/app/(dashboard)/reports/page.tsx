@@ -267,7 +267,9 @@ export default function ReportsPage() {
                 setSelectedTabunganNote({
                   noteNumber: s.noteNumber || "-",
                   date: s.date,
-                  suppliers: Array.from(s.suppliers.values()).sort((a: any, b: any) => b.tabungan - a.tabungan)
+                  suppliers: Array.from(s.suppliers.values())
+                    .filter((sup: any) => (Number(sup.tabungan) || 0) > 0)
+                    .sort((a: any, b: any) => (Number(b.tabungan) || 0) - (Number(a.tabungan) || 0))
                 });
                 setIsTabunganModalOpen(true);
               }}

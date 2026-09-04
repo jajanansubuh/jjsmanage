@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
 import { revalidatePath } from "next/cache";
-
+// Trigger re-eval with updated Prisma schema
 export async function POST(req: Request) {
   try {
     const { session, response } = await requireAuth();
@@ -33,10 +33,15 @@ export async function POST(req: Request) {
         const reports = await tx.consignmentReport.findMany({
           where: {
             supplierId: item.supplierId,
-            date: {
-              gte: start,
-              lte: end
-            }
+            OR: [
+              ...(item.savingsNoteNumber ? [{ savingsNoteNumber: item.savingsNoteNumber }] : []),
+              {
+                date: {
+                  gte: start,
+                  lte: end
+                }
+              }
+            ]
           },
           orderBy: { date: 'asc' }
         });

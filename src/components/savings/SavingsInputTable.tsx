@@ -1,9 +1,9 @@
-import { Loader2, AlertCircle, Trash2, Coins } from "lucide-react";
+import { Loader2, AlertCircle, Trash2, Coins, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SavingsRow } from "@/app/(dashboard)/savings/input/hooks/use-savings-data";
-import { useCallback, memo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 
 interface SavingsInputTableProps {
   loading: boolean;
@@ -103,6 +103,50 @@ const MemoizedRow = memo(
 );
 
 export function SavingsInputTable({ loading, rows, onUpdateField, onDeleteRow }: SavingsInputTableProps) {
+  const [sortConfig, setSortConfig] = useState<{
+    key: "supplierName" | "totalCost" | "tabungan" | "netMitra";
+    direction: "asc" | "desc";
+  }>({
+    key: "supplierName",
+    direction: "asc",
+  });
+
+  const handleSort = (key: "supplierName" | "totalCost" | "tabungan" | "netMitra") => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
+
+  const sortedRows = useMemo(() => {
+    return [...rows].sort((a, b) => {
+      if (sortConfig.key === "supplierName") {
+        return sortConfig.direction === "asc"
+          ? a.supplierName.localeCompare(b.supplierName)
+          : b.supplierName.localeCompare(a.supplierName);
+      }
+      if (sortConfig.key === "netMitra") {
+        const netA = a.baseProfit80 - (a.serviceCharge + a.kukuluban + a.tabungan);
+        const netB = b.baseProfit80 - (b.serviceCharge + b.kukuluban + b.tabungan);
+        return sortConfig.direction === "asc" ? netA - netB : netB - netA;
+      }
+      const valA = a[sortConfig.key] || 0;
+      const valB = b[sortConfig.key] || 0;
+      return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+    });
+  }, [rows, sortConfig]);
+
+  const getSortIcon = (key: "supplierName" | "totalCost" | "tabungan" | "netMitra") => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 opacity-60 group-hover:opacity-100 transition-opacity" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp className="w-3.5 h-3.5 text-blue-400" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 text-blue-400" />
+    );
+  };
+
   const handleTableKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" || e.key === "ArrowDown") {
@@ -125,10 +169,42 @@ export function SavingsInputTable({ loading, rows, onUpdateField, onDeleteRow }:
       <Table>
         <TableHeader className="bg-muted/30">
           <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="py-5 px-6 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground min-w-[220px]">Nama Mitra & Nota</TableHead>
-            <TableHead className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 min-w-[140px]">Total Cost</TableHead>
-            <TableHead className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-blue-400 min-w-[190px]">Nominal Tabungan</TableHead>
-            <TableHead className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-emerald-400 min-w-[150px]">Net Mitra</TableHead>
+            <TableHead 
+              className="py-5 px-6 font-black text-[10px] uppercase tracking-[0.2em] text-muted-foreground min-w-[220px] cursor-pointer select-none group hover:text-white transition-colors"
+              onClick={() => handleSort("supplierName")}
+            >
+              <div className="flex items-center gap-1.5">
+                <span>Nama Mitra & Nota</span>
+                {getSortIcon("supplierName")}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 min-w-[140px] cursor-pointer select-none group hover:text-white transition-colors"
+              onClick={() => handleSort("totalCost")}
+            >
+              <div className="flex items-center justify-end gap-1.5">
+                <span>Total Cost</span>
+                {getSortIcon("totalCost")}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-blue-400 min-w-[190px] cursor-pointer select-none group hover:text-blue-300 transition-colors"
+              onClick={() => handleSort("tabungan")}
+            >
+              <div className="flex items-center justify-end gap-1.5">
+                <span>Nominal Tabungan</span>
+                {getSortIcon("tabungan")}
+              </div>
+            </TableHead>
+            <TableHead 
+              className="py-5 px-6 text-right font-black text-[10px] uppercase tracking-[0.2em] text-emerald-400 min-w-[150px] cursor-pointer select-none group hover:text-emerald-300 transition-colors"
+              onClick={() => handleSort("netMitra")}
+            >
+              <div className="flex items-center justify-end gap-1.5">
+                <span>Net Mitra</span>
+                {getSortIcon("netMitra")}
+              </div>
+            </TableHead>
             <TableHead className="py-5 px-4 text-center font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 w-16">Aksi</TableHead>
           </TableRow>
         </TableHeader>
@@ -142,7 +218,7 @@ export function SavingsInputTable({ loading, rows, onUpdateField, onDeleteRow }:
                 </div>
               </TableCell>
             </TableRow>
-          ) : rows.length === 0 ? (
+          ) : sortedRows.length === 0 ? (
             <TableRow>
               <TableCell colSpan={5} className="text-center py-24 text-slate-500 font-medium italic">
                 <div className="flex flex-col items-center gap-2">
@@ -152,7 +228,7 @@ export function SavingsInputTable({ loading, rows, onUpdateField, onDeleteRow }:
               </TableCell>
             </TableRow>
           ) : (
-            rows.map((row) => (
+            sortedRows.map((row) => (
               <MemoizedRow
                 key={row.supplierId}
                 row={row}

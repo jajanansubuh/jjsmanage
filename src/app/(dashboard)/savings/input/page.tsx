@@ -61,6 +61,14 @@ function SavingsInputPageContent() {
     setIsMounted(true);
   }, []);
 
+  // Sync dates when editing a note
+  useEffect(() => {
+    if (editNote && actualStartDate && actualEndDate) {
+      setStartDate(actualStartDate);
+      setEndDate(actualEndDate);
+    }
+  }, [editNote, actualStartDate, actualEndDate]);
+
   // Save to localStorage
   useEffect(() => {
     if (isMounted && !editNote) {
@@ -70,7 +78,7 @@ function SavingsInputPageContent() {
       localStorage.setItem("jjs-savings-endDate", endDate);
       localStorage.setItem("jjs-savings-rows", JSON.stringify(rows));
     }
-  }, [savingsDate, savingsNoteNumber, startDate, endDate, rows, isMounted]);
+  }, [savingsDate, savingsNoteNumber, startDate, endDate, rows, isMounted, editNote]);
 
   const updateField = (supplierId: string, value: string) => {
     const numericValue = parseInt(value.replace(/\D/g, ""), 10) || 0;
@@ -211,6 +219,7 @@ function SavingsInputPageContent() {
         setEndDate={setEndDate}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
+        isEditMode={!!editNote}
       />
 
       <SavingsInputTable
@@ -249,7 +258,7 @@ function SavingsInputPageContent() {
         onPrint={handlePrint}
         onFinish={() => {
           setIsSaveSuccessModalOpen(false);
-          router.push("/savings");
+          router.push(editNote ? "/reports" : "/savings");
         }}
       />
     </div>

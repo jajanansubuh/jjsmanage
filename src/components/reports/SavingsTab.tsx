@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Coins, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Coins, Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,13 +33,50 @@ export function SavingsTab({
 }: SavingsTabProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [sortConfig, setSortConfig] = useState<{
+    key: "date" | "noteNumber" | "totalRevenue" | "totalTabungan";
+    direction: "asc" | "desc";
+  }>({
+    key: "date",
+    direction: "desc",
+  });
+
+  const handleSort = (key: "date" | "noteNumber" | "totalRevenue" | "totalTabungan") => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [savingsSearch, startDate, endDate]);
+  }, [savingsSearch, startDate, endDate, sortConfig]);
 
-  const totalPages = Math.ceil(groupedSavingsByNote.length / itemsPerPage);
-  const paginatedSavings = groupedSavingsByNote.slice(
+  const sortedSavings = useMemo(() => {
+    return [...groupedSavingsByNote].sort((a, b) => {
+      let valA = a[sortConfig.key];
+      let valB = b[sortConfig.key];
+
+      if (sortConfig.key === "date") {
+        const timeA = new Date(valA).getTime();
+        const timeB = new Date(valB).getTime();
+        return sortConfig.direction === "asc" ? timeA - timeB : timeB - timeA;
+      }
+
+      if (typeof valA === "string") {
+        return sortConfig.direction === "asc"
+          ? (valA || "").localeCompare(valB || "")
+          : (valB || "").localeCompare(valA || "");
+      }
+
+      valA = Number(valA) || 0;
+      valB = Number(valB) || 0;
+      return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+    });
+  }, [groupedSavingsByNote, sortConfig]);
+
+  const totalPages = Math.ceil(sortedSavings.length / itemsPerPage);
+  const paginatedSavings = sortedSavings.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -53,6 +90,17 @@ export function SavingsTab({
       { totalRevenue: 0, totalTabungan: 0 }
     );
   }, [paginatedSavings]);
+
+  const getSortIcon = (key: "date" | "noteNumber" | "totalRevenue" | "totalTabungan") => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 opacity-60 group-hover:opacity-100 transition-opacity" />;
+    }
+    return sortConfig.direction === "asc" ? (
+      <ArrowUp className="w-3.5 h-3.5 text-blue-400" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 text-blue-400" />
+    );
+  };
 
   return (
     <Card className="border border-white/10 bg-card rounded-2xl overflow-hidden shadow-xl animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -87,10 +135,42 @@ export function SavingsTab({
         <Table>
           <TableHeader className="bg-zinc-900/80 backdrop-blur-md">
             <TableRow className="border-b border-white/10">
-              <TableHead className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400">Tanggal</TableHead>
-              <TableHead className="py-4 text-xs font-bold uppercase tracking-wider text-slate-400">No Nota</TableHead>
-              <TableHead className="py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400">Total Omzet</TableHead>
-              <TableHead className="py-4 text-right px-6 text-xs font-bold uppercase tracking-wider text-blue-400">Total Tabungan</TableHead>
+              <TableHead 
+                className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none group hover:text-white transition-colors"
+                onClick={() => handleSort("date")}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>Tanggal</span>
+                  {getSortIcon("date")}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="py-4 text-xs font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none group hover:text-white transition-colors"
+                onClick={() => handleSort("noteNumber")}
+              >
+                <div className="flex items-center gap-1.5">
+                  <span>No Nota</span>
+                  {getSortIcon("noteNumber")}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-400 cursor-pointer select-none group hover:text-white transition-colors"
+                onClick={() => handleSort("totalRevenue")}
+              >
+                <div className="flex items-center justify-end gap-1.5">
+                  <span>Total Omzet</span>
+                  {getSortIcon("totalRevenue")}
+                </div>
+              </TableHead>
+              <TableHead 
+                className="py-4 text-right px-6 text-xs font-bold uppercase tracking-wider text-blue-400 cursor-pointer select-none group hover:text-blue-300 transition-colors"
+                onClick={() => handleSort("totalTabungan")}
+              >
+                <div className="flex items-center justify-end gap-1.5">
+                  <span>Total Tabungan</span>
+                  {getSortIcon("totalTabungan")}
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -135,7 +215,7 @@ export function SavingsTab({
         {totalPages > 1 && (
           <div className="flex items-center justify-between p-6 border-t border-white/5 bg-white/[0.01]">
             <p className="text-xs text-slate-400 font-medium">
-              Halaman <span className="text-white font-bold">{currentPage}</span> dari <span className="text-white font-bold">{totalPages}</span> ({groupedSavingsByNote.length} nota)
+              Halaman <span className="text-white font-bold">{currentPage}</span> dari <span className="text-white font-bold">{totalPages}</span> ({sortedSavings.length} nota)
             </p>
             <div className="flex items-center gap-2">
               <Button

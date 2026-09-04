@@ -177,19 +177,22 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
 };
 
 export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
-  const rowsHtml = [...selectedTabunganNote.suppliers]
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((s, index) => `
+  const activeSuppliers = (selectedTabunganNote?.suppliers || [])
+    .filter((s: any) => (Number(s.tabungan) || 0) > 0)
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+  const rowsHtml = activeSuppliers
+    .map((s: any, index: number) => `
       <tr>
         <td>${index + 1}</td>
         <td class="col-supplier">${s.name}</td>
-        <td align="right">${new Intl.NumberFormat("id-ID").format(s.revenue)}</td>
+        <td align="right">${new Intl.NumberFormat("id-ID").format(s.cost ?? s.revenue ?? 0)}</td>
         <td align="right"><strong>${new Intl.NumberFormat("id-ID").format(s.tabungan)}</strong></td>
       </tr>
     `)
     .join("");
 
-  const totalTabungan = selectedTabunganNote.suppliers.reduce((sum: number, s: any) => sum + s.tabungan, 0);
+  const totalTabungan = activeSuppliers.reduce((sum: number, s: any) => sum + (Number(s.tabungan) || 0), 0);
 
   return `
     <!DOCTYPE html>
@@ -205,7 +208,7 @@ export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
         </div>
         <table>
           <thead>
-            <tr><th width="30">No</th><th class="col-supplier">Nama Suplier</th><th align="right">Omzet</th><th align="right">Potongan Tabungan</th></tr>
+            <tr><th width="30">No</th><th class="col-supplier">Nama Suplier</th><th align="right">Total Cost</th><th align="right">Potongan Tabungan</th></tr>
           </thead>
           <tbody>
             ${rowsHtml}
