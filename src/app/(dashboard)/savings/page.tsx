@@ -175,7 +175,7 @@ export default function SavingsPage() {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
-    const periodText = startDate && endDate 
+    const periodText = startDate && endDate
       ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
       : "Semua Periode";
 
@@ -257,7 +257,7 @@ export default function SavingsPage() {
             </table>
             <div class="footer-sig">
               <div class="sig">Kasir / Admin</div>
-              <div class="sig">Manager Toko</div>
+              <div class="sig">Supervisor</div>
             </div>
           </body>
         </html>
@@ -304,7 +304,7 @@ export default function SavingsPage() {
             </table>
             <div class="footer-sig">
               <div class="sig">Kasir / Admin</div>
-              <div class="sig">Manager Toko</div>
+              <div class="sig">Supervisor</div>
             </div>
           </body>
         </html>
@@ -375,23 +375,23 @@ export default function SavingsPage() {
 
   if (loading) {
     return (
-                <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
-                   <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                   <p className="text-muted-foreground font-medium">Memuat data tabungan...</p>
-                </div>
+      <div className="bg-card rounded-xl p-12 text-center border border-border shadow-sm">
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-muted-foreground font-medium">Memuat data tabungan...</p>
+      </div>
     );
   }
 
   if (error) {
     return (
-          <div className="mx-4 md:mx-0 flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-border shadow-sm">
-            <div className="w-16 h-16 md:w-24 md:h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
-              <Banknote className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl md:text-3xl font-black text-foreground mb-2 md:mb-3">Tidak Ada Data Tabungan</h3>
+      <div className="mx-4 md:mx-0 flex flex-col items-center justify-center py-20 bg-card rounded-xl border border-border shadow-sm">
+        <div className="w-16 h-16 md:w-24 md:h-24 bg-muted/50 rounded-full flex items-center justify-center mb-6">
+          <Banknote className="w-8 h-8 md:w-12 md:h-12 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl md:text-3xl font-black text-foreground mb-2 md:mb-3">Tidak Ada Data Tabungan</h3>
         <p className="text-slate-400 max-w-md">{error}</p>
         <Button onClick={() => window.location.reload()} className="mt-4 bg-blue-600 hover:bg-blue-700 rounded-xl">
-           Coba Lagi
+          Coba Lagi
         </Button>
       </div>
     );
@@ -496,69 +496,69 @@ export default function SavingsPage() {
                 </div>
               ) : (
                 <>
-                {paginatedHistory.map((item) => (
-                  <Card key={item.id} className="bg-card border-border rounded-xl overflow-hidden group shadow-sm">
-                    <CardContent className="p-5">
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tanggal</span>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-blue-400" />
-                            <p className="text-sm font-bold text-slate-200">
-                              {format(new Date(item.date), "dd MMM yyyy", { locale: localeId })}
+                  {paginatedHistory.map((item) => (
+                    <Card key={item.id} className="bg-card border-border rounded-xl overflow-hidden group shadow-sm">
+                      <CardContent className="p-5">
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Tanggal</span>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                              <p className="text-sm font-bold text-slate-200">
+                                {format(new Date(item.date), "dd MMM yyyy", { locale: localeId })}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Potongan</span>
+                            <span className="text-lg font-black text-blue-400">
+                              +{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.tabungan)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">No. Nota</span>
+                            <p className="text-sm font-mono font-bold text-slate-400">
+                              {item.noteNumber || "—"}
+                            </p>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Omzet</span>
+                            <p className="text-sm font-bold text-slate-400">
+                              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.revenue)}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 block mb-1">Potongan</span>
-                          <span className="text-lg font-black text-blue-400">
-                            +{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.tabungan)}
-                          </span>
-                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {supplierData.history.length > historyPerPage && (
+                    <div className="flex items-center justify-between px-2 py-2">
+                      <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                          disabled={historyPage === 1}
+                          className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
+                          disabled={historyPage === historyTotalPages}
+                          className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
+                        >
+                          <ChevronRight className="w-5 h-5" />
+                        </Button>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/5">
-                        <div className="space-y-1">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">No. Nota</span>
-                          <p className="text-sm font-mono font-bold text-slate-400">
-                            {item.noteNumber || "—"}
-                          </p>
-                        </div>
-                        <div className="space-y-1 text-right">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Omzet</span>
-                          <p className="text-sm font-bold text-slate-400">
-                            {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(item.revenue)}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {supplierData.history.length > historyPerPage && (
-                  <div className="flex items-center justify-between px-2 py-2">
-                    <span className="text-xs text-slate-400 font-medium">Halaman {historyPage} dari {historyTotalPages}</span>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
-                        disabled={historyPage === 1}
-                        className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setHistoryPage(p => Math.min(historyTotalPages, p + 1))}
-                        disabled={historyPage === historyTotalPages}
-                        className="h-10 w-10 border border-white/10 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 transition-all flex items-center justify-center"
-                      >
-                        <ChevronRight className="w-5 h-5" />
-                      </Button>
                     </div>
-                  </div>
-                )}
+                  )}
                 </>
               )}
             </div>
@@ -730,8 +730,8 @@ export default function SavingsPage() {
                       </TableRow>
                     ) : (
                       paginatedAdminData.map((item) => (
-                        <TableRow 
-                          key={item.id} 
+                        <TableRow
+                          key={item.id}
                           className="border-b border-white/5 hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer"
                           onClick={() => handleOpenSupplierHistory(item)}
                         >

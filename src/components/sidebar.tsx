@@ -109,8 +109,10 @@ export function Sidebar({
       {/* Mobile Top Bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background border-b border-border z-30 flex items-center justify-between px-4">
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all"
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-label="Toggle Menu"
+          className="p-2.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all cursor-pointer"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
@@ -134,12 +136,12 @@ export function Sidebar({
 
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 lg:w-64 bg-[#0f1117] border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0 h-[100dvh]",
+        "fixed inset-y-0 left-0 z-50 w-72 lg:w-64 bg-[#0f1117] border-r border-white/5 transition-transform duration-300 ease-in-out lg:translate-x-0 h-screen h-[100dvh] max-h-screen",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex flex-col h-full overflow-hidden">
           {/* Header */}
-          <div className="px-5 py-6 lg:py-7">
+          <div className="px-5 py-6 lg:py-7 flex items-center justify-between">
             <div className="flex items-center gap-3 group">
               <div className="relative w-11 h-11 lg:w-14 lg:h-14 overflow-hidden group-hover:scale-105 transition-transform duration-300 shrink-0">
                 <Image
@@ -158,6 +160,16 @@ export function Sidebar({
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500/60 mt-0.5">Sukabumi</p>
               </div>
             </div>
+
+            {/* Mobile Close Button inside Sidebar */}
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              aria-label="Tutup Menu"
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+            >
+              <X size={20} />
+            </button>
           </div>
 
           {/* Nav */}
@@ -212,8 +224,9 @@ export function Sidebar({
               </Link>
 
               <button
+                type="button"
                 onClick={() => setIsLogoutDialogOpen(true)}
-                className="flex items-center justify-center w-full gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 active:scale-[0.98]"
+                className="flex items-center justify-center w-full gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 rounded-xl hover:bg-rose-500/10 hover:text-rose-400 transition-all duration-200 active:scale-[0.98] cursor-pointer"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 Sign out
@@ -242,8 +255,9 @@ export function Sidebar({
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 lg:hidden cursor-pointer"
           onClick={() => setIsOpen(false)}
+          onTouchEnd={() => setIsOpen(false)}
         />
       )}
 

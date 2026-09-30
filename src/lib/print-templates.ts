@@ -96,7 +96,7 @@ export const getTransactionPrintTemplate = (selectedNote: string, reportDate: st
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak ulang pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
@@ -110,7 +110,7 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
   const dates = noteDetails.map((r: any) => new Date(r.date).getTime());
   const minDate = new Date(Math.min(...dates));
   const maxDate = new Date(Math.max(...dates));
-  
+
   const rowsHtml = [...noteDetails]
     .sort((a, b) => (a.supplier?.name || "").localeCompare(b.supplier?.name || ""))
     .filter((r) => (r.serviceCharge || 0) > 0 || (r.kukuluban || 0) > 0 || (r.tabungan || 0) > 0)
@@ -166,7 +166,7 @@ export const getDeductionPrintTemplate = (selectedNote: string, reportDate: stri
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak ulang pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
@@ -220,7 +220,7 @@ export const getSavingsPrintTemplate = (selectedTabunganNote: any) => {
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak ulang pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
@@ -249,7 +249,7 @@ export const getSavingsSummaryPrintTemplate = (data: any[], startDate?: string, 
     savings: data.reduce((sum, s) => sum + s.totalTabungan, 0),
   };
 
-  const periodText = startDate && endDate 
+  const periodText = startDate && endDate
     ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
     : "Semua Periode";
 
@@ -286,7 +286,7 @@ export const getSavingsSummaryPrintTemplate = (data: any[], startDate?: string, 
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
@@ -322,7 +322,7 @@ export const getDeductionsSummaryPrintTemplate = (data: any[], startDate?: strin
     grand: data.reduce((sum, r) => sum + (r.serviceCharge || 0) + (r.kukuluban || 0) + (r.tabungan || 0), 0)
   };
 
-  const periodText = startDate && endDate 
+  const periodText = startDate && endDate
     ? `${format(new Date(startDate), "dd/MM/yyyy")} - ${format(new Date(endDate), "dd/MM/yyyy")}`
     : "Semua Periode";
 
@@ -363,7 +363,7 @@ export const getDeductionsSummaryPrintTemplate = (data: any[], startDate?: strin
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}

@@ -85,7 +85,7 @@ export const getTransactionPrintTemplate = (
         </table>
         <div class="footer-sig">
           <div class="sig">Kasir / Admin</div>
-          <div class="sig">Manager Toko</div>
+          <div class="sig">Supervisor</div>
         </div>
         <div style="text-align: center; margin-top: 30px; font-size: 9px; color: #999; font-style: italic;">
           Dicetak pada: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}
